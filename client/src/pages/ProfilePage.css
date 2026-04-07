@@ -1,0 +1,109 @@
+.profile-container {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  background-color: #d1d1f0; /* Nền tím nhạt Như thích */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Để nó không bị dính sát lề trên khi màn hình thấp */
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: 25px;
+  box-shadow: 0 15px 35px rgba(40, 13, 140, 0.1);
+  overflow: hidden;
+  padding: 40px;
+  text-align: center;
+}
+
+/* HEADER */
+.profile-avatar-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #f0f0ff;
+}
+
+.rank-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #ffd600;
+  color: #280d8c;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.profile-name { color: #280d8c; margin-bottom: 5px; font-size: 24px; }
+.profile-email { color: #777; margin-bottom: 20px; font-size: 14px; }
+
+.edit-btn {
+  background: transparent;
+  border: 1.5px solid #635bff;
+  color: #635bff;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.edit-btn:hover { background: #635bff; color: white; }
+
+/* STATS */
+.profile-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 30px 0;
+  padding: 20px 0;
+  border-top: 1px solid #f0f0f5;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.stat-item { flex: 1; display: flex; flex-direction: column; }
+.stat-value { font-size: 20px; font-weight: 800; color: #280d8c; }
+.stat-label { font-size: 12px; color: #888; }
+.stat-divider { width: 1px; height: 30px; background: #eee; }
+
+/* CONTENT */
+.profile-content h3 {
+  text-align: left;
+  color: #280d8c;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.empty-state {
+  padding: 30px;
+  background: #f9f9ff;
+  border-radius: 15px;
+  color: #999;
+  font-size: 14px;
+}
+
+.contribute-now-btn {
+  margin-top: 10px;
+  background: #635bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}

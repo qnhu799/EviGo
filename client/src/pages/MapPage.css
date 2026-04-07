@@ -1,0 +1,238 @@
+/* --- KHOANH VÙNG CSS - CHỈ CÓ TÁC DỤNG TRONG TRANG BẢN ĐỒ --- */
+
+/* Lớp bao ngoài cùng để cô lập toàn bộ style */
+.map-page-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* Khung chính 3 cột */
+.map-page-wrapper .map-page-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 55px);
+  min-height: calc(100vh - 55px);
+  background: #e3d9f2;
+  overflow: hidden;
+}
+
+/* Sidebar chung cho trang bản đồ */
+.map-page-wrapper .sidebar {
+  flex: 0 0 300px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: transparent !important;
+  z-index: 10;
+}
+
+.map-page-wrapper .left-panel { border-right: 1px solid rgba(0,0,0,0.05); }
+.map-page-wrapper .right-panel { border-left: 1px solid rgba(0,0,0,0.05); }
+
+.map-page-wrapper .panel-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #280d8c;
+}
+
+/* --- PANEL BẢN ĐỒ Ở GIỮA --- */
+.map-page-wrapper .map-center-panel {
+  flex: 1;
+  height: 100%;
+  background-color: #fff;
+  position: relative;
+}
+
+.map-page-wrapper .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 1;
+}
+
+/* --- BỘ LỌC CỘT TRÁI (FIX CÂN ĐỐI) --- */
+.map-page-wrapper .panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.map-page-wrapper .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+
+.map-page-wrapper .filter-group label {
+  font-weight: 700;
+  color: #280d8c;
+  font-size: 14px;
+  align-self: flex-start;
+  margin-left: calc(50% - 110px);
+}
+
+/* Ô tìm kiếm và các nút bấm đồng bộ chiều rộng 220px */
+.map-page-wrapper .search-wrapper,
+.map-page-wrapper .btn-gps-locate,
+.map-page-wrapper .range-container,
+.map-page-wrapper .apply-filter-btn {
+  width: 220px;
+  box-sizing: border-box;
+}
+
+.map-page-wrapper .search-wrapper {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 0 10px;
+  border: 1px solid #d1d1f0;
+  height: 40px;
+}
+
+.map-page-wrapper .filter-input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  padding: 8px 5px;
+  outline: none;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.map-page-wrapper .search-icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #635bff;
+  display: flex;
+  align-items: center;
+}
+
+.map-page-wrapper .btn-gps-locate {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #635bff;
+  background: white;
+  color: #635bff;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.map-page-wrapper .filter-range {
+  -webkit-appearance: none;
+  width: 100%; height: 6px; border-radius: 5px; background: #ffffff;
+}
+
+.map-page-wrapper .filter-range::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #635bff; border: 2px solid white;
+}
+
+.map-page-wrapper .apply-filter-btn {
+  padding: 12px;
+  background: linear-gradient(90deg, #635bff 0%, #280d8c 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* --- CỘT PHẢI: SỰ KIỆN GẦN ĐÂY --- */
+
+/* Đảm bảo sidebar phải có không gian thở */
+.map-page-wrapper .right-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 15px;
+  background-color: transparent !important;
+}
+
+/* Khu vực cuộn sự kiện */
+.map-page-wrapper .event-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Card sự kiện - Làm cho nó thanh thoát hơn */
+.map-page-wrapper .event-item-card {
+  width: 92%;
+  max-width: 260px;
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(209, 209, 240, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.map-page-wrapper .event-item-card.clickable:hover {
+  border-color: #635bff;
+  box-shadow: 0 8px 25px rgba(99, 91, 255, 0.15);
+  transform: translateY(-3px);
+}
+
+/* Font chữ trong Card */
+.map-page-wrapper .event-info h4 {
+  font-size: 15px;
+  color: #280d8c;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.map-page-wrapper .event-info p {
+  font-size: 12px;
+  color: #555;
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Dòng chữ hướng dẫn nhấn */
+.map-page-wrapper .click-hint {
+  font-size: 11px !important;
+  color: #635bff !important;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+/* --- RESPONSIVE --- */
+
+/* Thu nhỏ: Ẩn bộ lọc trái */
+@media (max-width: 1024px) {
+  .map-page-wrapper .left-panel {
+    display: none !important;
+  }
+}
+
+/* Điện thoại: Cột phải thành Bottom Sheet */
+@media (max-width: 768px) {
+  .map-page-wrapper .map-page-container { display: block; position: relative; }
+  .map-page-wrapper .map-center-panel { height: calc(100vh - 55px); width: 100%; }
+  .map-page-wrapper .right-panel {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%;
+    height: 30vh;
+    background-color: #fff !important;
+    border-radius: 25px 25px 0 0;
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+}

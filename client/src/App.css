@@ -1,0 +1,239 @@
+/* App.css - Bố cục site chính xác */
+
+/* 1. Đảm bảo html và body chiếm full chiều cao cửa sổ */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow: hidden; /* QUAN TRỌNG: Ngăn cuộn toàn site, để sidebar tự cuộn */
+}
+
+#root {
+  height: 100%;
+}
+
+/* 2. Container chính cho toàn bộ trang web (Flexbox xếp dọc) */
+.site-container {
+  display: flex;
+  flex-direction: column; /* Xếp dọc: header -> content -> footer */
+  height: 100%; /* Đảm bảo site-container chiếm full chiều cao cửa sổ */
+}
+
+/* 3. Vùng nội dung chính (Bản đồ và sidebars) */
+.site-content {
+  flex: 1; /* CHIẾM TẤT CẢ KHÔNG GIAN CÒN LẠI, ĐẨY FOOTER XUỐNG DƯỚI CÙNG */
+  display: flex; /* Bố cục ngang cho map và sidebars */
+  flex-direction: row;
+  overflow: hidden; /* Ngăn cuộn site-content, để sidebar tự cuộn */
+}
+
+/* --- TÙY CHỈNH CHI TIẾT THEO FIGMA CỦA NHƯ --- */
+
+/* Header updated from image_2.png */
+.evigo-header {
+  background-color: #280d8c; /* Tím đậm */
+  color: white;
+  height: 80px; /* Chiều cao cố định */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+  flex: 0 0 auto; /* Đảm bảo header không co, không giãn */
+}
+
+/* Logo updated from image_2.png */
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f0f0f5; /* Trắng tím nhạt */
+}
+
+/* Nav updated from image_2.png */
+nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+nav button {
+  background-color: #635bff; /* Tím xanh */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f0f0f5;
+  border: 2px solid white;
+}
+
+/* Sidebar LEFT updated from image_7.png */
+.sidebar-left {
+  background-color: #d1d1f0; /* Tím nhạt */
+  width: 250px;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.sidebar-left h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* MAP-VIEW updated from image_7.png */
+.map-view {
+  flex: 1; /* Chiếm tất cả không gian còn lại ở giữa */
+  height: 100%;
+}
+
+/* Sidebar RIGHT updated from image_7.png */
+.sidebar-right {
+  background-color: #f0f0f5; /* Trắng tím nhạt */
+  width: 300px;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  overflow-y: auto; /* QUAN TRỌNG: Chỉ cuộn sidebar này, không cuộn site-container */
+}
+
+.sidebar-right h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* Cập nhật CSS thẻ sự kiện chi tiết từ image_2.png */
+.event-card {
+  background-color: #e9e9f2; /* Xám tím nhạt */
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.event-info h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.event-info p {
+  font-size: 14px;
+  color: #333;
+  margin: 3px 0;
+}
+
+.stars {
+  color: #f1c40f; /* Màu vàng sao */
+}
+
+.btn-detail {
+  background-color: transparent;
+  border: none;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: block;
+}
+
+/* Footer updated from image_6.png with "Fat Footer" structure */
+.evigo-footer {
+  background-color: #280d8c;
+  color: white;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 0 0 auto; /* Đảm bảo footer không co, không giãn */
+}
+
+/* Phần nội dung chính chia cột */
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  padding: 50px 20px; /* Tăng padding để footer to và thoáng hơn */
+  max-width: 1200px;
+  margin: 0 auto; /* Căn giữa nội dung */
+  flex-wrap: wrap; /* Tự động rớt dòng nếu màn hình chật */
+  gap: 30px;
+}
+
+.footer-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+/* Tiêu đề của từng cột */
+.footer-section h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  border-bottom: 2px solid #635BFF; /* Gạch chân tím nhạt tạo điểm nhấn */
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+.footer-section p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #d1d1f0; /* Trắng hơi tím để chữ dịu mắt hơn */
+  margin-bottom: 8px;
+}
+
+/* Kiểu dáng cho danh sách link */
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 12px;
+}
+
+.footer-section ul li a {
+  color: #d1d1f0;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+/* Hiệu ứng di chuột vào link */
+.footer-section ul li a:hover {
+  color: #ffffff;
+  padding-left: 5px; /* Chữ thụt vào 1 xíu nhìn rất "nghệ" */
+}
+
+/* Phần bản quyền dưới đáy */
+.footer-bottom {
+  text-align: center;
+  padding: 15px 20px;
+  background-color: #1a085d; /* Màu tím tối hơn thân footer một độ */
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+/* --- 📱 RESPONSIVE CHO ĐIỆN THOẠI --- */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column; /* Đổi thành xếp dọc trên điện thoại */
+    padding: 30px 15px;
+    gap: 20px;
+  }
+}
