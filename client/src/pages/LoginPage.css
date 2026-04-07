@@ -7,16 +7,16 @@
   align-items: center;
   padding: 20px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-y: auto; /* Cho phép cuộn nếu màn hình quá nhỏ */
 }
 
 .login-box-wrapper {
   display: flex;
   width: 100%;
   max-width: 860px;
-  height: 70vh;
-  max-height: 500px;
-  min-height: 420px;
+  /* CẬP NHẬT: Bỏ height cố định, dùng min-height để tự dãn khi có lỗi */
+  min-height: 450px;
+  height: auto;
   background: white;
   border-radius: 30px;
   overflow: hidden;
@@ -44,7 +44,6 @@
   align-items: center;
   color: white;
   padding: 40px;
-  /* Chạy từ trái vào */
   transform: translateX(-60px);
   transition: transform 0.8s ease;
 }
@@ -56,7 +55,8 @@
 /* FORM BÊN PHẢI */
 .login-form-side {
   flex: 1;
-  padding: 30px 40px;
+  /* CẬP NHẬT: Giảm padding một chút để tiết kiệm diện tích */
+  padding: 25px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -69,14 +69,40 @@
 }
 
 .login-form-title { color: #280d8c; font-size: 26px; font-weight: 800; margin-bottom: 5px; }
-.login-form-subtitle { color: #777; font-size: 14px; margin-bottom: 25px; }
+.login-form-subtitle { color: #777; font-size: 14px; margin-bottom: 20px; }
 
-.login-auth-form { display: flex; flex-direction: column; gap: 15px; }
+/* --- PHẦN MỚI: HỘP THÔNG BÁO LỖI --- */
+.error-message-box {
+  background-color: #fff2f0;
+  border: 1.5px solid #ffccc7;
+  color: #ff4d4f;
+  /* CẬP NHẬT: Thu gọn padding và margin để không đẩy form quá xa */
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  animation: shakeError 0.4s ease-in-out;
+}
 
-.login-input-field { display: flex; flex-direction: column; gap: 6px; }
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.login-auth-form {
+  display: flex;
+  flex-direction: column;
+  /* CẬP NHẬT: Giảm gap để các ô input sát nhau hơn một chút */
+  gap: 12px;
+}
+
+.login-input-field { display: flex; flex-direction: column; gap: 4px; }
 .login-input-field label { font-weight: 700; font-size: 13px; color: #280d8c; }
 .login-input-field input {
-  padding: 12px 15px;
+  padding: 10px 15px; /* CẬP NHẬT: Giảm nhẹ padding input */
   border-radius: 12px;
   border: 1.5px solid #e0e0f0;
   outline: none;
@@ -94,7 +120,7 @@
 
 .login-btn-gradient {
   width: 100%;
-  padding: 14px;
+  padding: 12px; /* CẬP NHẬT: Giảm nhẹ padding button */
   background: linear-gradient(135deg, #635bff 0%, #280d8c 100%);
   color: white;
   border: none;
@@ -104,6 +130,7 @@
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(99, 91, 255, 0.3);
   transition: 0.3s;
+  margin-top: 5px;
 }
 
 .login-btn-gradient:hover {
@@ -112,13 +139,13 @@
   box-shadow: 0 12px 25px rgba(99, 91, 255, 0.45);
 }
 
-.login-redirect-text { text-align: center; margin-top: 20px; font-size: 13px; color: #666; }
+.login-redirect-text { text-align: center; margin-top: 15px; font-size: 13px; color: #666; }
 .login-redirect-text a { color: #635bff; font-weight: 700; text-decoration: none; }
 
 /* Responsive Mobile */
 @media (max-width: 850px) {
   .login-box-wrapper { flex-direction: column; max-width: 400px; height: auto; max-height: none; }
   .login-visual-side { height: 160px; transform: translateY(-40px); }
-  .login-form-side { transform: translateY(40px); padding: 30px 20px; }
+  .login-form-side { transform: translateY(0); padding: 30px 20px; }
   .login-box-wrapper.active .login-visual-side, .login-box-wrapper.active .login-form-side { transform: translateY(0); }
 }

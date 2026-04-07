@@ -1,44 +1,82 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./LoginPage.css";
 
 export default function LoginPage() {
   const [isJoined, setIsJoined] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Hiệu ứng "hít khối" tự động chạy sau khi trang load
   useEffect(() => {
     const timer = setTimeout(() => setIsJoined(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError("");
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/login", formData);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("username", res.data.user.username);
+      window.dispatchEvent(new Event("authChange"));
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Lỗi rồi Evier ơi!");
+    }
+  };
+
   return (
     <div className="login-page-container">
-      {/* Thêm class 'active' để kích hoạt hiệu ứng hít khối */}
       <div className={`login-box-wrapper ${isJoined ? "active" : ""}`}>
-        {/* MẢNH TRÁI: ẢNH DECOR */}
         <div className="login-visual-side">
           <div className="visual-overlay">
             <h1>EviGo</h1>
-            <p>Mừng bạn trở lại!</p>
+            <p>Mừng Evier trở lại!</p>
           </div>
         </div>
 
-        {/* MẢNH PHẢI: FORM ĐĂNG NHẬP */}
         <div className="login-form-side">
           <h2 className="login-form-title">Đăng nhập</h2>
           <p className="login-form-subtitle">
             Tiếp tục hành trình khám phá sự kiện
           </p>
 
-          <form className="login-auth-form">
+          <form className="login-auth-form" onSubmit={handleLogin}>
+            {/* 1. HỘP LỖI RIÊNG BIỆT: Chỉ hiện khi có lỗi, không bao bọc cái gì khác */}
+            {error && <div className="error-message-box">⚠️ {error}</div>}
+
+            {/* 2. CÁC Ô NHẬP LIỆU: Luôn luôn hiện, nằm ngoài dấu ngoặc của error */}
             <div className="login-input-field">
               <label>Email</label>
-              <input type="email" placeholder="nhu.le@example.com" required />
+              <input
+                name="email"
+                type="email"
+                placeholder="Evier@example.com"
+                onChange={handleChange}
+                value={formData.email}
+                required
+              />
             </div>
 
             <div className="login-input-field">
               <label>Mật khẩu</label>
-              <input type="password" placeholder="••••••••" required />
+              <input
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                onChange={handleChange}
+                value={formData.password}
+                required
+              />
             </div>
 
             <div className="login-forgot-link">

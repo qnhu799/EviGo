@@ -1,18 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./ProfilePage.css";
 import { Link } from "react-router-dom";
 
 export default function ProfilePage() {
-  // Giả sử đây là dữ liệu từ máy chủ (sau này Như sẽ gọi API)
-  const user = {
-    name: "Lê Quỳnh Như",
-    email: "nhu.le@example.com",
+  // 1. Khởi tạo state với dữ liệu mặc định
+  const [user, setUser] = useState({
+    name: "Khách",
+    email: "user@evigo.vn",
     avatar:
-      "https://ui-avatars.com/api/?name=Nhu+Le&background=635bff&color=fff&size=128",
+      "https://ui-avatars.com/api/?name=User&background=635bff&color=fff&size=128",
     contributionCount: 15,
     rank: "Sứ giả sự kiện",
-    joinedDate: "Tháng 01, 2026",
-  };
+    joinedDate: "Tháng 01, 2026", // Ngày dự phòng
+  });
+
+  // 2. useEffect để lấy dữ liệu thực tế khi trang load
+  useEffect(() => {
+    // Lấy tất cả "báu vật" từ localStorage mà em đã lưu lúc Register/Login
+    const savedName = localStorage.getItem("username");
+    const savedEmail = localStorage.getItem("email");
+    const savedJoinedDate = localStorage.getItem("joinedDate");
+
+    if (savedName) {
+      setUser((prev) => ({
+        ...prev,
+        name: savedName,
+        // Ưu tiên lấy email thực, nếu không có mới dùng demo
+        email:
+          savedEmail ||
+          `${savedName.toLowerCase().replace(/\s/g, "")}@example.com`,
+        // Lấy đúng ngày tham gia từ lúc đăng ký tài khoản
+        joinedDate: savedJoinedDate || prev.joinedDate,
+        // Cập nhật Avatar động theo tên mới lấy được
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(savedName)}&background=635bff&color=fff&size=128&bold=true`,
+      }));
+    }
+  }, []);
 
   return (
     <div className="profile-container">
@@ -46,12 +69,11 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* PHẦN DƯỚI: DANH SÁCH HOẠT ĐỘNG HOẶC SỰ KIỆN */}
+        {/* PHẦN DƯỚI: DANH SÁCH HOẠT ĐỘNG */}
         <div className="profile-content">
           <h3>Sự kiện bạn đã đóng góp gần đây</h3>
           <div className="empty-state">
             <p>Bạn chưa đóng góp sự kiện nào trong tuần này.</p>
-            {/* Bọc nút bấm bằng Link để dẫn sang trang đóng góp */}
             <Link to="/contribute">
               <button className="contribute-now-btn">Đóng góp ngay</button>
             </Link>
