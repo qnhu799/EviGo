@@ -30,25 +30,18 @@ export default function Register() {
 
     try {
       // 1. Gửi yêu cầu đăng ký đến Server
-      const response = await axios.post(
-        "http://localhost:5000/api/register",
-        formData,
-      );
-
-      // --- CẬP NHẬT ĐỊNH DẠNG NGÀY: DD/MM/YY ---
+      await axios.post("http://localhost:5000/api/register", formData);
       const now = new Date();
       const day = String(now.getDate()).padStart(2, "0");
       const month = String(now.getMonth() + 1).padStart(2, "0");
-      const year = String(now.getFullYear()).slice(-2); // Lấy 2 số cuối (2026 -> 26)
+      const year = String(now.getFullYear()).slice(-2);
 
-      const formattedDate = `${day}/${month}/${year}`; // Kết quả: 08/04/26
+      const formattedDate = `${day}/${month}/${year}`;
 
-      // Lưu vào localStorage
       localStorage.setItem("username", formData.username);
       localStorage.setItem("email", formData.email);
       localStorage.setItem("joinedDate", formattedDate);
 
-      // Báo tin cho Header cập nhật
       window.dispatchEvent(new Event("authChange"));
 
       // 2. Chuyển hướng sang Login

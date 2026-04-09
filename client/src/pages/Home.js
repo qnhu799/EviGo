@@ -127,8 +127,6 @@ export default function Home() {
       <section className="map-cta-container">
         <div className="map-cta-content">
           <h2 className="map-cta-title">Discover Events Around You</h2>
-
-          {/* Bọc nút bấm bằng Link để dẫn sang trang bản đồ */}
           <Link to="/map" style={{ textDecoration: "none" }}>
             <button className="map-cta-button">
               Khám phá bản đồ <span className="arrow">→</span>
@@ -141,16 +139,13 @@ export default function Home() {
       <section className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Sự kiện nổi bật</h2>
-          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
           <button className="see-more-btn">Xem thêm</button>
         </div>
 
         <div className="events-grid">
-          {/* Placeholder cho 3 sự kiện. Sau này phần này sẽ loop dữ liệu thực */}
           {[1, 2, 3].map((event) => (
             <div className="event-card" key={event}>
               <div className="event-image-wrapper">
-                {/* Ảnh tượng trưng cho đến khi có data thật */}
                 <img
                   src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
                   alt="Sự kiện EviGo"
@@ -180,16 +175,13 @@ export default function Home() {
       <section className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Sự kiện nổi bật</h2>
-          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
           <button className="see-more-btn">Xem thêm</button>
         </div>
 
         <div className="events-grid">
-          {/* Placeholder cho 3 sự kiện. Sau này phần này sẽ loop dữ liệu thực */}
           {[1, 2, 3].map((event) => (
             <div className="event-card" key={event}>
               <div className="event-image-wrapper">
-                {/* Ảnh tượng trưng cho đến khi có data thật */}
                 <img
                   src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
                   alt="Sự kiện EviGo"

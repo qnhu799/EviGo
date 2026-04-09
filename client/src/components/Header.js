@@ -78,7 +78,6 @@ export default function Header() {
             <div className="auth-popup">
               {username ? (
                 <>
-                  {/* Class quan trọng để ăn theo CSS mới này Như ơi */}
                   <div className="popup-welcome-container">
                     Chào <b>{username}</b>!
                   </div>

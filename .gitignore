@@ -1,7 +1,7 @@
 # Chặn các thư viện nặng
 node_modules/
 
-# Chặn file chứa mật khẩu của Như
+# Chặn file chứa mật khẩu
 .env
 
 # Chặn các file rác của hệ thống

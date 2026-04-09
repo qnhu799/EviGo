@@ -12,7 +12,6 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
 
-// Fix icon Marker mặc định
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -23,16 +22,15 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Icon ĐỎ rực rỡ và TO hơn cho Vị trí của tôi
 const myLocationIcon = L.icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [30, 50], // Tăng kích thước lên một chút (mặc định là 25, 41)
-  iconAnchor: [15, 50], // Căn lề chân ghim cho chuẩn
-  popupAnchor: [1, -40], // Căn lề popup nổi lên trên
-  shadowSize: [50, 50], // Căn lề bóng đổ
+  iconSize: [30, 50],
+  iconAnchor: [15, 50],
+  popupAnchor: [1, -40],
+  shadowSize: [50, 50],
 });
 
 const MapController = ({ center, zoom }) => {
@@ -83,7 +81,7 @@ const MapPage = () => {
         setUserPos(newPos);
         setMapCenter(newPos);
         setMapZoom(15);
-        setCurrentLocationMarker(newPos); // Đặt ghim đỏ tại vị trí GPS
+        setCurrentLocationMarker(newPos);
       });
     }
   };
@@ -96,7 +94,6 @@ const MapPage = () => {
   return (
     <div className="map-page-wrapper">
       <div className="map-page-container">
-        {/* CỘT TRÁI: BỘ LỌC */}
         <div className="sidebar left-panel">
           <h2 className="panel-title">Bộ lọc sự kiện</h2>
           <div className="panel-content">
@@ -154,7 +151,7 @@ const MapPage = () => {
           </div>
         </div>
 
-        {/* CHÍNH GIỮA: BẢN ĐỒ */}
+        {/* BẢN ĐỒ */}
         <div className="map-center-panel">
           <MapContainer
             center={userPos}
@@ -167,7 +164,6 @@ const MapPage = () => {
             />
             <MapController center={mapCenter} zoom={mapZoom} />
 
-            {/* HIỆN GHIM ĐỎ rực rỡ NẾU ĐÃ ĐỊNH VỊ */}
             {currentLocationMarker && (
               <Marker position={currentLocationMarker} icon={myLocationIcon}>
                 <Popup>
@@ -214,7 +210,7 @@ const MapPage = () => {
           </MapContainer>
         </div>
 
-        {/* CỘT PHẢI: DANH SÁCH */}
+        {/* DANH SÁCH */}
         <div className="sidebar right-panel">
           <h2 className="panel-title">Sự kiện gần đây</h2>
           <div className="event-scroll-area">

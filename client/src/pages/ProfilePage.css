@@ -1,10 +1,10 @@
 .profile-container {
   width: 100%;
   min-height: calc(100vh - 60px);
-  background-color: #d1d1f0; /* Nền tím nhạt Như thích */
+  background-color: #d1d1f0;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Để nó không bị dính sát lề trên khi màn hình thấp */
+  align-items: flex-start;
   padding: 40px 20px;
   box-sizing: border-box;
 }

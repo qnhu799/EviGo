@@ -25,7 +25,6 @@ export default function ProfilePage() {
       setUser((prev) => ({
         ...prev,
         name: savedName,
-        // Ưu tiên lấy email thực, nếu không có mới dùng demo
         email:
           savedEmail ||
           `${savedName.toLowerCase().replace(/\s/g, "")}@example.com`,

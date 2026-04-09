@@ -7,14 +7,13 @@
   align-items: center;
   padding: 20px;
   box-sizing: border-box;
-  overflow-y: auto; /* Cho phép cuộn nếu màn hình quá nhỏ */
+  overflow-y: auto;
 }
 
 .login-box-wrapper {
   display: flex;
   width: 100%;
   max-width: 860px;
-  /* CẬP NHẬT: Bỏ height cố định, dùng min-height để tự dãn khi có lỗi */
   min-height: 450px;
   height: auto;
   background: white;
@@ -31,7 +30,6 @@
   transform: scale(1);
 }
 
-/* ẢNH BÊN TRÁI */
 .login-visual-side {
   flex: 1.2;
   background: linear-gradient(135deg, rgba(99, 91, 255, 0.85), rgba(40, 13, 140, 0.95)),
@@ -55,7 +53,6 @@
 /* FORM BÊN PHẢI */
 .login-form-side {
   flex: 1;
-  /* CẬP NHẬT: Giảm padding một chút để tiết kiệm diện tích */
   padding: 25px 40px;
   display: flex;
   flex-direction: column;
@@ -71,12 +68,10 @@
 .login-form-title { color: #280d8c; font-size: 26px; font-weight: 800; margin-bottom: 5px; }
 .login-form-subtitle { color: #777; font-size: 14px; margin-bottom: 20px; }
 
-/* --- PHẦN MỚI: HỘP THÔNG BÁO LỖI --- */
 .error-message-box {
   background-color: #fff2f0;
   border: 1.5px solid #ffccc7;
   color: #ff4d4f;
-  /* CẬP NHẬT: Thu gọn padding và margin để không đẩy form quá xa */
   padding: 8px 12px;
   border-radius: 10px;
   margin-bottom: 15px;
@@ -95,14 +90,13 @@
 .login-auth-form {
   display: flex;
   flex-direction: column;
-  /* CẬP NHẬT: Giảm gap để các ô input sát nhau hơn một chút */
   gap: 12px;
 }
 
 .login-input-field { display: flex; flex-direction: column; gap: 4px; }
 .login-input-field label { font-weight: 700; font-size: 13px; color: #280d8c; }
 .login-input-field input {
-  padding: 10px 15px; /* CẬP NHẬT: Giảm nhẹ padding input */
+  padding: 10px 15px;
   border-radius: 12px;
   border: 1.5px solid #e0e0f0;
   outline: none;
@@ -120,7 +114,7 @@
 
 .login-btn-gradient {
   width: 100%;
-  padding: 12px; /* CẬP NHẬT: Giảm nhẹ padding button */
+  padding: 12px;
   background: linear-gradient(135deg, #635bff 0%, #280d8c 100%);
   color: white;
   border: none;
@@ -142,7 +136,6 @@
 .login-redirect-text { text-align: center; margin-top: 15px; font-size: 13px; color: #666; }
 .login-redirect-text a { color: #635bff; font-weight: 700; text-decoration: none; }
 
-/* Responsive Mobile */
 @media (max-width: 850px) {
   .login-box-wrapper { flex-direction: column; max-width: 400px; height: auto; max-height: none; }
   .login-visual-side { height: 160px; transform: translateY(-40px); }

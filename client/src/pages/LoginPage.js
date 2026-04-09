@@ -51,10 +51,7 @@ export default function LoginPage() {
           </p>
 
           <form className="login-auth-form" onSubmit={handleLogin}>
-            {/* 1. HỘP LỖI RIÊNG BIỆT: Chỉ hiện khi có lỗi, không bao bọc cái gì khác */}
             {error && <div className="error-message-box">⚠️ {error}</div>}
-
-            {/* 2. CÁC Ô NHẬP LIỆU: Luôn luôn hiện, nằm ngoài dấu ngoặc của error */}
             <div className="login-input-field">
               <label>Email</label>
               <input

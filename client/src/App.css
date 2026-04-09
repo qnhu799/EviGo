@@ -1,56 +1,46 @@
-/* App.css - Bố cục site chính xác */
-
-/* 1. Đảm bảo html và body chiếm full chiều cao cửa sổ */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
-  overflow: hidden; /* QUAN TRỌNG: Ngăn cuộn toàn site, để sidebar tự cuộn */
+  overflow: hidden;
 }
 
 #root {
   height: 100%;
 }
 
-/* 2. Container chính cho toàn bộ trang web (Flexbox xếp dọc) */
 .site-container {
   display: flex;
-  flex-direction: column; /* Xếp dọc: header -> content -> footer */
-  height: 100%; /* Đảm bảo site-container chiếm full chiều cao cửa sổ */
+  flex-direction: column;
+  height: 100%;
 }
 
-/* 3. Vùng nội dung chính (Bản đồ và sidebars) */
 .site-content {
-  flex: 1; /* CHIẾM TẤT CẢ KHÔNG GIAN CÒN LẠI, ĐẨY FOOTER XUỐNG DƯỚI CÙNG */
-  display: flex; /* Bố cục ngang cho map và sidebars */
+  flex: 1;
+  display: flex;
   flex-direction: row;
-  overflow: hidden; /* Ngăn cuộn site-content, để sidebar tự cuộn */
+  overflow: hidden;
 }
 
-/* --- TÙY CHỈNH CHI TIẾT THEO FIGMA CỦA NHƯ --- */
-
-/* Header updated from image_2.png */
 .evigo-header {
-  background-color: #280d8c; /* Tím đậm */
+  background-color: #280d8c;
   color: white;
-  height: 80px; /* Chiều cao cố định */
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   box-sizing: border-box;
-  flex: 0 0 auto; /* Đảm bảo header không co, không giãn */
+  flex: 0 0 auto;
 }
 
-/* Logo updated from image_2.png */
 .logo {
   font-size: 24px;
   font-weight: bold;
-  color: #f0f0f5; /* Trắng tím nhạt */
+  color: #f0f0f5;
 }
 
-/* Nav updated from image_2.png */
 nav {
   display: flex;
   align-items: center;
@@ -58,7 +48,7 @@ nav {
 }
 
 nav button {
-  background-color: #635bff; /* Tím xanh */
+  background-color: #635bff;
   color: white;
   border: none;
   border-radius: 8px;
@@ -76,9 +66,8 @@ nav button {
   border: 2px solid white;
 }
 
-/* Sidebar LEFT updated from image_7.png */
 .sidebar-left {
-  background-color: #d1d1f0; /* Tím nhạt */
+  background-color: #d1d1f0;
   width: 250px;
   height: 100%;
   padding: 20px;
@@ -92,21 +81,19 @@ nav button {
   margin-bottom: 20px;
 }
 
-/* MAP-VIEW updated from image_7.png */
 .map-view {
-  flex: 1; /* Chiếm tất cả không gian còn lại ở giữa */
+  flex: 1;
   height: 100%;
 }
 
-/* Sidebar RIGHT updated from image_7.png */
 .sidebar-right {
-  background-color: #f0f0f5; /* Trắng tím nhạt */
+  background-color: #f0f0f5;
   width: 300px;
   height: 100%;
   padding: 20px;
   box-sizing: border-box;
   flex: 0 0 auto;
-  overflow-y: auto; /* QUAN TRỌNG: Chỉ cuộn sidebar này, không cuộn site-container */
+  overflow-y: auto;
 }
 
 .sidebar-right h3 {
@@ -115,9 +102,8 @@ nav button {
   margin-bottom: 20px;
 }
 
-/* Cập nhật CSS thẻ sự kiện chi tiết từ image_2.png */
 .event-card {
-  background-color: #e9e9f2; /* Xám tím nhạt */
+  background-color: #e9e9f2;
   border-radius: 12px;
   padding: 15px;
   margin-bottom: 15px;
@@ -137,7 +123,7 @@ nav button {
 }
 
 .stars {
-  color: #f1c40f; /* Màu vàng sao */
+  color: #f1c40f;
 }
 
 .btn-detail {
@@ -150,23 +136,21 @@ nav button {
   display: block;
 }
 
-/* Footer updated from image_6.png with "Fat Footer" structure */
 .evigo-footer {
   background-color: #280d8c;
   color: white;
   width: 100%;
   box-sizing: border-box;
-  flex: 0 0 auto; /* Đảm bảo footer không co, không giãn */
+  flex: 0 0 auto;
 }
 
-/* Phần nội dung chính chia cột */
 .footer-content {
   display: flex;
   justify-content: space-between;
-  padding: 50px 20px; /* Tăng padding để footer to và thoáng hơn */
+  padding: 50px 20px;
   max-width: 1200px;
-  margin: 0 auto; /* Căn giữa nội dung */
-  flex-wrap: wrap; /* Tự động rớt dòng nếu màn hình chật */
+  margin: 0 auto;
+  flex-wrap: wrap;
   gap: 30px;
 }
 
@@ -175,12 +159,11 @@ nav button {
   min-width: 250px;
 }
 
-/* Tiêu đề của từng cột */
 .footer-section h3 {
   font-size: 18px;
   margin-bottom: 20px;
   font-weight: 700;
-  border-bottom: 2px solid #635BFF; /* Gạch chân tím nhạt tạo điểm nhấn */
+  border-bottom: 2px solid #635BFF;
   padding-bottom: 8px;
   display: inline-block;
 }
@@ -188,11 +171,10 @@ nav button {
 .footer-section p {
   font-size: 14px;
   line-height: 1.6;
-  color: #d1d1f0; /* Trắng hơi tím để chữ dịu mắt hơn */
+  color: #d1d1f0;
   margin-bottom: 8px;
 }
 
-/* Kiểu dáng cho danh sách link */
 .footer-section ul {
   list-style: none;
   padding: 0;
@@ -210,17 +192,15 @@ nav button {
   transition: 0.3s;
 }
 
-/* Hiệu ứng di chuột vào link */
 .footer-section ul li a:hover {
   color: #ffffff;
-  padding-left: 5px; /* Chữ thụt vào 1 xíu nhìn rất "nghệ" */
+  padding-left: 5px;
 }
 
-/* Phần bản quyền dưới đáy */
 .footer-bottom {
   text-align: center;
   padding: 15px 20px;
-  background-color: #1a085d; /* Màu tím tối hơn thân footer một độ */
+  background-color: #1a085d;
   font-size: 13px;
   font-weight: 500;
 }
@@ -229,10 +209,9 @@ nav button {
   margin: 0;
 }
 
-/* --- 📱 RESPONSIVE CHO ĐIỆN THOẠI --- */
 @media (max-width: 768px) {
   .footer-content {
-    flex-direction: column; /* Đổi thành xếp dọc trên điện thoại */
+    flex-direction: column;
     padding: 30px 15px;
     gap: 20px;
   }
