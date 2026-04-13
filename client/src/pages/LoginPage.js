@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast"; // 1. Import toast
 import "./LoginPage.css";
 
 export default function LoginPage() {
@@ -25,12 +26,35 @@ export default function LoginPage() {
 
     try {
       const res = await axios.post("http://localhost:5000/api/login", formData);
+
+      // 1. Lưu Token & Username
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
+
+      // 2. LOGIC ÉP QUYỀN TRONG CODE
+      let userRole = res.data.user.role || "user";
+      if (formData.email === "qnhu799@gmail.com") {
+        userRole = "superadmin";
+      }
+      localStorage.setItem("role", userRole);
       window.dispatchEvent(new Event("authChange"));
-      navigate("/");
+
+      // 3. THÔNG BÁO TOAST XỊN MỊN
+      toast.success(`Mừng ${res.data.user.username} trở lại!`, {
+        duration: 3000,
+        icon: userRole === "superadmin" ? "👑" : "👋",
+      });
+
+      // 4. ĐIỀU HƯỚNG
+      if (userRole === "superadmin" || userRole === "admin") {
+        navigate("/admindashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Lỗi rồi Evier ơi!");
+      const errMsg = err.response?.data?.message || "Lỗi rồi Evier ơi!";
+      toast.error(errMsg);
+      setError(errMsg);
     }
   };
 
@@ -57,7 +81,7 @@ export default function LoginPage() {
               <input
                 name="email"
                 type="email"
-                placeholder="Evier@example.com"
+                placeholder="qnhu799@gmail.com"
                 onChange={handleChange}
                 value={formData.email}
                 required

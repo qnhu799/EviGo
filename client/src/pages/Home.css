@@ -17,7 +17,6 @@
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
-
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,16 +29,6 @@
 
 .swiper-pagination-bullet-active {
   background: #635bff !important;
-}
-
-@media (max-width: 768px) {
-  .banner-slider {
-    height: 300px !important;
-  }
-
-  .active-banner {
-    height: 300px !important;
-  }
 }
 
 .search-container {
@@ -91,31 +80,9 @@
   transition: 0.3s;
 }
 
-@media (max-width: 768px) {
-  .search-container {
-    margin-top: 20px;
-  }
-
-  .search-wrapper {
-    flex-direction: row;
-    gap: 8px;
-  }
-
-  .search-submit-btn {
-    padding: 0 15px;
-    font-size: 13px;
-  }
-
-  .search-input-field {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 768px) {
-  .banner-slider {
-    height: 45vw;
-  }
+.search-submit-btn:hover {
+  background-color: #635bff;
+  transform: translateY(-2px);
 }
 
 .categories-container {
@@ -124,10 +91,19 @@
   margin: 50px auto;
 }
 
+.categories-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #280d8c;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
 .categories-grid {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
+  gap: 20px;
 }
 
 .category-item {
@@ -140,32 +116,72 @@
 .category-circle-placeholder {
   width: clamp(80px, 12vw, 150px);
   height: clamp(80px, 12vw, 150px);
-
   border-radius: 50%;
   border: 2px solid #280d8c;
-  background-color: #d9d9d9;
+  background-color: #f0f0f0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
+.category-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  transition: transform 0.5s ease;
+}
+
+.category-icon-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(40, 13, 140, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: 0.3s;
+}
+
+.category-icon {
+  font-size: clamp(24px, 3vw, 40px);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  position: relative;
+  z-index: 3;
+}
+
 .category-name {
   margin-top: 12px;
-  font-weight: 600;
-  font-size: clamp(0.8rem, 1vw, 1rem);
-  color: #333;
+  font-weight: 700;
+  font-size: clamp(0.85rem, 1.1vw, 1.05rem);
+  color: #280d8c;
   text-align: center;
   white-space: nowrap;
 }
 
+/* Hiệu ứng Hover chuyên nghiệp */
 .category-circle-placeholder:hover {
   transform: scale(1.1);
-  box-shadow: 0 8px 15px rgba(99, 91, 255, 0.2);
+  box-shadow: 0 8px 15px rgba(99, 91, 255, 0.3);
+  border-color: #635bff;
 }
 
-@media (max-width: 480px) {
-  .categories-grid {
-    gap: 1.5rem 1rem;
-  }
+.category-circle-placeholder:hover .category-img {
+  transform: scale(1.15);
+}
+
+.category-circle-placeholder:hover .category-icon-wrapper {
+  background: rgba(40, 13, 140, 0.4);
 }
 
 .featured-events {
@@ -276,19 +292,6 @@
   font-weight: 600;
 }
 
-@media (max-width: 1024px) {
-  .events-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .events-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .map-cta-container {
   width: 90%;
   max-width: 1200px;
@@ -337,16 +340,24 @@
   transform: scale(1.05);
 }
 
-.map-cta-button .arrow {
-  font-size: 20px;
+@media (max-width: 1024px) {
+  .events-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
 }
 
 @media (max-width: 768px) {
-  .map-cta-content {
-    padding: 40px 15px;
-  }
-  .map-cta-button {
-    padding: 10px 30px;
-    font-size: 14px;
-  }
+  .banner-slider { height: 45vw; }
+  .search-container { margin-top: 20px; }
+  .search-wrapper { flex-direction: row; gap: 8px; }
+  .search-submit-btn { padding: 0 15px; font-size: 13px; }
+  .search-input-field { padding: 8px 12px; font-size: 13px; }
+  .events-grid { grid-template-columns: 1fr; }
+  .map-cta-content { padding: 40px 15px; }
+  .map-cta-button { padding: 10px 30px; font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .categories-grid { gap: 1.5rem 1rem; }
 }

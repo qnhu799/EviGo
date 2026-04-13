@@ -69,15 +69,53 @@ export default function Home() {
         <h2 className="categories-title">Thể loại sự kiện</h2>
         <div className="categories-grid">
           {[
-            { id: 1, name: "Âm nhạc", icon: "🎵" },
-            { id: 2, name: "Nghệ thuật", icon: "🎨" },
-            { id: 3, name: "Ẩm thực", icon: "🍴" },
-            { id: 4, name: "Thể thao", icon: "🏃‍♂️" },
-            { id: 5, name: "Học thuật", icon: "🎓" },
+            {
+              id: 1,
+              name: "Âm nhạc",
+              icon: "🎵",
+              image: "D:/EviGo/client/src/assets/theloaisukhien/amnhac.png",
+            },
+            {
+              id: 2,
+              name: "Nghệ thuật",
+              icon: "🎨",
+              image: "/theloaisukien/nghethuat.jpg",
+            },
+            {
+              id: 3,
+              name: "Ẩm thực",
+              icon: "🍴",
+              image: "/theloaisukien/amthuc.jpg",
+            },
+            {
+              id: 4,
+              name: "Thể thao",
+              icon: "🏃‍♂️",
+              image: "/theloaisukien/thethao.jpg",
+            },
+            {
+              id: 5,
+              name: "Học thuật",
+              icon: "🎓",
+              image: "/theloaisukien/hocthuat.jpg",
+            },
           ].map((cat) => (
             <div className="category-item" key={cat.id}>
               <div className="category-circle-placeholder">
-                <span className="category-icon">{cat.icon}</span>
+                {/* Ảnh thực tế lấy từ public/theloaisukien */}
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="category-img"
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/150?text=EviGo";
+                  }}
+                />
+
+                {/* Lớp phủ chứa Icon để tăng tính nhận diện */}
+                <div className="category-icon-wrapper">
+                  <span className="category-icon">{cat.icon}</span>
+                </div>
               </div>
               <p className="category-name">{cat.name}</p>
             </div>

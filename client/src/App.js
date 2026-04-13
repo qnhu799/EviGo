@@ -10,10 +10,14 @@ import Login from "./pages/LoginPage";
 import Register from "./pages/Register";
 import Profile from "./pages/ProfilePage";
 import ForgotPassword from "./pages/ForgotPassword";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="app-container">
         <Header />
         <main style={{ minHeight: "80vh" }}>
@@ -26,6 +30,15 @@ function App() {
             <Route path="/register" element={<Register />} />\
             <Route path="/profile" element={<Profile />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <adminpage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/admindashboard" element={<AdminDashboard />} />
           </Routes>
         </main>
         <Footer />

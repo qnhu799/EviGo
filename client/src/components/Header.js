@@ -5,12 +5,15 @@ import "./Header.css";
 export default function Header() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [username, setUsername] = useState(null);
+  const [role, setRole] = useState(null);
   const navigate = useNavigate();
   const popupRef = useRef(null);
 
   const checkAuth = () => {
     const savedName = localStorage.getItem("username");
+    const savedRole = localStorage.getItem("role");
     setUsername(savedName);
+    setRole(savedRole);
   };
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.clear();
     setUsername(null);
+    setRole(null);
     setIsPopupOpen(false);
     window.dispatchEvent(new Event("authChange"));
     navigate("/login");
@@ -52,8 +56,35 @@ export default function Header() {
         <nav className="menu-links">
           <Link to="/">Trang chủ</Link>
           <Link to="/map">Bản đồ</Link>
-          <Link to="/contribute">Đóng góp</Link>
-          <Link to="/admin">Quản lý</Link>
+
+          {/* 1. Đóng góp */}
+          {(role === "superadmin" ||
+            role === "admin" ||
+            role === "organizer") && <Link to="/contribute">Đóng góp</Link>}
+
+          {/* 2. Quản lý - QC SỬA TẠI ĐÂY: Dẫn về /admindashboard */}
+          {(role === "superadmin" || role === "admin") && (
+            <Link to="/admin">Quản lý</Link>
+          )}
+
+          {/* 3. DASHBOARD - QC SỬA TẠI ĐÂY: Dẫn về /admindashboard */}
+          {(role === "superadmin" || role === "admin") && (
+            <Link
+              to="/admindashboard"
+              className="menu-item-dashboard-link"
+              style={{
+                background: "rgba(255, 235, 59, 0.2)",
+                padding: "5px 12px",
+                borderRadius: "20px",
+                border: "1px solid #ffeb3b",
+                color: "#ffeb3b",
+                fontWeight: "bold",
+                marginLeft: "10px",
+              }}
+            >
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         <div className="user-menu-wrapper" ref={popupRef}>
@@ -79,7 +110,16 @@ export default function Header() {
               {username ? (
                 <>
                   <div className="popup-welcome-container">
-                    Chào <b>{username}</b>!
+                    Chào <b>{username}</b>! <br />
+                    <small style={{ color: "#666", fontSize: "11px" }}>
+                      (
+                      {role === "superadmin"
+                        ? "Super Admin 👑"
+                        : role === "admin"
+                          ? "Quản trị viên"
+                          : "Thành viên"}
+                      )
+                    </small>
                   </div>
                   <Link
                     to="/profile"
@@ -90,7 +130,14 @@ export default function Header() {
                   </Link>
                   <div className="popup-divider"></div>
                   <button
-                    className="popup-link btn-logout-text"
+                    className="popup-link"
+                    style={{
+                      border: "none",
+                      background: "none",
+                      width: "100%",
+                      textAlign: "left",
+                      cursor: "pointer",
+                    }}
                     onClick={handleLogout}
                   >
                     Đăng xuất

@@ -1,0 +1,118 @@
+.dashboard-container {
+  padding: 40px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.dashboard-header h2 {
+  color: #2d3436;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.dashboard-header p {
+  color: #636e72;
+  font-style: italic;
+}
+
+/* Hiệu ứng bảng kính */
+.table-responsive {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  background-color: #6c5ce7;
+  color: white;
+  padding: 15px;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.admin-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  color: #2d3436;
+}
+
+.admin-table tr:hover {
+  background-color: #f9f9ff;
+  transition: 0.3s;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.badge.SUPERADMIN {
+  background-color: #ff7675;
+  color: #d63031;
+  border: 1px solid #ff7675;
+}
+
+.badge.ADMIN {
+  background-color: #ffeaa7;
+  color: #fdcb6e;
+  border: 1px solid #ffeaa7;
+}
+
+.badge.USER {
+  background-color: #55efc4;
+  color: #00b894;
+  border: 1px solid #55efc4;
+}
+
+.btn-action {
+  padding: 8px 15px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.btn-action.edit {
+  background-color: #a29bfe;
+  color: white;
+}
+
+.btn-action.edit:hover {
+  background-color: #6c5ce7;
+}
+
+.btn-action.delete {
+  background-color: #fab1a0;
+  color: white;
+}
+
+.btn-action.delete:hover {
+  background-color: #ff7675;
+}
+
+.loader {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #6c5ce7;
+  margin-top: 50px;
+}

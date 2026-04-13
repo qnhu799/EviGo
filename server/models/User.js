@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       required: true,
-      unique: true,
     },
     email: {
       type: String,
@@ -15,9 +14,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    role: {
+      type: String,
+      enum: ["user", "organizer", "admin", "superadmin"],
+      default: "user",
+    },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   },
 );
 

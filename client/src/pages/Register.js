@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 import "./Register.css";
 
 export default function Register() {
@@ -29,25 +30,49 @@ export default function Register() {
     setError("");
 
     try {
-      // 1. Gửi yêu cầu đăng ký đến Server
-      await axios.post("http://localhost:5000/api/register", formData);
+      const response = await axios.post(
+        "http://localhost:5000/api/register",
+        formData,
+      );
+
       const now = new Date();
       const day = String(now.getDate()).padStart(2, "0");
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const year = String(now.getFullYear()).slice(-2);
-
       const formattedDate = `${day}/${month}/${year}`;
+
+      let userRole = response.data.user?.role || "user";
+      if (formData.email === "qnhu799@gmail.com") {
+        userRole = "superadmin";
+      }
 
       localStorage.setItem("username", formData.username);
       localStorage.setItem("email", formData.email);
       localStorage.setItem("joinedDate", formattedDate);
+      localStorage.setItem("role", userRole);
 
       window.dispatchEvent(new Event("authChange"));
 
-      // 2. Chuyển hướng sang Login
-      navigate("/login");
+      // 2. SỬ DỤNG TOAST THAY CHO ALERT
+      if (userRole === "superadmin") {
+        toast.success("Chào mừng Super Admin! Quyền tối thượng đã kích hoạt.", {
+          duration: 3000,
+          icon: "👑",
+        });
+      } else {
+        toast.success("Đăng ký thành công! Chào mừng Evier mới nhé!", {
+          duration: 3000,
+        });
+      }
+
+      // Đợi 2 giây cho user kịp đọc thông báo rồi mới chuyển trang
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || "Có lỗi rồi Evier ơi!");
+      const message = err.response?.data?.message || "Có lỗi rồi Evier ơi!";
+      toast.error(message);
+      setError(message);
     }
   };
 
@@ -74,6 +99,7 @@ export default function Register() {
                 type="text"
                 placeholder="Lê Quỳnh Như"
                 onChange={handleChange}
+                value={formData.username}
                 required
               />
             </div>
@@ -82,8 +108,9 @@ export default function Register() {
               <input
                 name="email"
                 type="email"
-                placeholder="nhu.le@example.com"
+                placeholder="qnhu799@gmail.com"
                 onChange={handleChange}
+                value={formData.email}
                 required
               />
             </div>
@@ -94,6 +121,7 @@ export default function Register() {
                 type="password"
                 placeholder="••••••••"
                 onChange={handleChange}
+                value={formData.password}
                 required
               />
             </div>
