@@ -11,7 +11,7 @@ export default function Header() {
 
   const checkAuth = () => {
     const savedName = localStorage.getItem("username");
-    const savedRole = localStorage.getItem("role");
+    const savedRole = localStorage.getItem("role")?.toLowerCase(); // Chuyển về chữ thường để so sánh cho chuẩn
     setUsername(savedName);
     setRole(savedRole);
   };
@@ -54,21 +54,24 @@ export default function Header() {
 
       <div className="menu-container">
         <nav className="menu-links">
+          {/* QUYỀN KHÁCH: Luôn luôn thấy */}
           <Link to="/">Trang chủ</Link>
           <Link to="/map">Bản đồ</Link>
 
-          {/* 1. Đóng góp */}
-          {(role === "superadmin" ||
-            role === "admin" ||
-            role === "organizer") && <Link to="/contribute">Đóng góp</Link>}
+          {/* QUYỀN THÀNH VIÊN TRỞ LÊN: Thấy thêm Đóng góp */}
+          {username &&
+            (role === "member" ||
+              role === "organizer" ||
+              role === "admin" ||
+              role === "superadmin") && <Link to="/contribute">Đóng góp</Link>}
 
-          {/* 2. Quản lý - QC SỬA TẠI ĐÂY: Dẫn về /admindashboard */}
-          {(role === "superadmin" || role === "admin") && (
+          {/* QUYỀN QUẢN TRỊ VIÊN TRỞ LÊN: Thấy thêm Quản lý */}
+          {(role === "admin" || role === "superadmin") && (
             <Link to="/admin">Quản lý</Link>
           )}
 
-          {/* 3. DASHBOARD - QC SỬA TẠI ĐÂY: Dẫn về /admindashboard */}
-          {(role === "superadmin" || role === "admin") && (
+          {/* QUYỀN SUPERADMIN: Thấy thêm Dashboard màu vàng nổi bật */}
+          {role === "superadmin" && (
             <Link
               to="/admindashboard"
               className="menu-item-dashboard-link"
@@ -82,7 +85,7 @@ export default function Header() {
                 marginLeft: "10px",
               }}
             >
-              Dashboard
+              Dashboard 👑
             </Link>
           )}
         </nav>

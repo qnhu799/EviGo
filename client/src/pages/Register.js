@@ -93,11 +93,11 @@ export default function Register() {
             {error && <div className="error-message-box">⚠️ {error}</div>}
 
             <div className="input-field">
-              <label>Họ và tên</label>
+              <label>Tên tài khoản</label>
               <input
                 name="username"
                 type="text"
-                placeholder="Lê Quỳnh Như"
+                placeholder="Nhập tên tài khoản..."
                 onChange={handleChange}
                 value={formData.username}
                 required
@@ -108,7 +108,7 @@ export default function Register() {
               <input
                 name="email"
                 type="email"
-                placeholder="qnhu799@gmail.com"
+                placeholder="Nhập email..."
                 onChange={handleChange}
                 value={formData.email}
                 required

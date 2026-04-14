@@ -81,7 +81,7 @@ export default function LoginPage() {
               <input
                 name="email"
                 type="email"
-                placeholder="qnhu799@gmail.com"
+                placeholder="Nhập email..."
                 onChange={handleChange}
                 value={formData.email}
                 required
