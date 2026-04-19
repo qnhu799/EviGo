@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 
-// 1. Tuyến đường ĐĂNG KÝ (Register)
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -34,7 +33,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// 2. Tuyến đường ĐĂNG NHẬP (Login)
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -50,6 +48,7 @@ router.post("/login", async (req, res) => {
 
     res.status(200).json({
       message: `Chào mừng ${user.role === "superadmin" ? "Super Admin" : "Evier"} quay trở lại!`,
+      token: "fake-jwt-token-for-now",
       user: {
         id: user._id,
         username: user.username,
@@ -62,17 +61,13 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 3. API CẬP NHẬT QUYỀN
 router.put("/update-role", async (req, res) => {
   try {
     const { userId } = req.body;
-
-    // Tìm user để kiểm tra role hiện tại
     const user = await User.findById(userId);
     if (!user)
       return res.status(404).json({ message: "Không tìm thấy người dùng!" });
 
-    // QC bảo vệ: Không cho phép hạ quyền chính mình
     if (user.email === "qnhu799@gmail.com") {
       return res
         .status(403)
@@ -82,7 +77,6 @@ router.put("/update-role", async (req, res) => {
         });
     }
 
-    // LOGIC: Nếu đang là admin thì xuống user, ngược lại thì lên admin
     const newRole = user.role === "admin" ? "user" : "admin";
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -100,7 +94,6 @@ router.put("/update-role", async (req, res) => {
   }
 });
 
-// 4. API LẤY TẤT CẢ THÀNH VIÊN
 router.get("/all-users", async (req, res) => {
   try {
     const users = await User.find().select("-password");

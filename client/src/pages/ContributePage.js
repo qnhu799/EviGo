@@ -1,7 +1,59 @@
 import React, { useState } from "react";
+import axios from "axios";
 import "./ContributePage.css";
 
 const ContributePage = () => {
+  // 1. Quản lý trạng thái Form
+  const [formData, setFormData] = useState({
+    title: "",
+    type: "",
+    ticketPrice: "",
+    date: "",
+    time: "",
+    district: "",
+    address: "",
+    description: "",
+    lat: 10.871,
+    lng: 106.792,
+  });
+
+  // 2. Hàm xử lý khi người dùng nhập liệu
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // 3. Hàm gửi dữ liệu về Server
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/events/contribute",
+        formData,
+      );
+
+      if (response.status === 201) {
+        alert("Gửi thành công! Đang chờ Admin duyệt nhé ✨");
+        setFormData({
+          title: "",
+          type: "",
+          ticketPrice: "",
+          date: "",
+          time: "",
+          district: "",
+          address: "",
+          description: "",
+          lat: 10.871,
+          lng: 106.792,
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi rồi:", error);
+      alert("Hệ thống đang bận hoặc Server chưa chạy, kiểm tra lại nhé!");
+    }
+  };
+
   return (
     <div className="contribute-container">
       <div className="contribute-card">
@@ -9,13 +61,12 @@ const ContributePage = () => {
 
         <div className="guide-box">
           <p>
-            <strong>Hướng dẫn:</strong> Chia sẻ thông tin để cộng đồng khám phá
-            thêm nhiều sự kiện thú vị quanh mình nhé!
+            <strong>Hướng dẫn:</strong> Điền đầy đủ thông tin để ghim sự kiện
+            lên bản đồ EviGo nhé!
           </p>
         </div>
 
-        <form className="contribute-form">
-          {/* PHẦN 1: THÔNG TIN CƠ BẢN */}
+        <form className="contribute-form" onSubmit={handleSubmit}>
           <div className="form-section">
             <h3>1. Thông tin sự kiện</h3>
             <div className="form-group full-width">
@@ -23,7 +74,10 @@ const ContributePage = () => {
                 Tên sự kiện <span className="required">*</span>
               </label>
               <input
+                name="title"
                 type="text"
+                value={formData.title}
+                onChange={handleChange}
                 placeholder="Ví dụ: Lễ hội Âm thực Việt Nam..."
                 required
               />
@@ -32,7 +86,12 @@ const ContributePage = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Loại sự kiện</label>
-                <select required>
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  required
+                >
                   <option value="">Chọn loại sự kiện</option>
                   <option value="music">🎵 Âm nhạc</option>
                   <option value="food">🍕 Ẩm thực</option>
@@ -42,9 +101,12 @@ const ContributePage = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label>Giá vé (Ghi "Miễn phí" nếu không thu phí)</label>
+                <label>Giá vé</label>
                 <input
+                  name="ticketPrice"
                   type="text"
+                  value={formData.ticketPrice}
+                  onChange={handleChange}
                   placeholder="Ví dụ: 50.000đ hoặc Miễn phí..."
                 />
               </div>
@@ -53,69 +115,83 @@ const ContributePage = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Ngày bắt đầu</label>
-                <input type="date" required />
+                <input
+                  name="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label>Thời gian diễn ra</label>
-                <input type="time" required />
+                <input
+                  name="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
           </div>
 
-          {/* PHẦN 2: ĐỊA ĐIỂM (GIS) */}
           <div className="form-section">
             <h3>2. Địa điểm diễn ra (Dành cho bản đồ)</h3>
             <div className="form-row">
               <div className="form-group">
                 <label>Quận / Huyện</label>
-                <select required>
+                <select
+                  name="district"
+                  value={formData.district}
+                  onChange={handleChange}
+                  required
+                >
                   <option value="">Chọn Quận/Huyện</option>
-                  <option value="Q1">Quận 1</option>
-                  <option value="Q3">Quận 3</option>
-                  <option value="Q4">Quận 4</option>
-                  <option value=" Thủ Đức">Tp. Thủ Đức</option>
-                  {/* Như thêm các quận khác vào đây nhé */}
+                  <option value="Quận 1">Quận 1</option>
+                  <option value="Quận 3">Quận 3</option>
+                  <option value="Quận 4">Quận 4</option>
+                  <option value="Thủ Đức">Tp. Thủ Đức</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>Phường / Xã</label>
-                <input type="text" placeholder="Nhập phường/xã..." />
+                <label>Vị trí GIS (Lat, Lng)</label>
+                <input
+                  type="text"
+                  value={`${formData.lat}, ${formData.lng}`}
+                  disabled
+                />
               </div>
             </div>
 
             <div className="form-group full-width">
-              <label>Địa chỉ cụ thể (Tên địa điểm, số nhà, tên đường...)</label>
+              <label>Địa chỉ cụ thể</label>
               <input
+                name="address"
                 type="text"
-                placeholder="Ví dụ: Công viên Lê Văn Tám, Đ. Võ Thị Sáu..."
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="Số nhà, tên đường..."
                 required
               />
             </div>
 
-            {/* KHU VỰC BẢN ĐỒ - Như sẽ nhúng Leaflet vào đây sau */}
             <div className="map-picker-container">
               <div className="map-placeholder">
-                <p>📍 Nhấn vào bản đồ để lấy tọa độ chính xác</p>
-                {/* <MapContainer ... /> sẽ nằm ở đây */}
+                <p>📍 (Bản đồ Leaflet sẽ nhúng tại đây để Như chấm tọa độ)</p>
               </div>
             </div>
           </div>
 
-          {/* PHẦN 3: HÌNH ẢNH & MÔ TẢ */}
           <div className="form-section">
             <h3>3. Nội dung chi tiết</h3>
             <div className="form-group full-width">
-              <label>Hình ảnh sự kiện (Link ảnh hoặc tải lên)</label>
-              <input type="file" className="file-input" accept="image/*" />
-              <small className="help-text">
-                Gợi ý: Tỷ lệ 16:9 để hiển thị đẹp nhất trên trang chủ.
-              </small>
-            </div>
-
-            <div className="form-group full-width">
               <label>Mô tả chi tiết sự kiện</label>
               <textarea
+                name="description"
                 rows="4"
+                value={formData.description}
+                onChange={handleChange}
                 placeholder="Kể cho mọi người biết sự kiện có gì hấp dẫn..."
               ></textarea>
             </div>

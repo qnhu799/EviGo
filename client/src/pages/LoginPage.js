@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast"; // 1. Import toast
+import toast from "react-hot-toast";
 import "./LoginPage.css";
 
 export default function LoginPage() {
@@ -25,13 +25,14 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/login", formData);
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        formData,
+      );
 
-      // 1. Lưu Token & Username
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
 
-      // 2. LOGIC ÉP QUYỀN TRONG CODE
       let userRole = res.data.user.role || "user";
       if (formData.email === "qnhu799@gmail.com") {
         userRole = "superadmin";
@@ -39,13 +40,11 @@ export default function LoginPage() {
       localStorage.setItem("role", userRole);
       window.dispatchEvent(new Event("authChange"));
 
-      // 3. THÔNG BÁO TOAST XỊN MỊN
       toast.success(`Mừng ${res.data.user.username} trở lại!`, {
         duration: 3000,
         icon: userRole === "superadmin" ? "👑" : "👋",
       });
 
-      // 4. ĐIỀU HƯỚNG
       if (userRole === "superadmin" || userRole === "admin") {
         navigate("/admindashboard");
       } else {

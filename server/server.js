@@ -6,17 +6,19 @@ const path = require("path");
 
 dotenv.config({ path: path.join(__dirname, ".env") });
 
-const authRoutes = require("./routes/authRoutes");
-const eventRoutes = require("./routes/eventRoutes");
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", authRoutes);
+const authRoutes = require("./routes/authRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+
+app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+
 app.get("/", (req, res) => {
-  res.send("EviGo Server is running...");
+  res.send("🚀 EviGo Server is running smoothly...");
 });
 
 mongoose

@@ -9,9 +9,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
 
+  // 1. Hàm lấy danh sách thành viên
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/all-users");
+      const response = await axios.get(
+        "http://localhost:5000/api/auth/all-users",
+      );
       setUsers(response.data);
       setLoading(false);
     } catch (err) {
@@ -38,54 +41,6 @@ export default function AdminDashboard() {
       cancelButtonText: "Hủy bỏ",
       confirmButtonColor: themeColor,
       cancelButtonColor: "#888",
-      borderRadius: "15px",
-
-      didOpen: () => {
-        const confirmBtn = Swal.getConfirmButton();
-        if (confirmBtn) {
-          confirmBtn.style.setProperty(
-            "background-color",
-            themeColor,
-            "important",
-          );
-          confirmBtn.style.setProperty("border-color", themeColor, "important");
-          confirmBtn.style.setProperty("box-shadow", "none", "important");
-
-          confirmBtn.onmouseenter = () => {
-            confirmBtn.style.setProperty(
-              "filter",
-              "brightness(1.1)",
-              "important",
-            );
-          };
-          confirmBtn.onmouseleave = () => {
-            confirmBtn.style.setProperty(
-              "filter",
-              "brightness(1)",
-              "important",
-            );
-          };
-        }
-
-        const cancelBtn = Swal.getCancelButton();
-        if (cancelBtn) {
-          cancelBtn.style.setProperty("background-color", "#888", "important");
-          cancelBtn.onmouseenter = () => {
-            cancelBtn.style.setProperty(
-              "background-color",
-              "#ff4d4f",
-              "important",
-            );
-          };
-          cancelBtn.onmouseleave = () => {
-            cancelBtn.style.setProperty(
-              "background-color",
-              "#888",
-              "important",
-            );
-          };
-        }
-      },
     }).then((result) => {
       if (result.isConfirmed) {
         handleToggleRole(user._id);
@@ -93,19 +48,23 @@ export default function AdminDashboard() {
     });
   };
 
+  // 2. Hàm thay đổi quyền
   const handleToggleRole = async (userId) => {
     setProcessingId(userId);
     try {
-      const res = await axios.put("http://localhost:5000/api/update-role", {
-        userId,
-      });
+      const res = await axios.put(
+        "http://localhost:5000/api/auth/update-role",
+        {
+          userId,
+        },
+      );
 
       toast.success(res.data.message, {
         icon: "🛡️",
         duration: 3000,
       });
 
-      await fetchUsers();
+      await fetchUsers(); 
     } catch (err) {
       toast.error(err.response?.data?.message || "Cập nhật thất bại!");
     } finally {
