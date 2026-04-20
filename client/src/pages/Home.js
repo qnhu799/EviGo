@@ -6,11 +6,27 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./Home.css";
+
 import banner1 from "../assets/banner/1.png";
 import banner2 from "../assets/banner/2.png";
 import banner3 from "../assets/banner/3.png";
+import imgAmNhac from "../assets/theloaisukien/amnhac.png";
+import imgNgheThuat from "../assets/theloaisukien/nghethuat.png";
+import imgAmThuc from "../assets/theloaisukien/amthuc.png";
+import imgTheThao from "../assets/theloaisukien/thethao.png";
+import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 
 export default function Home() {
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth", // Lệnh này giúp cuộn mượt mà
+        block: "start", // Cuộn đến đầu section đó
+      });
+    }
+  };
+
   return (
     <div className="home-container">
       <section className="banner-slider">
@@ -69,53 +85,41 @@ export default function Home() {
         <h2 className="categories-title">Thể loại sự kiện</h2>
         <div className="categories-grid">
           {[
-            {
-              id: 1,
-              name: "Âm nhạc",
-              icon: "🎵",
-              image: "D:/EviGo/client/src/assets/theloaisukhien/amnhac.png",
-            },
+            { id: 1, name: "Âm nhạc", image: imgAmNhac, sectionId: "am-nhac" },
             {
               id: 2,
               name: "Nghệ thuật",
-              icon: "🎨",
-              image: "/theloaisukien/nghethuat.jpg",
+              image: imgNgheThuat,
+              sectionId: "nghe-thuat",
             },
-            {
-              id: 3,
-              name: "Ẩm thực",
-              icon: "🍴",
-              image: "/theloaisukien/amthuc.jpg",
-            },
+            { id: 3, name: "Ẩm thực", image: imgAmThuc, sectionId: "am-thuc" },
             {
               id: 4,
               name: "Thể thao",
-              icon: "🏃‍♂️",
-              image: "/theloaisukien/thethao.jpg",
+              image: imgTheThao,
+              sectionId: "the-thao",
             },
             {
               id: 5,
               name: "Học thuật",
-              icon: "🎓",
-              image: "/theloaisukien/hocthuat.jpg",
+              image: imgHocThuat,
+              sectionId: "hoc-thuat",
             },
           ].map((cat) => (
-            <div className="category-item" key={cat.id}>
+            <div
+              className="category-item"
+              key={cat.id}
+              onClick={() => scrollToSection(cat.sectionId)}
+            >
               <div className="category-circle-placeholder">
-                {/* Ảnh thực tế lấy từ public/theloaisukien */}
                 <img
                   src={cat.image}
                   alt={cat.name}
                   className="category-img"
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/150?text=EviGo";
+                    e.target.src = "https://via.placeholder.com/150";
                   }}
                 />
-
-                {/* Lớp phủ chứa Icon để tăng tính nhận diện */}
-                <div className="category-icon-wrapper">
-                  <span className="category-icon">{cat.icon}</span>
-                </div>
               </div>
               <p className="category-name">{cat.name}</p>
             </div>

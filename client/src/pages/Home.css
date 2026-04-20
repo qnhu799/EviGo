@@ -117,7 +117,7 @@
   width: clamp(80px, 12vw, 150px);
   height: clamp(80px, 12vw, 150px);
   border-radius: 50%;
-  border: 2px solid #280d8c;
+  border: 3px solid #280d8c;
   background-color: #f0f0f0;
   position: relative;
   overflow: hidden;
@@ -172,7 +172,7 @@
 /* Hiệu ứng Hover chuyên nghiệp */
 .category-circle-placeholder:hover {
   transform: scale(1.1);
-  box-shadow: 0 8px 15px rgba(99, 91, 255, 0.3);
+  box-shadow: 0 0px 35px 10px rgba(40, 13, 140, 0.5);
   border-color: #635bff;
 }
 
