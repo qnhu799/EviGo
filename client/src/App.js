@@ -12,12 +12,16 @@ import Profile from "./pages/ProfilePage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from "react-hot-toast";
+import ScrollToTop from "./components/ScrollToTop"; // Import xịn sò
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
+
       <Toaster position="top-center" reverseOrder={false} />
+
       <div className="app-container">
         <Header />
         <main style={{ minHeight: "80vh" }}>
@@ -25,19 +29,21 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/contribute" element={<ContributePage />} />
-            <Route path="/Admin" element={<Admin />} />
+            <Route path="/admin-view" element={<Admin />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />\
+            <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <adminpage />
+                <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                  <Admin />
                 </ProtectedRoute>
               }
             />
+
             <Route path="/admindashboard" element={<AdminDashboard />} />
           </Routes>
         </main>

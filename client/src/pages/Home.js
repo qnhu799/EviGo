@@ -161,6 +161,82 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
+      <section className="featured-events">
+        <div className="section-header">
+          <h2 className="section-title">Âm nhạc</h2>
+          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
+          <button className="see-more-btn">Xem thêm</button>
+        </div>
+
+        <div className="events-grid">
+          {[1, 2, 3].map((event) => (
+            <div className="event-card" key={event}>
+              <div className="event-image-wrapper">
+                {/* Ảnh tượng trưng cho đến khi có data thật */}
+                <img
+                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
+                  alt="Sự kiện EviGo"
+                  className="event-image"
+                />
+              </div>
+
+              <div className="event-details">
+                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
+                <p className="event-location">
+                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
+                  Tám, Quận 1
+                </p>
+                <div className="event-meta">
+                  <span className="event-date">
+                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
+                  </span>
+                  <span className="event-price">Miễn phí vào cổng</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
+      <section className="featured-events">
+        <div className="section-header">
+          <h2 className="section-title">Nghệ thuật</h2>
+          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
+          <button className="see-more-btn">Xem thêm</button>
+        </div>
+
+        <div className="events-grid">
+          {[1, 2, 3].map((event) => (
+            <div className="event-card" key={event}>
+              <div className="event-image-wrapper">
+                {/* Ảnh tượng trưng cho đến khi có data thật */}
+                <img
+                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
+                  alt="Sự kiện EviGo"
+                  className="event-image"
+                />
+              </div>
+
+              <div className="event-details">
+                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
+                <p className="event-location">
+                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
+                  Tám, Quận 1
+                </p>
+                <div className="event-meta">
+                  <span className="event-date">
+                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
+                  </span>
+                  <span className="event-price">Miễn phí vào cổng</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* 5. Khối giới thiệu Bản đồ */}
       <section className="map-cta-container">
         <div className="map-cta-content">
@@ -173,10 +249,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
+      {/* 4. Danh sách Sự kiện nổi bật (Ẩm thực) */}
       <section className="featured-events">
         <div className="section-header">
-          <h2 className="section-title">Sự kiện nổi bật</h2>
+          <h2 className="section-title">Ẩm thực</h2>
           <button className="see-more-btn">Xem thêm</button>
         </div>
 
@@ -209,10 +285,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
+      {/* 4. Danh sách Sự kiện nổi bật (Ẩm thực) */}
       <section className="featured-events">
         <div className="section-header">
-          <h2 className="section-title">Sự kiện nổi bật</h2>
+          <h2 className="section-title">Ẩm thực</h2>
+          <button className="see-more-btn">Xem thêm</button>
+        </div>
+
+        <div className="events-grid">
+          {[1, 2, 3].map((event) => (
+            <div className="event-card" key={event}>
+              <div className="event-image-wrapper">
+                <img
+                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
+                  alt="Sự kiện EviGo"
+                  className="event-image"
+                />
+              </div>
+
+              <div className="event-details">
+                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
+                <p className="event-location">
+                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
+                  Tám, Quận 1
+                </p>
+                <div className="event-meta">
+                  <span className="event-date">
+                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
+                  </span>
+                  <span className="event-price">Miễn phí vào cổng</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Danh sách Sự kiện nổi bật (Học thuật) */}
+      <section className="featured-events">
+        <div className="section-header">
+          <h2 className="section-title">Học thuật</h2>
           <button className="see-more-btn">Xem thêm</button>
         </div>
 
