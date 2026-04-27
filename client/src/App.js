@@ -13,7 +13,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import { Toaster } from "react-hot-toast";
-import ScrollToTop from "./components/ScrollToTop"; // Import xịn sò
+import ScrollToTop from "./components/ScrollToTop";
+import EventDetail from "./pages/EventDetail";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/event/:id" element={<EventDetail />} />
 
             <Route
               path="/admin"

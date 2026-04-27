@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./Home.css";
+import { useNavigate } from "react-router-dom";
 
 import banner1 from "../assets/banner/1.png";
 import banner2 from "../assets/banner/2.png";
@@ -17,12 +18,13 @@ import imgTheThao from "../assets/theloaisukien/thethao.png";
 import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 
 export default function Home() {
+  const navigate = useNavigate();
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({
-        behavior: "smooth", // Lệnh này giúp cuộn mượt mà
-        block: "start", // Cuộn đến đầu section đó
+        behavior: "smooth",
+        block: "start",
       });
     }
   };
@@ -85,41 +87,44 @@ export default function Home() {
         <h2 className="categories-title">Thể loại sự kiện</h2>
         <div className="categories-grid">
           {[
-            { id: 1, name: "Âm nhạc", image: imgAmNhac, sectionId: "am-nhac" },
+            {
+              id: 1,
+              name: "Âm nhạc",
+              image: imgAmNhac,
+              targetId: "section-am-nhac",
+            },
             {
               id: 2,
               name: "Nghệ thuật",
               image: imgNgheThuat,
-              sectionId: "nghe-thuat",
+              targetId: "section-nghe-thuat",
             },
-            { id: 3, name: "Ẩm thực", image: imgAmThuc, sectionId: "am-thuc" },
+            {
+              id: 3,
+              name: "Ẩm thực",
+              image: imgAmThuc,
+              targetId: "section-am-thuc",
+            },
             {
               id: 4,
               name: "Thể thao",
               image: imgTheThao,
-              sectionId: "the-thao",
+              targetId: "section-the-thao",
             },
             {
               id: 5,
               name: "Học thuật",
               image: imgHocThuat,
-              sectionId: "hoc-thuat",
+              targetId: "section-hoc-thuat",
             },
           ].map((cat) => (
             <div
               className="category-item"
               key={cat.id}
-              onClick={() => scrollToSection(cat.sectionId)}
+              onClick={() => scrollToSection(cat.targetId)} // Khi em thêm dòng này, dấu vàng sẽ biến mất!
             >
               <div className="category-circle-placeholder">
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="category-img"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/150";
-                  }}
-                />
+                <img src={cat.image} alt={cat.name} className="category-img" />
               </div>
               <p className="category-name">{cat.name}</p>
             </div>
@@ -128,7 +133,7 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
-      <section className="featured-events">
+      <section id="su-kien-noi-bat" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Sự kiện nổi bật</h2>
           {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
@@ -166,7 +171,7 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
-      <section className="featured-events">
+      <section id="section-am-nhac" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Âm nhạc</h2>
           {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
@@ -204,7 +209,7 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
-      <section className="featured-events">
+      <section id="section-nghe-thuat" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Nghệ thuật</h2>
           {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
@@ -254,7 +259,7 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Ẩm thực) */}
-      <section className="featured-events">
+      <section id="section-am-thuc" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Ẩm thực</h2>
           <button className="see-more-btn">Xem thêm</button>
@@ -290,7 +295,7 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Ẩm thực) */}
-      <section className="featured-events">
+      <section id="section-the-thao" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Ẩm thực</h2>
           <button className="see-more-btn">Xem thêm</button>
@@ -326,7 +331,7 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Học thuật) */}
-      <section className="featured-events">
+      <section id="section-hoc-thuat" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Học thuật</h2>
           <button className="see-more-btn">Xem thêm</button>
