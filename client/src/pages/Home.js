@@ -12,7 +12,7 @@ import banner1 from "../assets/banner/1.png";
 import banner2 from "../assets/banner/2.png";
 import banner3 from "../assets/banner/3.png";
 import imgAmNhac from "../assets/theloaisukien/amnhac.png";
-import imgNgheThuat from "../assets/theloaisukien/nghethuat.png";
+import imgTrienLam from "../assets/theloaisukien/trienlam.png";
 import imgAmThuc from "../assets/theloaisukien/amthuc.png";
 import imgTheThao from "../assets/theloaisukien/thethao.png";
 import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
@@ -95,9 +95,9 @@ export default function Home() {
             },
             {
               id: 2,
-              name: "Nghệ thuật",
-              image: imgNgheThuat,
-              targetId: "section-nghe-thuat",
+              name: "Triễn lãm",
+              image: imgTrienLam,
+              targetId: "section-trien-lam",
             },
             {
               id: 3,
@@ -209,9 +209,9 @@ export default function Home() {
       </section>
 
       {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
-      <section id="section-nghe-thuat" className="featured-events">
+      <section id="section-trien-lam" className="featured-events">
         <div className="section-header">
-          <h2 className="section-title">Nghệ thuật</h2>
+          <h2 className="section-title">Triễn lãm</h2>
           {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
           <button className="see-more-btn">Xem thêm</button>
         </div>

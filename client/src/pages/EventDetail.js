@@ -1,46 +1,63 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios"; // Đảm bảo em đã cài axios
 import "./EventDetail.css";
 
 export default function EventDetail() {
-  const { id } = useParams();
+  const { id } = useParams(); // Lấy ID từ URL
   const navigate = useNavigate();
 
-  // Tự động cuộn lên đầu trang khi vào
+  // 1. Khởi tạo State để lưu dữ liệu sự kiện
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Tự động cuộn lên đầu trang và gọi API lấy dữ liệu
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
 
-  // Dữ liệu mẫu (Như sẽ thay bằng API sau này)
-  const event = {
-    title: "Lễ hội Ám thực Việt Nam 2026",
-    category: "Ẩm thực",
-    location: "Công viên Lê Văn Tám, Quận 1, TP.HCM",
-    date: "10/05 - 12/05/2026",
-    time: "08:00 - 22:00",
-    price: "Miễn phí vào cổng",
-    description:
-      "Khám phá hương vị ẩm thực ba miền với hơn 200 gian hàng đặc sắc. Sự kiện còn có các màn trình diễn nấu ăn từ các đầu bếp hàng đầu và không gian âm nhạc dân gian truyền thống.",
-    banner:
-      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1300&auto=format&fit=crop",
-    organizer: "Sở Du lịch TP.HCM",
-    tags: ["Lễ hội", "Văn hóa", "Ẩm thực"],
-  };
+    const fetchDetail = async () => {
+      try {
+        // Gọi API lấy chi tiết sự kiện theo ID
+        const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+        setEvent(res.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Lỗi lấy dữ liệu thật:", err);
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
+  }, [id]);
+
+  // Nếu đang tải hoặc không thấy sự kiện
+  if (loading)
+    return <div className="ed-loading">Đang tải thông tin EviGo...</div>;
+  if (!event)
+    return (
+      <div className="ed-error">Không tìm thấy sự kiện này rồi Như ơi!</div>
+    );
 
   return (
     <div className="ed-wrapper">
-      {/* 1. Hero Banner Section */}
+      {/* 1. Hero Banner Section - Dùng ảnh banner từ Database */}
       <header className="ed-hero">
-        <img src={event.banner} alt="Banner" className="ed-hero-img" />
+        <img
+          src={event.image || event.banner}
+          alt="Banner"
+          className="ed-hero-img"
+        />
         <div className="ed-hero-overlay">
           <div className="ed-container">
             <button className="ed-btn-back" onClick={() => navigate("/")}>
               <i className="fas fa-chevron-left"></i> Quay lại
             </button>
             <div className="ed-hero-content">
-              <span className="ed-badge">{event.category}</span>
+              <span className="ed-badge">{event.type || event.category}</span>
               <h1 className="ed-main-title">{event.title}</h1>
-              <p className="ed-hero-loc">📍 {event.location}</p>
+              <p className="ed-hero-loc">
+                📍 {event.address}, {event.district}
+              </p>
             </div>
           </div>
         </div>
@@ -54,7 +71,8 @@ export default function EventDetail() {
             <h2 className="ed-section-title">Giới thiệu sự kiện</h2>
             <p className="ed-desc">{event.description}</p>
             <div className="ed-tags">
-              {event.tags.map((tag) => (
+              {/* Nếu DB có mảng tags thì hiện, không thì hiện mặc định */}
+              {(event.tags || ["EviGo", "Sự kiện"]).map((tag) => (
                 <span key={tag} className="ed-tag">
                   #{tag}
                 </span>
@@ -65,16 +83,18 @@ export default function EventDetail() {
           <section className="ed-card">
             <h2 className="ed-section-title">Vị trí thực tế</h2>
             <div className="ed-map-box">
-              {/* Đây là nơi Như sẽ chèn Leaflet Map */}
               <div className="ed-map-inner">
+                {/* Sau này Như chèn Component Map vào đây nhé */}
                 <i className="fas fa-map-marked-alt ed-map-icon"></i>
-                <p>Bản đồ GIS đang được tải...</p>
+                <p>
+                  Toạ độ GIS: {event.lat}, {event.lng}
+                </p>
               </div>
             </div>
           </section>
         </div>
 
-        {/* Cột Phải: Thông tin nhanh & Đặt chỗ */}
+        {/* Cột Phải: Thông tin nhanh */}
         <aside className="ed-sidebar">
           <div className="ed-sticky-card">
             <div className="ed-sidebar-item">
@@ -83,8 +103,8 @@ export default function EventDetail() {
               </div>
               <div className="ed-text-box">
                 <small>Thời gian</small>
-                <p>{event.date}</p>
-                <span>{event.time}</span>
+                <p>{new Date(event.date).toLocaleDateString("vi-VN")}</p>
+                <span>{event.time || "08:00 - 22:00"}</span>
               </div>
             </div>
 
@@ -94,7 +114,7 @@ export default function EventDetail() {
               </div>
               <div className="ed-text-box">
                 <small>Giá vé</small>
-                <p className="ed-price">{event.price}</p>
+                <p className="ed-price">{event.ticketPrice || "Miễn phí"}</p>
               </div>
             </div>
 
@@ -104,7 +124,7 @@ export default function EventDetail() {
               </div>
               <div className="ed-text-box">
                 <small>Ban tổ chức</small>
-                <p>{event.organizer}</p>
+                <p>{event.organizer || "Cộng đồng EviGo"}</p>
               </div>
             </div>
 

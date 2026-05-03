@@ -8,5 +8,6 @@ router.post("/contribute", eventController.createEvent);
 router.get("/pending", eventController.getPendingEvents);
 router.patch("/update-status/:id", eventController.updateStatus);
 router.delete("/delete/:id", eventController.deleteEvent);
+router.get("/:id", eventController.getEventById);
 
 module.exports = router;

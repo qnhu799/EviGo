@@ -8,6 +8,8 @@ import {
   Circle,
   useMap,
 } from "react-leaflet";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
@@ -44,35 +46,28 @@ const MapController = ({ center, zoom }) => {
 };
 
 const MapPage = () => {
+  const navigate = useNavigate();
   const [radius, setRadius] = useState(5);
   const [userPos, setUserPos] = useState([10.7719, 106.6983]);
   const [mapCenter, setMapCenter] = useState([10.7719, 106.6983]);
   const [mapZoom, setMapZoom] = useState(13);
-
-  // State quản lý Ghim vị trí hiện tại của Như
   const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
 
-  const events = [
-    {
-      id: 1,
-      name: "Trường Đại học Nông Lâm",
-      pos: [10.8707, 106.7941],
-      address: "Linh Trung, Thủ Đức",
-      shortDesc: "Đang mở cửa • 4.4 ⭐",
-      fullDesc:
-        "Cơ sở giáo dục đại học lâu đời với khuôn viên xanh ngát tại TP.HCM.",
-      img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzN7IqI6_1M0D3D_kP0X3T9_6_r_r_r_r_r_r",
-    },
-    {
-      id: 2,
-      name: "Sự kiện âm nhạc Quận 1",
-      pos: [10.7719, 106.6983],
-      address: "Bến Nghé, Quận 1",
-      shortDesc: "Sắp diễn ra • 4.8 ⭐",
-      fullDesc: "Đêm nhạc Acoustic sôi động tại trung tâm thành phố.",
-      img: "https://via.placeholder.com/150",
-    },
-  ];
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/events/approved",
+        );
+        setEvents(res.data);
+      } catch (err) {
+        console.error("Lỗi lấy dữ liệu bản đồ:", err);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   const handleLocate = () => {
     if (navigator.geolocation) {
@@ -187,20 +182,27 @@ const MapPage = () => {
             />
 
             {events.map((ev) => (
-              <Marker key={ev.id} position={ev.pos}>
+              <Marker key={ev._id} position={[ev.lat, ev.lng]}>
+                {/* ĐÂY LÀ CHỖ EM CẦN CHỈNH: */}
                 <Tooltip direction="top" offset={[0, -10]} opacity={1}>
                   <div className="map-hover-box">
-                    <strong>{ev.name}</strong>
-                    <p>{ev.shortDesc}</p>
+                    {/* Thay 'hello' bằng tiêu đề thật */}
+                    <strong style={{ fontSize: "14px" }}>{ev.title}</strong>
+                    <br />
+                    {/* Thay 'music' bằng thể loại thật */}
+                    <span style={{ color: "#635bff" }}>{ev.type}</span>
                   </div>
                 </Tooltip>
                 <Popup maxWidth={280}>
                   <div className="map-click-box">
-                    <img src={ev.img} alt="event" className="popup-img" />
-                    <h4>{ev.name}</h4>
+                    <img src={ev.image} alt="event" className="popup-img" />
+                    <h4>{ev.title}</h4>
                     <p className="popup-addr">{ev.address}</p>
-                    <p className="popup-text">{ev.fullDesc}</p>
-                    <button className="btn-go-here">
+                    {/* CHỈ THAY ĐỔI: Thêm lệnh navigate vào nút bấm */}
+                    <button
+                      className="btn-go-here"
+                      onClick={() => navigate(`/event/${ev._id}`)}
+                    >
                       Xem chi tiết sự kiện
                     </button>
                   </div>
