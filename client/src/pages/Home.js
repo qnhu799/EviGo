@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import EventCard from "./EventCard"; // Đảm bảo Như đã tạo file EventCard.js thầy gửi trước đó
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -17,6 +19,28 @@ import imgTheThao from "../assets/theloaisukien/thethao.png";
 import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 
 export default function Home() {
+  const [events, setEvents] = useState([]);
+
+  // 1. Lấy dữ liệu sự kiện đã duyệt từ Backend
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/events/approved",
+        );
+        setEvents(res.data);
+      } catch (err) {
+        console.error("Lỗi lấy dữ liệu trang chủ:", err);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  // 2. Hàm lọc sự kiện theo thể loại
+  const getEventsByType = (type) => {
+    return events.filter((ev) => ev.type === type).slice(0, 3); // Lấy tối đa 3 bài mỗi mục
+  };
+
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
@@ -29,6 +53,7 @@ export default function Home() {
 
   return (
     <div className="home-container">
+      {/* 1. Banner Slider */}
       <section className="banner-slider">
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
@@ -40,23 +65,18 @@ export default function Home() {
           loop={true}
           className="mySwiper"
         >
-          {/* Slide 1 */}
           <SwiperSlide>
             <div
               className="slide-item"
               style={{ backgroundImage: `url(${banner1})` }}
             ></div>
           </SwiperSlide>
-
-          {/* Slide 2 */}
           <SwiperSlide>
             <div
               className="slide-item"
               style={{ backgroundImage: `url(${banner2})` }}
             ></div>
           </SwiperSlide>
-
-          {/* Slide 3 */}
           <SwiperSlide>
             <div
               className="slide-item"
@@ -80,7 +100,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Danh mục Thể loại sự kiện */}
+      {/* 3. Danh mục Thể loại */}
       <section className="categories-container">
         <h2 className="categories-title">Thể loại sự kiện</h2>
         <div className="categories-grid">
@@ -119,7 +139,7 @@ export default function Home() {
             <div
               className="category-item"
               key={cat.id}
-              onClick={() => scrollToSection(cat.targetId)} // Khi em thêm dòng này, dấu vàng sẽ biến mất!
+              onClick={() => scrollToSection(cat.targetId)}
             >
               <div className="category-circle-placeholder">
                 <img src={cat.image} alt={cat.name} className="category-img" />
@@ -130,117 +150,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
-      <section id="su-kien-noi-bat" className="featured-events">
-        <div className="section-header">
-          <h2 className="section-title">Sự kiện nổi bật</h2>
-          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
-          <button className="see-more-btn">Xem thêm</button>
-        </div>
+      {/* 4. Tự động đổ dữ liệu vào các Section dựa trên Type */}
 
-        <div className="events-grid">
-          {[1, 2, 3].map((event) => (
-            <div className="event-card" key={event}>
-              <div className="event-image-wrapper">
-                {/* Ảnh tượng trưng cho đến khi có data thật */}
-                <img
-                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
-                  alt="Sự kiện EviGo"
-                  className="event-image"
-                />
-              </div>
-
-              <div className="event-details">
-                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
-                <p className="event-location">
-                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
-                  Tám, Quận 1
-                </p>
-                <div className="event-meta">
-                  <span className="event-date">
-                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
-                  </span>
-                  <span className="event-price">Miễn phí vào cổng</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
+      {/* SECTION: ÂM NHẠC */}
       <section id="section-am-nhac" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Âm nhạc</h2>
-          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
           <button className="see-more-btn">Xem thêm</button>
         </div>
-
         <div className="events-grid">
-          {[1, 2, 3].map((event) => (
-            <div className="event-card" key={event}>
-              <div className="event-image-wrapper">
-                {/* Ảnh tượng trưng cho đến khi có data thật */}
-                <img
-                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
-                  alt="Sự kiện EviGo"
-                  className="event-image"
-                />
-              </div>
-
-              <div className="event-details">
-                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
-                <p className="event-location">
-                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
-                  Tám, Quận 1
-                </p>
-                <div className="event-meta">
-                  <span className="event-date">
-                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
-                  </span>
-                  <span className="event-price">Miễn phí vào cổng</span>
-                </div>
-              </div>
-            </div>
+          {getEventsByType("Âm nhạc").map((ev) => (
+            <EventCard key={ev._id} event={ev} />
           ))}
+          {getEventsByType("Âm nhạc").length === 0 && (
+            <p className="no-data">Chưa có sự kiện âm nhạc nào.</p>
+          )}
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Đóng góp) */}
+      {/* SECTION: TRIỂN LÃM */}
       <section id="section-trien-lam" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Triễn lãm</h2>
-          {/* Nút Xem thêm để dẫn qua trang danh sách sự kiện */}
           <button className="see-more-btn">Xem thêm</button>
         </div>
-
         <div className="events-grid">
-          {[1, 2, 3].map((event) => (
-            <div className="event-card" key={event}>
-              <div className="event-image-wrapper">
-                {/* Ảnh tượng trưng cho đến khi có data thật */}
-                <img
-                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
-                  alt="Sự kiện EviGo"
-                  className="event-image"
-                />
-              </div>
-
-              <div className="event-details">
-                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
-                <p className="event-location">
-                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
-                  Tám, Quận 1
-                </p>
-                <div className="event-meta">
-                  <span className="event-date">
-                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
-                  </span>
-                  <span className="event-price">Miễn phí vào cổng</span>
-                </div>
-              </div>
-            </div>
+          {getEventsByType("Triển lãm").map((ev) => (
+            <EventCard key={ev._id} event={ev} />
           ))}
+          {getEventsByType("Triển lãm").length === 0 && (
+            <p className="no-data">Chưa có triển lãm nào.</p>
+          )}
         </div>
       </section>
 
@@ -256,111 +196,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Ẩm thực) */}
+      {/* SECTION: ẨM THỰ */}
       <section id="section-am-thuc" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Ẩm thực</h2>
           <button className="see-more-btn">Xem thêm</button>
         </div>
-
         <div className="events-grid">
-          {[1, 2, 3].map((event) => (
-            <div className="event-card" key={event}>
-              <div className="event-image-wrapper">
-                <img
-                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
-                  alt="Sự kiện EviGo"
-                  className="event-image"
-                />
-              </div>
-
-              <div className="event-details">
-                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
-                <p className="event-location">
-                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
-                  Tám, Quận 1
-                </p>
-                <div className="event-meta">
-                  <span className="event-date">
-                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
-                  </span>
-                  <span className="event-price">Miễn phí vào cổng</span>
-                </div>
-              </div>
-            </div>
+          {getEventsByType("Ẩm thực").map((ev) => (
+            <EventCard key={ev._id} event={ev} />
           ))}
+          {getEventsByType("Ẩm thực").length === 0 && (
+            <p className="no-data">Chưa có sự kiện ẩm thực nào.</p>
+          )}
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Ẩm thực) */}
+      {/* SECTION: THỂ THAO */}
       <section id="section-the-thao" className="featured-events">
         <div className="section-header">
-          <h2 className="section-title">Ẩm thực</h2>
+          <h2 className="section-title">Thể thao</h2>
           <button className="see-more-btn">Xem thêm</button>
         </div>
-
         <div className="events-grid">
-          {[1, 2, 3].map((event) => (
-            <div className="event-card" key={event}>
-              <div className="event-image-wrapper">
-                <img
-                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
-                  alt="Sự kiện EviGo"
-                  className="event-image"
-                />
-              </div>
-
-              <div className="event-details">
-                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
-                <p className="event-location">
-                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
-                  Tám, Quận 1
-                </p>
-                <div className="event-meta">
-                  <span className="event-date">
-                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
-                  </span>
-                  <span className="event-price">Miễn phí vào cổng</span>
-                </div>
-              </div>
-            </div>
+          {getEventsByType("Thể thao").map((ev) => (
+            <EventCard key={ev._id} event={ev} />
           ))}
+          {getEventsByType("Thể thao").length === 0 && (
+            <p className="no-data">Chưa có sự kiện thể thao nào.</p>
+          )}
         </div>
       </section>
 
-      {/* 4. Danh sách Sự kiện nổi bật (Học thuật) */}
+      {/* SECTION: HỌC THUẬT */}
       <section id="section-hoc-thuat" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Học thuật</h2>
           <button className="see-more-btn">Xem thêm</button>
         </div>
-
         <div className="events-grid">
-          {[1, 2, 3].map((event) => (
-            <div className="event-card" key={event}>
-              <div className="event-image-wrapper">
-                <img
-                  src={`https://images.unsplash.com/photo-${event === 1 ? "1533174072545-7a4b6ad7a6c3" : event === 2 ? "1501281668745-f7f57925c3b4" : "1540575861858-54d116301827"}?q=80&w=400&auto=format&fit=crop`}
-                  alt="Sự kiện EviGo"
-                  className="event-image"
-                />
-              </div>
-
-              <div className="event-details">
-                <h3 className="event-name">Lễ hội Ám thực Việt</h3>
-                <p className="event-location">
-                  <i className="fas fa-map-marker-alt"></i> Công viên Lê Văn
-                  Tám, Quận 1
-                </p>
-                <div className="event-meta">
-                  <span className="event-date">
-                    <i className="far fa-calendar-alt"></i> 10/05 - 12/05/2026
-                  </span>
-                  <span className="event-price">Miễn phí vào cổng</span>
-                </div>
-              </div>
-            </div>
+          {getEventsByType("Học thuật").map((ev) => (
+            <EventCard key={ev._id} event={ev} />
           ))}
+          {getEventsByType("Học thuật").length === 0 && (
+            <p className="no-data">Chưa có sự kiện học thuật nào.</p>
+          )}
         </div>
       </section>
     </div>

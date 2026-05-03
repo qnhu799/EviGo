@@ -38,7 +38,6 @@ const myLocationIcon = L.icon({
 const MapController = ({ center, zoom }) => {
   const map = useMap();
   useEffect(() => {
-    // Chỉ flyTo khi có tọa độ hợp lệ
     if (center && center[0] && center[1]) {
       map.flyTo(center, zoom || 14, { animate: true, duration: 1.5 });
     }
@@ -53,8 +52,26 @@ const MapPage = () => {
   const [mapCenter, setMapCenter] = useState([10.7719, 106.6983]);
   const [mapZoom, setMapZoom] = useState(13);
   const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
-
   const [events, setEvents] = useState([]);
+
+  // Hàm xử lý ảnh từ Backend
+  const getFullImageUrl = (path) => {
+    if (!path) return "/default-banner.jpg";
+    if (path.startsWith("http")) return path;
+    const cleanPath = path.replace(/\\/g, "/");
+    return `http://localhost:5000/${cleanPath}`;
+  };
+
+  // HÀM QUAN TRỌNG: Rút gọn địa chỉ chỉ lấy Phường và Quận/Thành phố
+  const getShortAddress = (address) => {
+    if (!address) return "Chưa cập nhật";
+    const parts = address.split(",");
+    if (parts.length >= 3) {
+      // Lấy 2 phần tử cuối cùng (Thường là Phường và Quận/TP)
+      return `${parts[parts.length - 3].trim()}, ${parts[parts.length - 2].trim()}`;
+    }
+    return address;
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -82,9 +99,13 @@ const MapPage = () => {
     }
   };
 
-  const handleEventClick = (eventPos) => {
-    if (eventPos && eventPos[0] && eventPos[1]) {
-      setMapCenter(eventPos);
+  const handleEventClick = (locationObj) => {
+    if (locationObj && locationObj.lat && locationObj.lng) {
+      const safePos = [
+        parseFloat(locationObj.lat),
+        parseFloat(locationObj.lng),
+      ];
+      setMapCenter(safePos);
       setMapZoom(16);
     }
   };
@@ -92,6 +113,7 @@ const MapPage = () => {
   return (
     <div className="map-page-wrapper">
       <div className="map-page-container">
+        {/* GIỮ NGUYÊN BỘ LỌC BÊN TRÁI CỦA NHƯ */}
         <div className="sidebar left-panel">
           <h2 className="panel-title">Bộ lọc sự kiện</h2>
           <div className="panel-content">
@@ -106,14 +128,12 @@ const MapPage = () => {
                 <button className="search-icon-btn">🔍</button>
               </div>
             </div>
-
             <div className="filter-group">
-              <label>Vị trí của tôi</label>
+              <label>V vị trí của tôi</label>
               <button className="btn-gps-locate" onClick={handleLocate}>
                 📍 Xác định vị trí hiện tại
               </button>
             </div>
-
             <div className="filter-group">
               <label>Bán kính: {radius}km</label>
               <div className="range-container">
@@ -127,7 +147,6 @@ const MapPage = () => {
                 />
               </div>
             </div>
-
             <div className="filter-group">
               <label>Thể loại</label>
               <select
@@ -147,12 +166,11 @@ const MapPage = () => {
                 <option>Học thuật</option>
               </select>
             </div>
-
             <button className="apply-filter-btn">Áp dụng bộ lọc</button>
           </div>
         </div>
 
-        {/* BẢN ĐỒ */}
+        {/* PHẦN BẢN ĐỒ CHÍNH */}
         <div className="map-center-panel">
           <MapContainer
             center={userPos}
@@ -164,8 +182,6 @@ const MapPage = () => {
               url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
             />
             <MapController center={mapCenter} zoom={mapZoom} />
-
-            {/* CHỈ HIỆN MARKER VÀ VÒNG TRÒN KHI ĐÃ NHẤN NÚT ĐỊNH VỊ */}
             {currentLocationMarker && (
               <>
                 <Marker position={currentLocationMarker} icon={myLocationIcon}>
@@ -174,12 +190,10 @@ const MapPage = () => {
                       <strong style={{ color: "red" }}>
                         🔴 Bạn đang ở đây!
                       </strong>
-                      <br />
-                      EviGo đã xác định được vị trí của bạn.
+                      <br /> EviGo đã xác định được vị trí của bạn.
                     </div>
                   </Popup>
                 </Marker>
-
                 <Circle
                   center={currentLocationMarker}
                   radius={radius * 1000}
@@ -192,38 +206,49 @@ const MapPage = () => {
                 />
               </>
             )}
-
             {events.map((ev) =>
-              // Kiểm tra tọa độ trước khi vẽ Marker để tránh lỗi Invalid LatLng
-              ev.lat && ev.lng ? (
-                <Marker key={ev._id} position={[ev.lat, ev.lng]}>
-                  <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                    <div className="map-hover-box">
-                      <strong style={{ fontSize: "14px" }}>{ev.title}</strong>
-                      <br />
-                      <span style={{ color: "#635bff" }}>{ev.type}</span>
-                    </div>
-                  </Tooltip>
-                  <Popup maxWidth={280}>
-                    <div className="map-click-box">
-                      <img src={ev.image} alt="event" className="popup-img" />
-                      <h4>{ev.title}</h4>
-                      <p className="popup-addr">{ev.address}</p>
-                      <button
-                        className="btn-go-here"
-                        onClick={() => navigate(`/event/${ev._id}`)}
-                      >
-                        Xem chi tiết sự kiện
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              ) : null,
+              ev.locations?.map((loc, idx) => {
+                const lat = parseFloat(loc.lat);
+                const lng = parseFloat(loc.lng);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                  return (
+                    <Marker key={`${ev._id}-${idx}`} position={[lat, lng]}>
+                      <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+                        <div className="map-hover-box">
+                          <strong style={{ fontSize: "14px" }}>
+                            {ev.title}
+                          </strong>
+                          <br />
+                          <span style={{ color: "#635bff" }}>{ev.type}</span>
+                        </div>
+                      </Tooltip>
+                      <Popup maxWidth={280}>
+                        <div className="map-click-box">
+                          <img
+                            src={getFullImageUrl(ev.image)}
+                            alt="event"
+                            className="popup-img"
+                          />
+                          <h4>{ev.title}</h4>
+                          <p className="popup-addr">{loc.address}</p>
+                          <button
+                            className="btn-go-here"
+                            onClick={() => navigate(`/event/${ev._id}`)}
+                          >
+                            Xem chi tiết sự kiện
+                          </button>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                }
+                return null;
+              }),
             )}
           </MapContainer>
         </div>
 
-        {/* DANH SÁCH */}
+        {/* CẬP NHẬT: DANH SÁCH BÊN PHẢI VỚI ĐỊA CHỈ RÚT GỌN */}
         <div className="sidebar right-panel">
           <h2 className="panel-title">Sự kiện gần đây</h2>
           <div className="event-scroll-area">
@@ -231,11 +256,11 @@ const MapPage = () => {
               <div
                 className="event-item-card clickable"
                 key={ev._id}
-                onClick={() => handleEventClick([ev.lat, ev.lng])}
+                onClick={() => handleEventClick(ev.locations?.[0])}
               >
                 <div className="event-info">
                   <h4>{ev.title}</h4>
-                  <p>Địa điểm: {ev.address || "Chưa cập nhật"}</p>
+                  <p>📍 {getShortAddress(ev.locations?.[0]?.address)}</p>
                   <p>⭐ 4.4 (653 đánh giá)</p>
                   <span className="click-hint">📍 Nhấn để xem trên bản đồ</span>
                 </div>

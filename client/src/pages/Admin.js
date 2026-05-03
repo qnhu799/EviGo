@@ -9,40 +9,63 @@ const Admin = () => {
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
 
+  // Hàm lấy thống kê số lượng bài duyệt của riêng Admin này
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5000/api/events/stats",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      // Cập nhật con số thực tế từ Backend trả về cho ID Admin này
+      setApprovedCount(response.data.approvedCount);
+      setRejectedCount(response.data.rejectedCount);
+    } catch (error) {
+      console.error("Lỗi khi lấy thống kê admin:", error);
+    }
+  };
+
   const fetchPendingEvents = async () => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get(
         "http://localhost:5000/api/events/pending",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
       setPendingEvents(response.data);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách admin:", error);
+      console.error("Lỗi khi lấy danh sách chờ duyệt:", error);
     }
   };
 
   useEffect(() => {
     fetchPendingEvents();
+    fetchStats();
   }, []);
 
   const handleApprove = async (id) => {
     try {
+      const token = localStorage.getItem("token");
       await axios.patch(
         `http://localhost:5000/api/events/update-status/${id}`,
         { status: "approved" },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      setApprovedCount((prev) => prev + 1);
-
-      // 2. Thông báo Duyệt thành công hiện trên màn hình
       Swal.fire({
         title: "Tuyệt vời!",
-        text: "Sự kiện đã được duyệt và ghim lên bản đồ EviGo ✨",
+        text: "Sự kiện đã được duyệt và ghi nhận vào tài khoản của bạn ✨",
         icon: "success",
         confirmButtonColor: "#635bff",
-        timer: 2000
+        timer: 2000,
       });
 
       fetchPendingEvents();
+      fetchStats();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -54,14 +77,13 @@ const Admin = () => {
 
   const handleReject = async (id) => {
     try {
+      const token = localStorage.getItem("token");
       await axios.patch(
         `http://localhost:5000/api/events/update-status/${id}`,
         { status: "rejected" },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      setRejectedCount((prev) => prev + 1);
-
-      // 3. Thông báo Hủy thành công hiện trên màn hình
       Swal.fire({
         title: "Đã từ chối",
         text: "Hệ thống đã ghi nhận việc hủy sự kiện này.",
@@ -70,6 +92,7 @@ const Admin = () => {
       });
 
       fetchPendingEvents();
+      fetchStats(); // Gọi lại stats để con số Đã hủy tự nhảy từ Database
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -92,7 +115,7 @@ const Admin = () => {
 
           <div className="stat-card green">
             <h3>{approvedCount}</h3>
-            <p>Đã duyệt</p>
+            <p>Bạn đã duyệt</p>
           </div>
 
           <div className="stat-card red">
@@ -116,14 +139,48 @@ const Admin = () => {
               {pendingEvents.map((event) => (
                 <tr key={event._id}>
                   <td>
-                    <strong>{event.title}</strong>
+                    <a
+                      href={`/event/${event._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Nhấn để xem trước nội dung chi tiết"
+                      style={{
+                        textDecoration: "none",
+                        color: "#635bff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition: "0.2s",
+                      }}
+                      onMouseOver={(e) =>
+                        (e.target.style.textDecoration = "underline")
+                      }
+                      onMouseOut={(e) =>
+                        (e.target.style.textDecoration = "none")
+                      }
+                    >
+                      {event.title}
+                    </a>
                     <br />
                     <small>{event.type}</small>
                   </td>
-                  <td>{event.district}</td>
-                  <td>{new Date(event.date).toLocaleDateString("vi-VN")}</td>
                   <td>
-                    <div className="action-btns">
+                    {event.district ||
+                      (event.locations && event.locations[0]?.district)}
+                  </td>
+                  <td>
+                    {event.startDate
+                      ? new Date(event.startDate).toLocaleDateString("vi-VN")
+                      : "Chưa cập nhật"}
+                  </td>
+                  <td>
+                    <div
+                      className="action-btns"
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center",
+                      }}
+                    >
                       <button
                         className="btn-approve"
                         onClick={() => handleApprove(event._id)}

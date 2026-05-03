@@ -9,7 +9,6 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Mảng tên các thứ trong tuần để hiển thị ngày nghỉ
   const dayNames = [
     "Chủ Nhật",
     "Thứ 2",
@@ -19,6 +18,24 @@ export default function EventDetail() {
     "Thứ 6",
     "Thứ 7",
   ];
+
+  // HÀM QUAN TRỌNG: Sửa lỗi hiển thị ảnh - Đã tối ưu để tránh lặp chữ "uploads"
+  const getFullImageUrl = (path) => {
+    if (!path) return "/default-banner.jpg";
+    if (path.startsWith("http")) return path;
+
+    // 1. Chuẩn hóa dấu gạch ngược từ database Windows sang gạch xuôi
+    let cleanPath = path.replace(/\\/g, "/");
+
+    // 2. Kiểm tra nếu path đã chứa sẵn "uploads/" thì không nối thêm nữa
+    // Điều này giúp tránh lỗi đường dẫn kiểu http://localhost:5000/uploads/uploads/ten-anh.png
+    if (cleanPath.startsWith("uploads/")) {
+      return `http://localhost:5000/${cleanPath}`;
+    }
+
+    // 3. Nếu path chưa có uploads/ thì mới nối thêm vào
+    return `http://localhost:5000/uploads/${cleanPath}`;
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,19 +59,15 @@ export default function EventDetail() {
       <div className="ed-error">Không tìm thấy sự kiện này rồi Như ơi!</div>
     );
 
+  // Banner ưu tiên ảnh 'image' (cover), nếu không có thì lấy ảnh đầu tiên trong album
+  const mainBanner = getFullImageUrl(
+    event.image || (event.images && event.images[0]),
+  );
+
   return (
     <div className="ed-wrapper">
-      {/* 1. Hero Banner - Lấy ảnh đầu tiên trong mảng images làm Banner */}
       <header className="ed-hero">
-        <img
-          src={
-            (event.images && event.images[0]) ||
-            event.image ||
-            "/default-banner.jpg"
-          }
-          alt="Banner"
-          className="ed-hero-img"
-        />
+        <img src={mainBanner} alt="Banner" className="ed-hero-img" />
         <div className="ed-hero-overlay">
           <div className="ed-container">
             <button className="ed-btn-back" onClick={() => navigate("/")}>
@@ -72,64 +85,40 @@ export default function EventDetail() {
       </header>
 
       <main className="ed-container ed-main-grid">
-        {/* CỘT TRÁI */}
         <div className="ed-content-left">
-          {/* Giới thiệu */}
           <section className="ed-card">
             <h2 className="ed-section-title">Giới thiệu sự kiện</h2>
             <p className="ed-desc">{event.description}</p>
           </section>
 
-          {/* Album ảnh (Nếu có nhiều ảnh từ đóng góp) */}
-          {event.images && event.images.length > 1 && (
+          {/* Album ảnh - Xử lý hiển thị mảng ảnh đóng góp */}
+          {event.images && event.images.length > 0 && (
             <section className="ed-card">
               <h2 className="ed-section-title">Album hình ảnh</h2>
-              <div
-                className="ed-gallery-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-                  gap: "10px",
-                  marginTop: "15px",
-                }}
-              >
+              <div className="ed-gallery-grid">
                 {event.images.map((img, index) => (
-                  <img
-                    key={index}
-                    src={img}
-                    alt={`img-${index}`}
-                    style={{
-                      width: "100%",
-                      height: "120px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
+                  <div key={index} className="ed-gallery-item">
+                    <img
+                      src={getFullImageUrl(img)}
+                      alt={`img-${index}`}
+                      className="ed-gallery-img-content"
+                    />
+                  </div>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Danh sách địa điểm (Hỗ trợ đa địa điểm) */}
           <section className="ed-card">
             <h2 className="ed-section-title">Các địa điểm diễn ra</h2>
             <div className="ed-location-list">
               {event.locations?.map((loc, index) => (
-                <div
-                  key={index}
-                  className="ed-loc-item"
-                  style={{
-                    marginBottom: "15px",
-                    padding: "10px",
-                    borderLeft: "4px solid #635bff",
-                    background: "#f9f9f9",
-                  }}
-                >
+                <div key={index} className="ed-loc-item">
                   <p>
                     <strong>Địa điểm {index + 1}:</strong> {loc.address}
                   </p>
-                  <small style={{ color: "#666" }}>
-                    Tọa độ GIS: {loc.lat}, {loc.lng}
+                  <small className="ed-gis-text">
+                    GIS: {loc.lat}, {loc.lng} - {loc.district}
                   </small>
                 </div>
               ))}
@@ -137,10 +126,8 @@ export default function EventDetail() {
           </section>
         </div>
 
-        {/* CỘT PHẢI (SIDEBAR) */}
         <aside className="ed-sidebar">
           <div className="ed-sticky-card">
-            {/* Logic Thời gian mới */}
             <div className="ed-sidebar-item">
               <div className="ed-icon-box">
                 <i className="far fa-calendar-alt"></i>
@@ -148,36 +135,22 @@ export default function EventDetail() {
               <div className="ed-text-box">
                 <small>Lịch trình</small>
                 {event.isPermanent ? (
-                  <p style={{ color: "#28a745", fontWeight: "bold" }}>
-                    Mở cửa cố định hằng tuần
-                  </p>
+                  <p className="ed-status-open">Mở cửa cố định hằng tuần</p>
                 ) : (
                   <p>
                     {new Date(event.startDate).toLocaleDateString("vi-VN")} -{" "}
                     {new Date(event.endDate).toLocaleDateString("vi-VN")}
                   </p>
                 )}
-
-                {/* Hiển thị giờ hoặc nhãn Cả ngày */}
                 <span>
                   {event.isAllDay
                     ? "🕛 Mở cửa cả ngày (24/24)"
                     : `⏰ ${event.dailyOpeningTime} - ${event.dailyClosingTime}`}
                 </span>
-
-                {/* Hiển thị ngày nghỉ nếu có */}
                 {event.isPermanent && event.closedDays?.length > 0 && (
-                  <div
-                    style={{
-                      marginTop: "5px",
-                      fontSize: "12px",
-                      color: "#ff4d4d",
-                    }}
-                  >
+                  <div className="ed-closed-days">
                     ❌ Nghỉ:{" "}
-                    {event.closedDays
-                      .map((d) => dayNames[dayNames.indexOf(dayNames[d])])
-                      .join(", ")}
+                    {event.closedDays.map((d) => dayNames[d]).join(", ")}
                   </div>
                 )}
               </div>
@@ -193,20 +166,18 @@ export default function EventDetail() {
               </div>
             </div>
 
-            {/* Thông tin người đóng góp (Tôn vinh cộng đồng) */}
             <div className="ed-sidebar-item">
               <div className="ed-icon-box">
                 <i className="fas fa-user-edit"></i>
               </div>
               <div className="ed-text-box">
                 <small>Cung cấp bởi</small>
-                <p>{event.contributorName || "Cộng đồng EviGo"}</p>
-                <span style={{ fontSize: "11px", color: "#27ae60" }}>
-                  <i className="fas fa-check-circle"></i> Đã duyệt thông tin
+                <p>{event.contributor?.name || "Cộng đồng EviGo"}</p>
+                <span className="ed-verified">
+                  <i className="fas fa-check-circle"></i> Đã xác thực
                 </span>
               </div>
             </div>
-
             <button className="ed-btn-primary">Lên lịch đi ngay!</button>
           </div>
         </aside>

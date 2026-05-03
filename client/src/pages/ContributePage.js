@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./ContributePage.css";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom"; // 1. Thêm useNavigate để nhảy trang
+import { useNavigate } from "react-router-dom";
 import {
   MapContainer,
   TileLayer,
@@ -42,7 +42,7 @@ function LocationMarker({ position, onSelect }) {
 }
 
 const ContributePage = () => {
-  const navigate = useNavigate(); // 2. Khởi tạo navigate
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     type: "",
@@ -169,7 +169,6 @@ const ContributePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- KIỂM TRA BẮT BUỘC ĐỊA ĐIỂM ---
     const hasInvalidLocation = formData.locations.some(
       (loc) => !loc.address || loc.address.trim() === "",
     );
@@ -184,8 +183,12 @@ const ContributePage = () => {
       return;
     }
 
+    // --- LOGIC GỬI DỮ LIỆU ĐÃ ĐƯỢC FIX ---
     const dataToSend = new FormData();
+
+    // QUAN TRỌNG: Title phải được append ĐẦU TIÊN để Multer Backend đọc được trước file ảnh
     dataToSend.append("title", formData.title);
+
     dataToSend.append("type", formData.type);
     dataToSend.append("ticketPrice", formData.ticketPrice);
     dataToSend.append("description", formData.description);
@@ -202,6 +205,7 @@ const ContributePage = () => {
     dataToSend.append("locations", JSON.stringify(formData.locations));
     dataToSend.append("closedDays", JSON.stringify(formData.closedDays));
 
+    // Ảnh gửi sau cùng để Backend có title tạo folder trước
     formData.images.forEach((file) => {
       dataToSend.append("images", file);
     });
@@ -214,7 +218,6 @@ const ContributePage = () => {
       );
 
       if (response.status === 201) {
-        // --- CẬP NHẬT: NHẤN OK NHẢY RA TRANG CHỦ ---
         Swal.fire({
           icon: "success",
           title: "Tuyệt vời!",
@@ -222,7 +225,7 @@ const ContributePage = () => {
           confirmButtonColor: "#635bff",
         }).then((result) => {
           if (result.isConfirmed) {
-            navigate("/"); // Nhảy về trang chủ
+            navigate("/");
           }
         });
       }
@@ -364,7 +367,6 @@ const ContributePage = () => {
                 />
                 <label htmlFor="isPermanent">Mở cửa cố định (Hằng tuần)</label>
               </div>
-
               <div
                 className={`modern-checkbox-card ${formData.isAllDay ? "active" : ""}`}
               >

@@ -7,7 +7,7 @@ const eventSchema = new mongoose.Schema(
     type: { type: String },
     ticketPrice: { type: String },
 
-    // 1. CẬP NHẬT: Hỗ trợ nhiều địa điểm (Mảng locations)
+    // 1. Hỗ trợ nhiều địa điểm (Mảng locations)
     locations: [
       {
         address: { type: String },
@@ -17,11 +17,11 @@ const eventSchema = new mongoose.Schema(
       },
     ],
 
-    // 2. CẬP NHẬT: Hỗ trợ Album nhiều ảnh
+    // 2. Hỗ trợ Album nhiều ảnh
     images: [{ type: String }],
-    image: { type: String }, // Giữ lại làm ảnh đại diện chính (Cover)
+    image: { type: String }, // Ảnh đại diện chính (Cover)
 
-    // 3. THÊM MỚI: Các trường quản lý thời gian linh hoạt
+    // 3. Các trường quản lý thời gian linh hoạt
     startDate: { type: Date },
     endDate: { type: Date },
     isPermanent: { type: Boolean, default: false }, // Luôn mở cửa hằng tuần
@@ -34,6 +34,13 @@ const eventSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
+    },
+
+    // --- Quản lý người duyệt để hiện số bài Admin đã duyệt ---
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Tham chiếu tới model User.js của em
+      default: null,
     },
 
     contributor: {

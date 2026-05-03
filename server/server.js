@@ -9,7 +9,13 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+
+// --- CẬP NHẬT QUAN TRỌNG: Mở rộng giới hạn để gửi được nhiều ảnh cùng lúc ---
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// Cấu hình để trình duyệt có thể truy cập xem ảnh trong thư mục uploads
+app.use("/uploads", express.static("uploads"));
 
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
