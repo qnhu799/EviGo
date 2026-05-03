@@ -6,7 +6,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./Home.css";
-import { useNavigate } from "react-router-dom";
 
 import banner1 from "../assets/banner/1.png";
 import banner2 from "../assets/banner/2.png";
@@ -18,7 +17,6 @@ import imgTheThao from "../assets/theloaisukien/thethao.png";
 import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 
 export default function Home() {
-  const navigate = useNavigate();
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {

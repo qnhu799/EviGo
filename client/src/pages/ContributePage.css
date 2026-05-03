@@ -38,6 +38,21 @@
   gap: 20px;
 }
 
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.form-section h3 {
+  color: #280d8c;
+  font-size: 18px;
+  border-bottom: 1px solid rgba(40, 13, 140, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
 .form-row {
   display: flex;
   gap: 20px;
@@ -77,6 +92,126 @@
   box-shadow: 0 0 0 2px #635BFF;
 }
 
+/* --- PHẦN THẦY MỚI CẬP NHẬT: CARD CHECKBOX CHO NHƯ --- */
+
+/* Container dàn hàng ngang cho 2 lựa chọn */
+.toggle-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 10px 0;
+}
+
+/* Biến mỗi checkbox thành một cái Card hiện đại */
+.modern-checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 1.5px solid #eee;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modern-checkbox-card:hover {
+  border-color: #635bff;
+  background: #f8f9ff;
+}
+
+/* Khi checkbox được chọn, card sẽ đổi màu tím nhẹ */
+.modern-checkbox-card.active {
+  border-color: #635bff;
+  background: #f0efff;
+}
+
+.modern-checkbox-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #635bff;
+}
+
+.modern-checkbox-card label {
+  margin-bottom: 0 !important;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: #444;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- KẾT THÚC PHẦN CẬP NHẬT --- */
+
+/* --- XỬ LÝ AUTOCOMPLETE (CHỐNG BỊ NÚT BẢN ĐỒ ĐÈ) --- */
+.search-autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 2000 !important;
+  list-style: none;
+  padding: 5px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggestions-dropdown li {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13.5px;
+  color: #444;
+}
+
+.suggestions-dropdown li:hover {
+  background-color: #f8f9ff;
+  color: #635bff;
+}
+
+/* --- TỔ CHỨC ĐỊA ĐIỂM & TABS --- */
+.mode-toggle {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 20px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.loc-item-tab {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.loc-item-tab.active {
+  border-color: #635bff;
+  background: #f0efff;
+}
+
+/* --- POSTER UPLOAD --- */
+.poster-upload-group {
+  border: 2px dashed rgba(99, 91, 255, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.5);
+}
+
 .submit-btn {
   background: #280d8c;
   color: white;
@@ -100,8 +235,14 @@
     flex-direction: column;
     gap: 20px;
   }
-
   .contribute-card {
     padding: 20px;
+  }
+}
+
+/* Thêm responsive cho grid checkbox */
+@media (max-width: 600px) {
+  .toggle-options-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,36 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios"; // Đảm bảo em đã cài axios
+import axios from "axios";
 import "./EventDetail.css";
 
 export default function EventDetail() {
-  const { id } = useParams(); // Lấy ID từ URL
+  const { id } = useParams();
   const navigate = useNavigate();
-
-  // 1. Khởi tạo State để lưu dữ liệu sự kiện
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Tự động cuộn lên đầu trang và gọi API lấy dữ liệu
+  // Mảng tên các thứ trong tuần để hiển thị ngày nghỉ
+  const dayNames = [
+    "Chủ Nhật",
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+  ];
+
   useEffect(() => {
     window.scrollTo(0, 0);
-
     const fetchDetail = async () => {
       try {
-        // Gọi API lấy chi tiết sự kiện theo ID
         const res = await axios.get(`http://localhost:5000/api/events/${id}`);
         setEvent(res.data);
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi lấy dữ liệu thật:", err);
+        console.error("Lỗi lấy dữ liệu:", err);
         setLoading(false);
       }
     };
-
     fetchDetail();
   }, [id]);
 
-  // Nếu đang tải hoặc không thấy sự kiện
   if (loading)
     return <div className="ed-loading">Đang tải thông tin EviGo...</div>;
   if (!event)
@@ -40,10 +44,14 @@ export default function EventDetail() {
 
   return (
     <div className="ed-wrapper">
-      {/* 1. Hero Banner Section - Dùng ảnh banner từ Database */}
+      {/* 1. Hero Banner - Lấy ảnh đầu tiên trong mảng images làm Banner */}
       <header className="ed-hero">
         <img
-          src={event.image || event.banner}
+          src={
+            (event.images && event.images[0]) ||
+            event.image ||
+            "/default-banner.jpg"
+          }
           alt="Banner"
           className="ed-hero-img"
         />
@@ -53,58 +61,125 @@ export default function EventDetail() {
               <i className="fas fa-chevron-left"></i> Quay lại
             </button>
             <div className="ed-hero-content">
-              <span className="ed-badge">{event.type || event.category}</span>
+              <span className="ed-badge">{event.type}</span>
               <h1 className="ed-main-title">{event.title}</h1>
               <p className="ed-hero-loc">
-                📍 {event.address}, {event.district}
+                📍 {event.locations && event.locations[0]?.address}
               </p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* 2. Main Layout */}
       <main className="ed-container ed-main-grid">
-        {/* Cột Trái: Nội dung chi tiết */}
+        {/* CỘT TRÁI */}
         <div className="ed-content-left">
+          {/* Giới thiệu */}
           <section className="ed-card">
             <h2 className="ed-section-title">Giới thiệu sự kiện</h2>
             <p className="ed-desc">{event.description}</p>
-            <div className="ed-tags">
-              {/* Nếu DB có mảng tags thì hiện, không thì hiện mặc định */}
-              {(event.tags || ["EviGo", "Sự kiện"]).map((tag) => (
-                <span key={tag} className="ed-tag">
-                  #{tag}
-                </span>
-              ))}
-            </div>
           </section>
 
-          <section className="ed-card">
-            <h2 className="ed-section-title">Vị trí thực tế</h2>
-            <div className="ed-map-box">
-              <div className="ed-map-inner">
-                {/* Sau này Như chèn Component Map vào đây nhé */}
-                <i className="fas fa-map-marked-alt ed-map-icon"></i>
-                <p>
-                  Toạ độ GIS: {event.lat}, {event.lng}
-                </p>
+          {/* Album ảnh (Nếu có nhiều ảnh từ đóng góp) */}
+          {event.images && event.images.length > 1 && (
+            <section className="ed-card">
+              <h2 className="ed-section-title">Album hình ảnh</h2>
+              <div
+                className="ed-gallery-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+                  gap: "10px",
+                  marginTop: "15px",
+                }}
+              >
+                {event.images.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`img-${index}`}
+                    style={{
+                      width: "100%",
+                      height: "120px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                    }}
+                  />
+                ))}
               </div>
+            </section>
+          )}
+
+          {/* Danh sách địa điểm (Hỗ trợ đa địa điểm) */}
+          <section className="ed-card">
+            <h2 className="ed-section-title">Các địa điểm diễn ra</h2>
+            <div className="ed-location-list">
+              {event.locations?.map((loc, index) => (
+                <div
+                  key={index}
+                  className="ed-loc-item"
+                  style={{
+                    marginBottom: "15px",
+                    padding: "10px",
+                    borderLeft: "4px solid #635bff",
+                    background: "#f9f9f9",
+                  }}
+                >
+                  <p>
+                    <strong>Địa điểm {index + 1}:</strong> {loc.address}
+                  </p>
+                  <small style={{ color: "#666" }}>
+                    Tọa độ GIS: {loc.lat}, {loc.lng}
+                  </small>
+                </div>
+              ))}
             </div>
           </section>
         </div>
 
-        {/* Cột Phải: Thông tin nhanh */}
+        {/* CỘT PHẢI (SIDEBAR) */}
         <aside className="ed-sidebar">
           <div className="ed-sticky-card">
+            {/* Logic Thời gian mới */}
             <div className="ed-sidebar-item">
               <div className="ed-icon-box">
                 <i className="far fa-calendar-alt"></i>
               </div>
               <div className="ed-text-box">
-                <small>Thời gian</small>
-                <p>{new Date(event.date).toLocaleDateString("vi-VN")}</p>
-                <span>{event.time || "08:00 - 22:00"}</span>
+                <small>Lịch trình</small>
+                {event.isPermanent ? (
+                  <p style={{ color: "#28a745", fontWeight: "bold" }}>
+                    Mở cửa cố định hằng tuần
+                  </p>
+                ) : (
+                  <p>
+                    {new Date(event.startDate).toLocaleDateString("vi-VN")} -{" "}
+                    {new Date(event.endDate).toLocaleDateString("vi-VN")}
+                  </p>
+                )}
+
+                {/* Hiển thị giờ hoặc nhãn Cả ngày */}
+                <span>
+                  {event.isAllDay
+                    ? "🕛 Mở cửa cả ngày (24/24)"
+                    : `⏰ ${event.dailyOpeningTime} - ${event.dailyClosingTime}`}
+                </span>
+
+                {/* Hiển thị ngày nghỉ nếu có */}
+                {event.isPermanent && event.closedDays?.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: "5px",
+                      fontSize: "12px",
+                      color: "#ff4d4d",
+                    }}
+                  >
+                    ❌ Nghỉ:{" "}
+                    {event.closedDays
+                      .map((d) => dayNames[dayNames.indexOf(dayNames[d])])
+                      .join(", ")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -118,25 +193,21 @@ export default function EventDetail() {
               </div>
             </div>
 
+            {/* Thông tin người đóng góp (Tôn vinh cộng đồng) */}
             <div className="ed-sidebar-item">
               <div className="ed-icon-box">
-                <i className="fas fa-user-tie"></i>
+                <i className="fas fa-user-edit"></i>
               </div>
               <div className="ed-text-box">
-                <small>Ban tổ chức</small>
-                <p>{event.organizer || "Cộng đồng EviGo"}</p>
+                <small>Cung cấp bởi</small>
+                <p>{event.contributorName || "Cộng đồng EviGo"}</p>
+                <span style={{ fontSize: "11px", color: "#27ae60" }}>
+                  <i className="fas fa-check-circle"></i> Đã duyệt thông tin
+                </span>
               </div>
             </div>
 
-            <button className="ed-btn-primary">Đăng ký tham gia ngay</button>
-            <div className="ed-btn-group">
-              <button className="ed-btn-outline">
-                <i className="far fa-heart"></i> Lưu
-              </button>
-              <button className="ed-btn-outline">
-                <i className="fas fa-share-alt"></i> Chia sẻ
-              </button>
-            </div>
+            <button className="ed-btn-primary">Lên lịch đi ngay!</button>
           </div>
         </aside>
       </main>

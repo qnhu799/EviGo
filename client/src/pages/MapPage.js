@@ -38,7 +38,8 @@ const myLocationIcon = L.icon({
 const MapController = ({ center, zoom }) => {
   const map = useMap();
   useEffect(() => {
-    if (center) {
+    // Chỉ flyTo khi có tọa độ hợp lệ
+    if (center && center[0] && center[1]) {
       map.flyTo(center, zoom || 14, { animate: true, duration: 1.5 });
     }
   }, [center, zoom, map]);
@@ -82,8 +83,10 @@ const MapPage = () => {
   };
 
   const handleEventClick = (eventPos) => {
-    setMapCenter(eventPos);
-    setMapZoom(16);
+    if (eventPos && eventPos[0] && eventPos[1]) {
+      setMapCenter(eventPos);
+      setMapZoom(16);
+    }
   };
 
   return (
@@ -138,7 +141,10 @@ const MapPage = () => {
               >
                 <option>Tất cả thể loại</option>
                 <option>Âm nhạc</option>
-                <option>Hội thảo</option>
+                <option>Triển lãm</option>
+                <option>Ẩm thực</option>
+                <option>Thể thao</option>
+                <option>Học thuật</option>
               </select>
             </div>
 
@@ -159,56 +165,61 @@ const MapPage = () => {
             />
             <MapController center={mapCenter} zoom={mapZoom} />
 
+            {/* CHỈ HIỆN MARKER VÀ VÒNG TRÒN KHI ĐÃ NHẤN NÚT ĐỊNH VỊ */}
             {currentLocationMarker && (
-              <Marker position={currentLocationMarker} icon={myLocationIcon}>
-                <Popup>
-                  <div style={{ textAlign: "center" }}>
-                    <strong style={{ color: "red" }}>🔴 Bạn đang ở đây!</strong>
-                    <br />
-                    EviGo đã xác định được vị trí của bạn.
-                  </div>
-                </Popup>
-              </Marker>
+              <>
+                <Marker position={currentLocationMarker} icon={myLocationIcon}>
+                  <Popup>
+                    <div style={{ textAlign: "center" }}>
+                      <strong style={{ color: "red" }}>
+                        🔴 Bạn đang ở đây!
+                      </strong>
+                      <br />
+                      EviGo đã xác định được vị trí của bạn.
+                    </div>
+                  </Popup>
+                </Marker>
+
+                <Circle
+                  center={currentLocationMarker}
+                  radius={radius * 1000}
+                  pathOptions={{
+                    color: "#635bff",
+                    fillColor: "#635bff",
+                    fillOpacity: 0.1,
+                    weight: 1,
+                  }}
+                />
+              </>
             )}
 
-            <Circle
-              center={userPos}
-              radius={radius * 1000}
-              pathOptions={{
-                color: "#635bff",
-                fillColor: "#635bff",
-                fillOpacity: 0.15,
-              }}
-            />
-
-            {events.map((ev) => (
-              <Marker key={ev._id} position={[ev.lat, ev.lng]}>
-                {/* ĐÂY LÀ CHỖ EM CẦN CHỈNH: */}
-                <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                  <div className="map-hover-box">
-                    {/* Thay 'hello' bằng tiêu đề thật */}
-                    <strong style={{ fontSize: "14px" }}>{ev.title}</strong>
-                    <br />
-                    {/* Thay 'music' bằng thể loại thật */}
-                    <span style={{ color: "#635bff" }}>{ev.type}</span>
-                  </div>
-                </Tooltip>
-                <Popup maxWidth={280}>
-                  <div className="map-click-box">
-                    <img src={ev.image} alt="event" className="popup-img" />
-                    <h4>{ev.title}</h4>
-                    <p className="popup-addr">{ev.address}</p>
-                    {/* CHỈ THAY ĐỔI: Thêm lệnh navigate vào nút bấm */}
-                    <button
-                      className="btn-go-here"
-                      onClick={() => navigate(`/event/${ev._id}`)}
-                    >
-                      Xem chi tiết sự kiện
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {events.map((ev) =>
+              // Kiểm tra tọa độ trước khi vẽ Marker để tránh lỗi Invalid LatLng
+              ev.lat && ev.lng ? (
+                <Marker key={ev._id} position={[ev.lat, ev.lng]}>
+                  <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+                    <div className="map-hover-box">
+                      <strong style={{ fontSize: "14px" }}>{ev.title}</strong>
+                      <br />
+                      <span style={{ color: "#635bff" }}>{ev.type}</span>
+                    </div>
+                  </Tooltip>
+                  <Popup maxWidth={280}>
+                    <div className="map-click-box">
+                      <img src={ev.image} alt="event" className="popup-img" />
+                      <h4>{ev.title}</h4>
+                      <p className="popup-addr">{ev.address}</p>
+                      <button
+                        className="btn-go-here"
+                        onClick={() => navigate(`/event/${ev._id}`)}
+                      >
+                        Xem chi tiết sự kiện
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ) : null,
+            )}
           </MapContainer>
         </div>
 
@@ -219,12 +230,12 @@ const MapPage = () => {
             {events.map((ev) => (
               <div
                 className="event-item-card clickable"
-                key={ev.id}
-                onClick={() => handleEventClick(ev.pos)}
+                key={ev._id}
+                onClick={() => handleEventClick([ev.lat, ev.lng])}
               >
                 <div className="event-info">
-                  <h4>{ev.name}</h4>
-                  <p>Địa điểm: {ev.address}</p>
+                  <h4>{ev.title}</h4>
+                  <p>Địa điểm: {ev.address || "Chưa cập nhật"}</p>
                   <p>⭐ 4.4 (653 đánh giá)</p>
                   <span className="click-hint">📍 Nhấn để xem trên bản đồ</span>
                 </div>
