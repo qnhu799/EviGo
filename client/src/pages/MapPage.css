@@ -3,7 +3,7 @@
   height: 100%;
 }
 
-/* Khung chính 3 cột */
+/* Khung chính 3 cột - Giữ nguyên */
 .map-page-wrapper .map-page-container {
   display: flex;
   width: 100%;
@@ -13,7 +13,7 @@
   overflow: hidden;
 }
 
-/* Sidebar chung cho trang bản đồ */
+/* Sidebar chung cho trang bản đồ - Giữ nguyên */
 .map-page-wrapper .sidebar {
   flex: 0 0 300px;
   height: 100%;
@@ -36,7 +36,7 @@
   color: #280d8c;
 }
 
-/* BẢN ĐỒ Ở GIỮA */
+/* BẢN ĐỒ Ở GIỮA - Giữ nguyên */
 .map-page-wrapper .map-center-panel {
   flex: 1;
   height: 100%;
@@ -52,7 +52,7 @@
   z-index: 1;
 }
 
-/* BỘ LỌC CỘT TRÁI */
+/* BỘ LỌC CỘT TRÁI - Giữ nguyên */
 .map-page-wrapper .panel-content {
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@
   margin-left: calc(50% - 110px);
 }
 
-/* Ô tìm kiếm và các nút */
+/* Ô tìm kiếm và các nút - Giữ nguyên */
 .map-page-wrapper .search-wrapper,
 .map-page-wrapper .btn-gps-locate,
 .map-page-wrapper .range-container,
@@ -144,8 +144,7 @@
   cursor: pointer;
 }
 
-/* SỰ KIỆN GẦN ĐÂY */
-
+/* SỰ KIỆN GẦN ĐÂY - Giữ nguyên */
 .map-page-wrapper .right-panel {
   display: flex;
   flex-direction: column;
@@ -205,10 +204,68 @@
   font-weight: 600;
 }
 
+/* --- PHẦN NÂNG CẤP TRANG TRÍ POPUP BẮT MẮT --- */
+.map-page-wrapper .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px; /* Bo góc tròn hơn nhìn hiện đại */
+  box-shadow: 0 10px 30px rgba(40, 13, 140, 0.2); /* Đổ bóng màu tím nhẹ cho sang */
+}
+
+.map-page-wrapper .leaflet-popup-content {
+  margin: 0 !important;
+  width: 260px !important;
+}
+
+.map-page-wrapper .leaflet-popup-content img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+  border-bottom: 3px solid #635bff; /* Thêm đường kẻ nhấn mạnh dưới ảnh */
+}
+
+.map-page-wrapper .leaflet-popup-content div {
+  padding: 15px;
+  background: white;
+}
+
+.map-page-wrapper .leaflet-popup-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #280d8c;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.map-page-wrapper .leaflet-popup-content p {
+  margin: 0 0 15px 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Nâng cấp cái nút trong Popup nhìn cho "chiến" */
+.map-page-wrapper .leaflet-popup-content button {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(90deg, #635bff 0%, #280d8c 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.map-page-wrapper .leaflet-popup-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(99, 91, 255, 0.3);
+}
+
+/* Responsive - Giữ nguyên */
 @media (max-width: 1024px) {
-  .map-page-wrapper .left-panel {
-    display: none !important;
-  }
+  .map-page-wrapper .left-panel { display: none !important; }
 }
 
 @media (max-width: 768px) {

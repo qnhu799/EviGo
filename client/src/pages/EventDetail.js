@@ -19,7 +19,7 @@ export default function EventDetail() {
     "Thứ 7",
   ];
 
-  // HÀM QUAN TRỌNG: Sửa lỗi hiển thị ảnh - Đã tối ưu để tránh lặp chữ "uploads"
+  // HÀM QUAN TRỌNG: Đã cập nhật để bóc tách chữ "server/" nếu có
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
     if (path.startsWith("http")) return path;
@@ -27,13 +27,17 @@ export default function EventDetail() {
     // 1. Chuẩn hóa dấu gạch ngược từ database Windows sang gạch xuôi
     let cleanPath = path.replace(/\\/g, "/");
 
-    // 2. Kiểm tra nếu path đã chứa sẵn "uploads/" thì không nối thêm nữa
-    // Điều này giúp tránh lỗi đường dẫn kiểu http://localhost:5000/uploads/uploads/ten-anh.png
+    // 2. Nếu đường dẫn bị dính "server/uploads/...", mình bỏ chữ "server/" đi
+    if (cleanPath.startsWith("server/")) {
+      cleanPath = cleanPath.replace("server/", "");
+    }
+
+    // 3. Kiểm tra nếu path đã chứa sẵn "uploads/" thì nối trực tiếp với Domain
     if (cleanPath.startsWith("uploads/")) {
       return `http://localhost:5000/${cleanPath}`;
     }
 
-    // 3. Nếu path chưa có uploads/ thì mới nối thêm vào
+    // 4. Nếu path chỉ là tên file đơn thuần, mới nối thêm "/uploads/"
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
