@@ -83,7 +83,7 @@
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 30px;
-  margin-top: -60px; /* Đẩy nội dung lên cao */
+  margin-top: -60px;
   position: relative;
   z-index: 5;
   padding-bottom: 100px;
@@ -97,6 +97,40 @@
   box-shadow: 0 10px 25px rgba(40, 13, 140, 0.04);
   margin-bottom: 30px;
 }
+
+/* --- PHẦN CẬP NHẬT: FIX KHUNG ALBUM HÌNH ẢNH --- */
+.ed-gallery-grid {
+  display: grid;
+  /* Tự động chia cột đều và đẹp */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.ed-gallery-item {
+  width: 100%;
+  /* Ép khung về tỷ lệ 16:9 chuẩn banner */
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #f3f4f6;
+  box-shadow: 0 4px 12px rgba(40, 13, 140, 0.05);
+}
+
+.ed-gallery-img-content {
+  width: 100%;
+  height: 100%;
+  /* QUAN TRỌNG: Giúp ảnh lấp đầy khung mà không bị lệch hay méo */
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  display: block;
+}
+
+.ed-gallery-img-content:hover {
+  /* Hiệu ứng zoom nhẹ khi Như di chuột qua */
+  transform: scale(1.08);
+}
+/* ------------------------------------------- */
 
 .ed-section-title {
   color: var(--primary-purple);
@@ -191,7 +225,7 @@
 }
 
 .ed-price {
-  color: #10b981 !important; /* Màu xanh lá cho giá vé */
+  color: #10b981 !important;
   font-size: 18px;
 }
 

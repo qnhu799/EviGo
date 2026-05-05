@@ -13,7 +13,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
 
-// Giữ nguyên phần cấu hình Icon của Như
+// Giữ nguyên cấu hình Icon mặc định
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -22,6 +22,18 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// 1. Tạo Icon màu Tím chủ đạo để làm nổi bật khi được chọn
+const selectedIcon = L.icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconSize: [30, 50],
+  iconAnchor: [15, 50],
+  popupAnchor: [1, -40],
+  shadowSize: [50, 50],
 });
 
 const myLocationIcon = L.icon({
@@ -53,6 +65,9 @@ const MapPage = () => {
   const [mapZoom, setMapZoom] = useState(13);
   const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
   const [events, setEvents] = useState([]);
+
+  // 2. Thêm state để lưu ID sự kiện đang được chọn
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
@@ -96,7 +111,8 @@ const MapPage = () => {
     }
   };
 
-  const handleEventClick = (locationObj) => {
+  // 3. Cập nhật hàm xử lý click để lưu ID sự kiện
+  const handleEventClick = (eventObj, locationObj) => {
     if (locationObj && locationObj.lat && locationObj.lng) {
       const safePos = [
         parseFloat(locationObj.lat),
@@ -104,6 +120,7 @@ const MapPage = () => {
       ];
       setMapCenter(safePos);
       setMapZoom(16);
+      setSelectedEventId(eventObj._id); // Đánh dấu ghim này được chọn
     }
   };
 
@@ -167,7 +184,6 @@ const MapPage = () => {
           </div>
         </div>
 
-        {/* BẢN ĐỒ - ĐÃ CẬP NHẬT HOVER AN TOÀN */}
         <div className="map-center-panel">
           <MapContainer
             center={userPos}
@@ -181,28 +197,13 @@ const MapPage = () => {
             <MapController center={mapCenter} zoom={mapZoom} />
 
             {currentLocationMarker && (
-              <>
-                <Marker position={currentLocationMarker} icon={myLocationIcon}>
-                  <Popup>
-                    <div style={{ textAlign: "center" }}>
-                      <strong style={{ color: "red" }}>
-                        🔴 Bạn đang ở đây!
-                      </strong>
-                      <br /> EviGo đã xác định được vị trí của bạn.
-                    </div>
-                  </Popup>
-                </Marker>
-                <Circle
-                  center={currentLocationMarker}
-                  radius={radius * 1000}
-                  pathOptions={{
-                    color: "#635bff",
-                    fillColor: "#635bff",
-                    fillOpacity: 0.1,
-                    weight: 1,
-                  }}
-                />
-              </>
+              <Marker position={currentLocationMarker} icon={myLocationIcon}>
+                <Popup>
+                  <div style={{ textAlign: "center" }}>
+                    <strong style={{ color: "red" }}>🔴 Bạn đang ở đây!</strong>
+                  </div>
+                </Popup>
+              </Marker>
             )}
 
             {events.map((ev) =>
@@ -214,17 +215,21 @@ const MapPage = () => {
                     <Marker
                       key={`${ev._id}-${idx}`}
                       position={[lat, lng]}
+                      // 4. Nếu ghim trùng ID đang chọn thì hiện màu Vím, không thì hiện Xanh mặc định
+                      icon={
+                        ev._id === selectedEventId
+                          ? selectedIcon
+                          : new L.Icon.Default()
+                      }
                       eventHandlers={{
-                        // SỬA LỖI TẠI ĐÂY: Mở popup an toàn
                         mouseover: (e) => {
                           const marker = e.target;
-                          if (marker && marker.openPopup) {
-                            marker.openPopup();
-                          }
+                          if (marker && marker.openPopup) marker.openPopup();
                         },
+                        // Khi nhấn trực tiếp vào ghim trên bản đồ cũng đổi màu
+                        click: () => setSelectedEventId(ev._id),
                       }}
                     >
-                      {/* Đã gỡ Tooltip để hiện thẳng Popup khi hover */}
                       <Popup maxWidth={280}>
                         <div className="map-click-box">
                           <img
@@ -251,7 +256,6 @@ const MapPage = () => {
           </MapContainer>
         </div>
 
-        {/* SIDEBAR PHẢI - GIỮ NGUYÊN */}
         <div className="sidebar right-panel">
           <h2 className="panel-title">Sự kiện gần đây</h2>
           <div className="event-scroll-area">
@@ -259,7 +263,8 @@ const MapPage = () => {
               <div
                 className="event-item-card clickable"
                 key={ev._id}
-                onClick={() => handleEventClick(ev.locations?.[0])}
+                // 5. Truyền cả object ev vào để lấy ID làm nổi bật ghim
+                onClick={() => handleEventClick(ev, ev.locations?.[0])}
               >
                 <div className="event-info">
                   <h4>{ev.title}</h4>
