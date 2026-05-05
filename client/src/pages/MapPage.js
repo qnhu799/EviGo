@@ -4,7 +4,6 @@ import {
   TileLayer,
   Marker,
   Popup,
-  Tooltip,
   Circle,
   useMap,
 } from "react-leaflet";
@@ -14,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
 
+// Giữ nguyên phần cấu hình Icon của Như
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -54,7 +54,6 @@ const MapPage = () => {
   const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
   const [events, setEvents] = useState([]);
 
-  // Hàm xử lý ảnh từ Backend
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
     if (path.startsWith("http")) return path;
@@ -62,12 +61,10 @@ const MapPage = () => {
     return `http://localhost:5000/${cleanPath}`;
   };
 
-  // HÀM QUAN TRỌNG: Rút gọn địa chỉ chỉ lấy Phường và Quận/Thành phố
   const getShortAddress = (address) => {
     if (!address) return "Chưa cập nhật";
     const parts = address.split(",");
     if (parts.length >= 3) {
-      // Lấy 2 phần tử cuối cùng (Thường là Phường và Quận/TP)
       return `${parts[parts.length - 3].trim()}, ${parts[parts.length - 2].trim()}`;
     }
     return address;
@@ -113,7 +110,7 @@ const MapPage = () => {
   return (
     <div className="map-page-wrapper">
       <div className="map-page-container">
-        {/* GIỮ NGUYÊN BỘ LỌC BÊN TRÁI CỦA NHƯ */}
+        {/* SIDEBAR TRÁI - GIỮ NGUYÊN */}
         <div className="sidebar left-panel">
           <h2 className="panel-title">Bộ lọc sự kiện</h2>
           <div className="panel-content">
@@ -170,7 +167,7 @@ const MapPage = () => {
           </div>
         </div>
 
-        {/* PHẦN BẢN ĐỒ CHÍNH */}
+        {/* BẢN ĐỒ - ĐÃ CẬP NHẬT HOVER AN TOÀN */}
         <div className="map-center-panel">
           <MapContainer
             center={userPos}
@@ -182,6 +179,7 @@ const MapPage = () => {
               url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
             />
             <MapController center={mapCenter} zoom={mapZoom} />
+
             {currentLocationMarker && (
               <>
                 <Marker position={currentLocationMarker} icon={myLocationIcon}>
@@ -206,22 +204,27 @@ const MapPage = () => {
                 />
               </>
             )}
+
             {events.map((ev) =>
               ev.locations?.map((loc, idx) => {
                 const lat = parseFloat(loc.lat);
                 const lng = parseFloat(loc.lng);
                 if (!isNaN(lat) && !isNaN(lng)) {
                   return (
-                    <Marker key={`${ev._id}-${idx}`} position={[lat, lng]}>
-                      <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                        <div className="map-hover-box">
-                          <strong style={{ fontSize: "14px" }}>
-                            {ev.title}
-                          </strong>
-                          <br />
-                          <span style={{ color: "#635bff" }}>{ev.type}</span>
-                        </div>
-                      </Tooltip>
+                    <Marker
+                      key={`${ev._id}-${idx}`}
+                      position={[lat, lng]}
+                      eventHandlers={{
+                        // SỬA LỖI TẠI ĐÂY: Mở popup an toàn
+                        mouseover: (e) => {
+                          const marker = e.target;
+                          if (marker && marker.openPopup) {
+                            marker.openPopup();
+                          }
+                        },
+                      }}
+                    >
+                      {/* Đã gỡ Tooltip để hiện thẳng Popup khi hover */}
                       <Popup maxWidth={280}>
                         <div className="map-click-box">
                           <img
@@ -248,7 +251,7 @@ const MapPage = () => {
           </MapContainer>
         </div>
 
-        {/* CẬP NHẬT: DANH SÁCH BÊN PHẢI VỚI ĐỊA CHỈ RÚT GỌN */}
+        {/* SIDEBAR PHẢI - GIỮ NGUYÊN */}
         <div className="sidebar right-panel">
           <h2 className="panel-title">Sự kiện gần đây</h2>
           <div className="event-scroll-area">
