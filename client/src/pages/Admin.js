@@ -19,7 +19,6 @@ const Admin = () => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      // Cập nhật con số thực tế từ Backend trả về cho ID Admin này
       setApprovedCount(response.data.approvedCount);
       setRejectedCount(response.data.rejectedCount);
     } catch (error) {
@@ -92,7 +91,7 @@ const Admin = () => {
       });
 
       fetchPendingEvents();
-      fetchStats(); // Gọi lại stats để con số Đã hủy tự nhảy từ Database
+      fetchStats();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -129,10 +128,12 @@ const Admin = () => {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Tên sự kiện</th>
-                <th>Địa chỉ / Quận</th>
-                <th>Ngày diễn ra</th>
-                <th>Thao tác</th>
+                <th style={{ width: "22%" }}>SỰ KIỆN</th>
+                <th style={{ width: "16%" }}>NGƯỜI ĐĂNG</th>
+                <th style={{ width: "18%" }}>ĐỊA CHỈ & QUẬN</th>
+                <th style={{ width: "12%" }}>THỜI GIAN</th>
+                <th style={{ width: "10%" }}>GIÁ VÉ</th>
+                <th style={{ width: "22%" }}>THAO TÁC</th>
               </tr>
             </thead>
             <tbody>
@@ -146,49 +147,117 @@ const Admin = () => {
                       title="Nhấn để xem trước nội dung chi tiết"
                       style={{
                         textDecoration: "none",
-                        color: "#635bff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        transition: "0.2s",
+                        color: "#280d8c",
+                        fontWeight: "800",
+                        fontSize: "14px",
+                        display: "block",
+                        marginBottom: "4px",
                       }}
-                      onMouseOver={(e) =>
-                        (e.target.style.textDecoration = "underline")
-                      }
-                      onMouseOut={(e) =>
-                        (e.target.style.textDecoration = "none")
-                      }
                     >
                       {event.title}
                     </a>
-                    <br />
-                    <small>{event.type}</small>
+                    <span
+                      style={{
+                        background: "#f0efff",
+                        padding: "2px 5px",
+                        borderRadius: "4px",
+                        fontSize: "11px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      {event.type}
+                    </span>
                   </td>
+
                   <td>
-                    {event.district ||
-                      (event.locations && event.locations[0]?.district)}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "26px",
+                          height: "26px",
+                          borderRadius: "50%",
+                          background: "#635bff",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {event.creatorName
+                          ? event.creatorName.charAt(0).toUpperCase()
+                          : "U"}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          color: "#4b5563",
+                        }}
+                      >
+                        {event.creatorName || "Ẩn danh"}
+                      </span>
+                    </div>
                   </td>
+
                   <td>
-                    {event.startDate
-                      ? new Date(event.startDate).toLocaleDateString("vi-VN")
-                      : "Chưa cập nhật"}
+                    <div style={{ fontWeight: "600", fontSize: "13px" }}>
+                      {event.district ||
+                        (event.locations && event.locations[0]?.district)}
+                    </div>
+                    <small style={{ color: "#6b7280", fontSize: "11px" }}>
+                      {event.locations?.[0]?.address}
+                    </small>
                   </td>
+
+                  <td style={{ fontSize: "13px", fontWeight: "500" }}>
+                    {event.isPermanent ? (
+                      <span style={{ color: "#635bff" }}>Cố định</span>
+                    ) : event.startDate ? (
+                      new Date(event.startDate).toLocaleDateString("vi-VN")
+                    ) : (
+                      "---"
+                    )}
+                  </td>
+
+                  <td>
+                    <span
+                      style={{
+                        color: "#10b981",
+                        fontWeight: "700",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {event.ticketPrice || "Free"}
+                    </span>
+                  </td>
+
                   <td>
                     <div
                       className="action-btns"
                       style={{
                         display: "flex",
-                        gap: "10px",
+                        gap: "6px",
                         alignItems: "center",
                       }}
                     >
                       <button
                         className="btn-approve"
+                        style={{ padding: "6px 10px" }}
                         onClick={() => handleApprove(event._id)}
                       >
                         Duyệt
                       </button>
                       <button
                         className="btn-reject"
+                        style={{ padding: "6px 10px" }}
                         onClick={() => handleReject(event._id)}
                       >
                         Hủy
@@ -200,7 +269,13 @@ const Admin = () => {
             </tbody>
           </table>
           {pendingEvents.length === 0 && (
-            <p style={{ textAlign: "center", marginTop: "20px" }}>
+            <p
+              style={{
+                textAlign: "center",
+                marginTop: "20px",
+                color: "#6b7280",
+              }}
+            >
               Không có sự kiện nào đang chờ duyệt.
             </p>
           )}
