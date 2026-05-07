@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import EventCard from "./EventCard"; // Đảm bảo Như đã tạo file EventCard.js thầy gửi trước đó
+import EventCard from "./EventCard";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -21,8 +21,16 @@ import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 export default function Home() {
   const [events, setEvents] = useState([]);
 
-  // 1. Lấy dữ liệu sự kiện đã duyệt từ Backend
+  const [visibleCounts, setVisibleCounts] = useState({
+    amNhac: 3,
+    trienLam: 3,
+    amThuc: 3,
+    theThao: 3,
+    hocThuat: 3,
+  });
+
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchEvents = async () => {
       try {
         const res = await axios.get(
@@ -36,18 +44,21 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  // 2. Hàm lọc sự kiện theo thể loại
-  const getEventsByType = (type) => {
-    return events.filter((ev) => ev.type === type).slice(0, 3); // Lấy tối đa 3 bài mỗi mục
+  const getEventsByType = (type, count) => {
+    return events.filter((ev) => ev.type === type).slice(0, count);
+  };
+
+  const handleShowMore = (category) => {
+    setVisibleCounts((prev) => ({
+      ...prev,
+      [category]: prev[category] + 3,
+    }));
   };
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -150,41 +161,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Tự động đổ dữ liệu vào các Section dựa trên Type */}
-
       {/* SECTION: ÂM NHẠC */}
       <section id="section-am-nhac" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Âm nhạc</h2>
-          <button className="see-more-btn">Xem thêm</button>
         </div>
         <div className="events-grid">
-          {getEventsByType("Âm nhạc").map((ev) => (
+          {getEventsByType("Âm nhạc", visibleCounts.amNhac).map((ev) => (
             <EventCard key={ev._id} event={ev} />
           ))}
-          {getEventsByType("Âm nhạc").length === 0 && (
+          {getEventsByType("Âm nhạc", visibleCounts.amNhac).length === 0 && (
             <p className="no-data">Chưa có sự kiện âm nhạc nào.</p>
           )}
         </div>
+        <button
+          className="see-more-btn"
+          onClick={() => handleShowMore("amNhac")}
+        >
+          Xem thêm
+        </button>
       </section>
 
       {/* SECTION: TRIỂN LÃM */}
       <section id="section-trien-lam" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Triễn lãm</h2>
-          <button className="see-more-btn">Xem thêm</button>
         </div>
         <div className="events-grid">
-          {getEventsByType("Triển lãm").map((ev) => (
+          {getEventsByType("Triển lãm", visibleCounts.trienLam).map((ev) => (
             <EventCard key={ev._id} event={ev} />
           ))}
-          {getEventsByType("Triển lãm").length === 0 && (
-            <p className="no-data">Chưa có triển lãm nào.</p>
-          )}
+          {getEventsByType("Triển lãm", visibleCounts.trienLam).length ===
+            0 && <p className="no-data">Chưa có triển lãm nào.</p>}
         </div>
+        <button
+          className="see-more-btn"
+          onClick={() => handleShowMore("trienLam")}
+        >
+          Xem thêm
+        </button>
       </section>
 
-      {/* 5. Khối giới thiệu Bản đồ */}
+      {/* Khối giới thiệu Bản đồ */}
       <section className="map-cta-container">
         <div className="map-cta-content">
           <h2 className="map-cta-title">Discover Events Around You</h2>
@@ -200,48 +218,62 @@ export default function Home() {
       <section id="section-am-thuc" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Ẩm thực</h2>
-          <button className="see-more-btn">Xem thêm</button>
         </div>
         <div className="events-grid">
-          {getEventsByType("Ẩm thực").map((ev) => (
+          {getEventsByType("Ẩm thực", visibleCounts.amThuc).map((ev) => (
             <EventCard key={ev._id} event={ev} />
           ))}
-          {getEventsByType("Ẩm thực").length === 0 && (
+          {getEventsByType("Ẩm thực", visibleCounts.amThuc).length === 0 && (
             <p className="no-data">Chưa có sự kiện ẩm thực nào.</p>
           )}
         </div>
+        <button
+          className="see-more-btn"
+          onClick={() => handleShowMore("amThuc")}
+        >
+          Xem thêm
+        </button>
       </section>
 
       {/* SECTION: THỂ THAO */}
       <section id="section-the-thao" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Thể thao</h2>
-          <button className="see-more-btn">Xem thêm</button>
         </div>
         <div className="events-grid">
-          {getEventsByType("Thể thao").map((ev) => (
+          {getEventsByType("Thể thao", visibleCounts.theThao).map((ev) => (
             <EventCard key={ev._id} event={ev} />
           ))}
-          {getEventsByType("Thể thao").length === 0 && (
+          {getEventsByType("Thể thao", visibleCounts.theThao).length === 0 && (
             <p className="no-data">Chưa có sự kiện thể thao nào.</p>
           )}
         </div>
+        <button
+          className="see-more-btn"
+          onClick={() => handleShowMore("theThao")}
+        >
+          Xem thêm
+        </button>
       </section>
 
       {/* SECTION: HỌC THUẬT */}
       <section id="section-hoc-thuat" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Học thuật</h2>
-          <button className="see-more-btn">Xem thêm</button>
         </div>
         <div className="events-grid">
-          {getEventsByType("Học thuật").map((ev) => (
+          {getEventsByType("Học thuật", visibleCounts.hocThuat).map((ev) => (
             <EventCard key={ev._id} event={ev} />
           ))}
-          {getEventsByType("Học thuật").length === 0 && (
-            <p className="no-data">Chưa có sự kiện học thuật nào.</p>
-          )}
+          {getEventsByType("Học thuật", visibleCounts.hocThuat).length ===
+            0 && <p className="no-data">Chưa có sự kiện học thuật nào.</p>}
         </div>
+        <button
+          className="see-more-btn"
+          onClick={() => handleShowMore("hocThuat")}
+        >
+          Xem thêm
+        </button>
       </section>
     </div>
   );
