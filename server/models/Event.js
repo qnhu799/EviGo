@@ -43,8 +43,10 @@ const eventSchema = new mongoose.Schema(
       default: null,
     },
 
+    // --- Cập nhật: Thông tin người đóng góp ---
     contributor: {
-      name: { type: String },
+      name: { type: String }, // Để lưu username (ví dụ: lequynhnhu)
+      displayName: { type: String, default: "Ẩn danh" }, // Để lưu tên hiển thị (ví dụ: Lê Quỳnh Như)
       contact: { type: String },
     },
   },

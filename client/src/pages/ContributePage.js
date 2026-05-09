@@ -283,6 +283,11 @@ const ContributePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // --- LOGIC GHI NHẬN NGƯỜI ĐÓNG GÓP ---
+    const contributorName =
+      localStorage.getItem("username") || "Người dùng ẩn danh";
+
     const finalTypes = [...selectedTypes];
     if (isOtherSelected && otherType.trim() !== "") {
       finalTypes.push(otherType.trim());
@@ -315,6 +320,7 @@ const ContributePage = () => {
 
     const dataToSend = new FormData();
     dataToSend.append("title", formData.title);
+    dataToSend.append("contributor", contributorName); // Thêm tên người đóng góp vào đây
     dataToSend.append("type", typeString); // Gửi chuỗi các loại sự kiện
     dataToSend.append("ticketPrice", formData.ticketPrice);
     dataToSend.append("description", formData.description);

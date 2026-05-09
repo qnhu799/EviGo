@@ -1,6 +1,6 @@
 const Event = require("../models/Event");
 
-// 1. Tạo sự kiện mới (Đóng góp) - GIỮ NGUYÊN
+// 1. Tạo sự kiện mới (Đóng góp) - CẬP NHẬT GHI NHẬN NGƯỜI ĐÓNG GÓP
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -23,10 +23,11 @@ exports.createEvent = async (req, res) => {
       isPermanent: String(req.body.isPermanent) === "true",
       isAllDay: String(req.body.isAllDay) === "true",
       closedDays: req.body.closedDays ? JSON.parse(req.body.closedDays) : [],
+
+      // SỬA ĐỔI CHÍNH: Bóc tách đúng giá trị displayName gửi từ Frontend
       contributor: {
-        name:
-          req.body.contributorName ||
-          (req.user ? req.user.name : "Người dùng EviGo"),
+        displayName: req.body.contributor || "Người dùng ẩn danh",
+        name: req.user ? req.user.username : "",
         contact: req.body.contributorContact || "",
       },
       status: "pending",
@@ -41,6 +42,7 @@ exports.createEvent = async (req, res) => {
     await newEvent.save();
     res.status(201).json({ message: "Gửi đóng góp thành công!" });
   } catch (err) {
+    console.error("Lỗi createEvent:", err);
     res.status(500).json({ error: "Lỗi xử lý dữ liệu đóng góp" });
   }
 };
@@ -134,7 +136,6 @@ exports.getEventById = async (req, res) => {
 // --- 🎯 HÀM MỚI BỔ SUNG: Lấy tất cả sự kiện để Admin lọc theo 3 trạng thái ---
 exports.getAllEventsForAdmin = async (req, res) => {
   try {
-    // Lấy toàn bộ sự kiện từ Database, xếp bài mới nhất lên đầu
     const events = await Event.find().sort({ createdAt: -1 });
     res.status(200).json(events);
   } catch (err) {

@@ -225,8 +225,10 @@ const Admin = () => {
                           fontWeight: "bold",
                         }}
                       >
-                        {event.creatorName
-                          ? event.creatorName.charAt(0).toUpperCase()
+                        {event.contributor?.displayName
+                          ? event.contributor.displayName
+                              .charAt(0)
+                              .toUpperCase()
                           : "U"}
                       </div>
                       <span
@@ -236,7 +238,7 @@ const Admin = () => {
                           color: "#4b5563",
                         }}
                       >
-                        {event.creatorName || "Ẩn danh"}
+                        {event.contributor?.displayName || "Ẩn danh"}
                       </span>
                     </div>
                   </td>
