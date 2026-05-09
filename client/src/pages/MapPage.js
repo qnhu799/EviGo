@@ -79,7 +79,8 @@ const MapPage = () => {
   // State bộ lọc
   const [selectedType, setSelectedType] = useState("Tất cả");
   const [selectedTime, setSelectedTime] = useState("Tất cả");
-  const [customDate, setCustomDate] = useState(""); // State lưu ngày chọn từ lịch
+  const [customDate, setCustomDate] = useState("");
+  const [startLocation, setStartLocation] = useState(""); // State cho điểm xuất phát
 
   const eventTypes = [
     "Tất cả",
@@ -129,6 +130,7 @@ const MapPage = () => {
         setMapCenter(newPos);
         setCurrentLocationMarker(newPos);
         setSelectedEventId(null);
+        setStartLocation(""); // Xóa text nhập tay khi dùng GPS
       });
     }
   };
@@ -151,14 +153,16 @@ const MapPage = () => {
         <div className="sidebar left-panel">
           <h2 className="panel-title">Bộ lọc sự kiện 🔍</h2>
           <div className="panel-content scrollable-filters">
-            {/* Nhóm 1: Địa điểm & Định vị */}
+            {/* Nhóm 1: Điểm khởi hành (Cập nhật Nơi đi - Nơi đến) */}
             <div className="filter-card">
-              <label className="filter-label">Tìm kiếm điểm đến</label>
+              <label className="filter-label">Vị trí của bạn</label>
               <div className="search-wrapper">
                 <input
                   type="text"
                   className="filter-input"
-                  placeholder="Nhập địa điểm..."
+                  placeholder="Nhập điểm xuất phát..."
+                  value={startLocation}
+                  onChange={(e) => setStartLocation(e.target.value)}
                 />
                 <button className="search-icon-btn">🔍</button>
               </div>
@@ -168,6 +172,17 @@ const MapPage = () => {
               >
                 📍 Vị trí hiện tại
               </button>
+              <p
+                style={{
+                  fontSize: "11px",
+                  color: "#635bff",
+                  marginTop: "8px",
+                  textAlign: "center",
+                  fontWeight: "500",
+                }}
+              >
+                * Hệ thống sẽ tìm sự kiện quanh điểm này
+              </p>
             </div>
 
             {/* Nhóm 2: Bán kính */}
@@ -186,7 +201,7 @@ const MapPage = () => {
               />
             </div>
 
-            {/* Nhóm 3: Thời gian (Có thêm chọn Lịch) */}
+            {/* Nhóm 3: Thời gian */}
             <div className="filter-card">
               <label className="filter-label">Thời gian</label>
               <div className="filter-chips">
@@ -196,15 +211,13 @@ const MapPage = () => {
                     className={`chip ${selectedTime === time ? "active" : ""}`}
                     onClick={() => {
                       setSelectedTime(time);
-                      setCustomDate(""); // Reset lịch khi chọn nút nhanh
+                      setCustomDate("");
                     }}
                   >
                     {time}
                   </button>
                 ))}
               </div>
-
-              {/* Ô CHỌN LỊCH */}
               <div
                 className="date-picker-container"
                 style={{ marginTop: "12px" }}
@@ -220,7 +233,7 @@ const MapPage = () => {
                   style={{
                     width: "100%",
                     padding: "8px",
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     border: "1.5px solid #d1d1f0",
                     fontSize: "13px",
                     outline: "none",
