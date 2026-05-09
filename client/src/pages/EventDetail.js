@@ -176,7 +176,12 @@ export default function EventDetail() {
               </div>
               <div className="ed-text-box">
                 <small>Cung cấp bởi</small>
-                <p>{event.contributor?.name || "Cộng đồng EviGo"}</p>
+                {/* --- CẬP NHẬT: Ưu tiên displayName để hiện tên Như xịn hơn --- */}
+                <p>
+                  {event.contributor?.displayName ||
+                    event.contributor?.name ||
+                    "Cộng đồng EviGo"}
+                </p>
                 <span className="ed-verified">
                   <i className="fas fa-check-circle"></i> Đã xác thực
                 </span>
