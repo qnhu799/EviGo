@@ -59,6 +59,32 @@ const ContributePage = () => {
     locations: [{ address: "", district: "", lat: 10.871, lng: 106.792 }],
   });
 
+  // --- LOGIC MỚI: CHỌN NHIỀU & NÚT KHÁC THÔNG MINH ---
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [otherType, setOtherType] = useState("");
+  const [isOtherSelected, setIsOtherSelected] = useState(false); // State quản lý việc nhấn nút "Khác"
+
+  const eventTypeOptions = [
+    "Âm nhạc",
+    "Triển lãm",
+    "Ẩm thực",
+    "Thể thao",
+    "Học thuật",
+  ];
+
+  const handleTypeToggle = (type) => {
+    if (type === "Khác") {
+      setIsOtherSelected(!isOtherSelected);
+      if (isOtherSelected) setOtherType(""); // Reset nếu bỏ chọn
+    } else {
+      if (selectedTypes.includes(type)) {
+        setSelectedTypes(selectedTypes.filter((t) => t !== type));
+      } else {
+        setSelectedTypes([...selectedTypes, type]);
+      }
+    }
+  };
+
   const [searchMode, setSearchMode] = useState("auto");
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -169,6 +195,23 @@ const ContributePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Gom loại sự kiện
+    const finalTypes = [...selectedTypes];
+    if (isOtherSelected && otherType.trim() !== "") {
+      finalTypes.push(otherType.trim());
+    }
+    const typeString = finalTypes.join(", ");
+
+    if (finalTypes.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Thiếu thông tin!",
+        text: "Hãy chọn ít nhất một loại sự kiện cho EviGo nhé!",
+        confirmButtonColor: "#635bff",
+      });
+      return;
+    }
+
     const hasInvalidLocation = formData.locations.some(
       (loc) => !loc.address || loc.address.trim() === "",
     );
@@ -183,13 +226,9 @@ const ContributePage = () => {
       return;
     }
 
-    // --- LOGIC GỬI DỮ LIỆU ĐÃ ĐƯỢC FIX ---
     const dataToSend = new FormData();
-
-    // QUAN TRỌNG: Title phải được append ĐẦU TIÊN để Multer Backend đọc được trước file ảnh
     dataToSend.append("title", formData.title);
-
-    dataToSend.append("type", formData.type);
+    dataToSend.append("type", typeString);
     dataToSend.append("ticketPrice", formData.ticketPrice);
     dataToSend.append("description", formData.description);
     dataToSend.append("isAllDay", formData.isAllDay);
@@ -205,7 +244,6 @@ const ContributePage = () => {
     dataToSend.append("locations", JSON.stringify(formData.locations));
     dataToSend.append("closedDays", JSON.stringify(formData.closedDays));
 
-    // Ảnh gửi sau cùng để Backend có title tạo folder trước
     formData.images.forEach((file) => {
       dataToSend.append("images", file);
     });
@@ -325,23 +363,89 @@ const ContributePage = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Loại sự kiện</label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  required
+            {/* PHẦN CHỌN LOẠI SỰ KIỆN: 5 LOẠI CHÍNH + NÚT KHÁC */}
+            <div
+              className="form-group full-width"
+              style={{ marginBottom: "20px" }}
+            >
+              <label>
+                Loại sự kiện (Có thể chọn nhiều){" "}
+                <span className="required">*</span>
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  marginTop: "10px",
+                }}
+              >
+                {eventTypeOptions.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => handleTypeToggle(type)}
+                    style={{
+                      padding: "8px 18px",
+                      borderRadius: "20px",
+                      border: "1.5px solid #635bff",
+                      background: selectedTypes.includes(type)
+                        ? "#635bff"
+                        : "white",
+                      color: selectedTypes.includes(type) ? "white" : "#635bff",
+                      cursor: "pointer",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                      transition: "0.3s ease",
+                    }}
+                  >
+                    {type}
+                  </button>
+                ))}
+
+                {/* Nút Khác đóng vai trò tag */}
+                <button
+                  type="button"
+                  onClick={() => handleTypeToggle("Khác")}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "20px",
+                    border: "1.5px solid #635bff",
+                    background: isOtherSelected ? "#635bff" : "white",
+                    color: isOtherSelected ? "white" : "#635bff",
+                    cursor: "pointer",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    transition: "0.3s ease",
+                  }}
                 >
-                  <option value="">Chọn loại sự kiện</option>
-                  <option value="Âm nhạc">🎵 Âm nhạc</option>
-                  <option value="Ẩm thực">🍕 Ẩm thực</option>
-                  <option value="Triển lãm">🎨 Triển lãm</option>
-                  <option value="Ngoài trời">🌳 Ngoài trời</option>
-                  <option value="Học thuật">💡 Học thuật</option>
-                </select>
+                  Khác...
+                </button>
               </div>
+
+              {/* Chỉ hiện input khi nút "Khác" được chọn */}
+              {isOtherSelected && (
+                <div style={{ marginTop: "15px" }}>
+                  <input
+                    type="text"
+                    placeholder="Nhập loại sự kiện khác..."
+                    value={otherType}
+                    onChange={(e) => setOtherType(e.target.value)}
+                    autoFocus
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: "8px",
+                      border: "1.5px solid #635bff",
+                      fontSize: "14px",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="form-row">
               <div className="form-group">
                 <label>Giá vé</label>
                 <input
