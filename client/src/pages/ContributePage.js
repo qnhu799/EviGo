@@ -32,10 +32,45 @@ function MapFlyController({ center }) {
   return null;
 }
 
-function LocationMarker({ position, onSelect }) {
+// --- Component nhấn bản đồ tự lấy địa chỉ ---
+function LocationMarker({ position, index, formData, setFormData }) {
   useMapEvents({
-    click(e) {
-      onSelect(e.latlng.lat, e.latlng.lng);
+    async click(e) {
+      const { lat, lng } = e.latlng;
+      try {
+        // Gọi API lấy địa chỉ từ tọa độ
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        );
+        const data = await response.json();
+
+        const detectedAddress = data.display_name || "";
+        const detectedDistrict =
+          data.address.suburb ||
+          data.address.district ||
+          data.address.city_district ||
+          "";
+
+        const newLocs = [...formData.locations];
+        newLocs[index] = {
+          ...newLocs[index],
+          lat: lat.toFixed(6),
+          lng: lng.toFixed(6),
+          address: detectedAddress,
+          district: detectedDistrict,
+        };
+        setFormData({ ...formData, locations: newLocs });
+      } catch (err) {
+        console.error("Lỗi lấy địa chỉ:", err);
+        // Dự phòng: Nếu lỗi API thì chỉ lấy tọa độ
+        const newLocs = [...formData.locations];
+        newLocs[index] = {
+          ...newLocs[index],
+          lat: lat.toFixed(6),
+          lng: lng.toFixed(6),
+        };
+        setFormData({ ...formData, locations: newLocs });
+      }
     },
   });
   return position ? <Marker position={position} /> : null;
@@ -59,10 +94,9 @@ const ContributePage = () => {
     locations: [{ address: "", district: "", lat: 10.871, lng: 106.792 }],
   });
 
-  // --- LOGIC MỚI: CHỌN NHIỀU & NÚT KHÁC THÔNG MINH ---
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [otherType, setOtherType] = useState("");
-  const [isOtherSelected, setIsOtherSelected] = useState(false); // State quản lý việc nhấn nút "Khác"
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
 
   const eventTypeOptions = [
     "Âm nhạc",
@@ -75,7 +109,7 @@ const ContributePage = () => {
   const handleTypeToggle = (type) => {
     if (type === "Khác") {
       setIsOtherSelected(!isOtherSelected);
-      if (isOtherSelected) setOtherType(""); // Reset nếu bỏ chọn
+      if (isOtherSelected) setOtherType("");
     } else {
       if (selectedTypes.includes(type)) {
         setSelectedTypes(selectedTypes.filter((t) => t !== type));
@@ -83,6 +117,61 @@ const ContributePage = () => {
         setSelectedTypes([...selectedTypes, type]);
       }
     }
+  };
+
+  // --- HÀM MỚI: Lấy vị trí hiện tại của người dùng ---
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      Swal.fire("Lỗi", "Trình duyệt của em không hỗ trợ định vị!", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: "Đang định vị...",
+      text: "Đợi xíu, EviGo đang tìm vị trí của em nhé!",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+          );
+          const data = await res.json();
+
+          const newLocs = [...formData.locations];
+          newLocs[activeIndex] = {
+            ...newLocs[activeIndex],
+            lat: latitude.toFixed(6),
+            lng: longitude.toFixed(6),
+            address: data.display_name || "Vị trí hiện tại",
+            district:
+              data.address.suburb ||
+              data.address.district ||
+              data.address.city_district ||
+              "",
+          };
+
+          setFormData({ ...formData, locations: newLocs });
+          Swal.close();
+        } catch (err) {
+          console.error(err);
+          Swal.fire(
+            "Lỗi",
+            "Tọa độ đã nhận nhưng không lấy được địa chỉ chữ!",
+            "warning",
+          );
+        }
+      },
+      () => {
+        Swal.fire("Lỗi", "Em hãy bật GPS/Quyền truy cập vị trí nhé!", "error");
+      },
+    );
   };
 
   const [searchMode, setSearchMode] = useState("auto");
@@ -194,8 +283,6 @@ const ContributePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Gom loại sự kiện
     const finalTypes = [...selectedTypes];
     if (isOtherSelected && otherType.trim() !== "") {
       finalTypes.push(otherType.trim());
@@ -228,7 +315,7 @@ const ContributePage = () => {
 
     const dataToSend = new FormData();
     dataToSend.append("title", formData.title);
-    dataToSend.append("type", typeString);
+    dataToSend.append("type", typeString); // Gửi chuỗi các loại sự kiện
     dataToSend.append("ticketPrice", formData.ticketPrice);
     dataToSend.append("description", formData.description);
     dataToSend.append("isAllDay", formData.isAllDay);
@@ -363,7 +450,6 @@ const ContributePage = () => {
               </div>
             </div>
 
-            {/* PHẦN CHỌN LOẠI SỰ KIỆN: 5 LOẠI CHÍNH + NÚT KHÁC */}
             <div
               className="form-group full-width"
               style={{ marginBottom: "20px" }}
@@ -402,8 +488,6 @@ const ContributePage = () => {
                     {type}
                   </button>
                 ))}
-
-                {/* Nút Khác đóng vai trò tag */}
                 <button
                   type="button"
                   onClick={() => handleTypeToggle("Khác")}
@@ -423,12 +507,11 @@ const ContributePage = () => {
                 </button>
               </div>
 
-              {/* Chỉ hiện input khi nút "Khác" được chọn */}
               {isOtherSelected && (
                 <div style={{ marginTop: "15px" }}>
                   <input
                     type="text"
-                    placeholder="Nhập loại sự kiện khác..."
+                    placeholder="Nhập loại sự kiện khác của em..."
                     value={otherType}
                     onChange={(e) => setOtherType(e.target.value)}
                     autoFocus
@@ -436,7 +519,7 @@ const ContributePage = () => {
                       width: "100%",
                       padding: "12px",
                       borderRadius: "8px",
-                      border: "1.5px solid #635bff",
+                      border: "1px solid #635bff",
                       fontSize: "14px",
                       outline: "none",
                     }}
@@ -733,42 +816,66 @@ const ContributePage = () => {
               />
             )}
 
-            <div
-              style={{
-                height: "300px",
-                borderRadius: "10px",
-                overflow: "hidden",
-                border: "1px solid #ddd",
-              }}
-            >
-              <MapContainer
-                center={[
-                  formData.locations[activeIndex].lat,
-                  formData.locations[activeIndex].lng,
-                ]}
-                zoom={13}
-                style={{ height: "100%", width: "100%" }}
+            {/* PHẦN BẢN ĐỒ CÓ NÚT ĐỊNH VỊ TẠI CHỖ */}
+            <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={handleGetCurrentLocation}
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  zIndex: 1000,
+                  background: "white",
+                  border: "2px solid #635bff",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  color: "#635bff",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
               >
-                <TileLayer url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi" />
-                <MapFlyController
+                📍 Vị trí hiện tại
+              </button>
+
+              <div
+                style={{
+                  height: "300px",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  border: "1px solid #ddd",
+                }}
+              >
+                <MapContainer
                   center={[
                     formData.locations[activeIndex].lat,
                     formData.locations[activeIndex].lng,
                   ]}
-                />
-                <LocationMarker
-                  position={[
-                    formData.locations[activeIndex].lat,
-                    formData.locations[activeIndex].lng,
-                  ]}
-                  onSelect={(lat, lng) => {
-                    const newLocs = [...formData.locations];
-                    newLocs[activeIndex].lat = lat.toFixed(6);
-                    newLocs[activeIndex].lng = lng.toFixed(6);
-                    setFormData({ ...formData, locations: newLocs });
-                  }}
-                />
-              </MapContainer>
+                  zoom={13}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi" />
+                  <MapFlyController
+                    center={[
+                      formData.locations[activeIndex].lat,
+                      formData.locations[activeIndex].lng,
+                    ]}
+                  />
+                  <LocationMarker
+                    position={[
+                      formData.locations[activeIndex].lat,
+                      formData.locations[activeIndex].lng,
+                    ]}
+                    index={activeIndex}
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
+                </MapContainer>
+              </div>
             </div>
           </div>
 
