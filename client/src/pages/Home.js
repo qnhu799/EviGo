@@ -116,9 +116,8 @@ export default function Home() {
         </Swiper>
       </section>
 
-      {/* 2. Thanh Tìm kiếm với Dropdown cố định và Địa chỉ đầy đủ */}
+      {/* 2. Thanh Tìm kiếm với Dropdown cố định và Địa chỉ lấy từ mảng locations */}
       <section className="search-container">
-        {/* Style trực tiếp position relative để bảng gợi ý bám chặt vào đây */}
         <div className="search-wrapper" style={{ position: "relative" }}>
           <div className="search-input-group">
             <input
@@ -141,8 +140,14 @@ export default function Home() {
               {events
                 .filter((ev) => {
                   const input = toNoneTone(searchTerm);
+                  // Gom tất cả thông tin tìm kiếm bao gồm cả các trường trong mảng locations
+                  const locString = ev.locations
+                    ? ev.locations
+                        .map((l) => `${l.address} ${l.district}`)
+                        .join(" ")
+                    : "";
                   const searchable = toNoneTone(
-                    `${ev.name} ${ev.title} ${ev.location} ${ev.address} ${ev.ward} ${ev.district} ${ev.city} ${ev.type}`,
+                    `${ev.name} ${ev.title} ${ev.type} ${locString} ${ev.district}`,
                   );
                   return searchable.includes(input);
                 })
@@ -166,16 +171,20 @@ export default function Home() {
                         <span className="suggestion-location">
                           📍{" "}
                           {(() => {
-                            // Hàm gom tất cả các trường địa chỉ chi tiết thành 1 chuỗi
-                            const addrParts = [
-                              ev.address,
-                              ev.ward,
-                              ev.district,
-                              ev.city || ev.location,
-                            ].filter(
-                              (part) => part && part.toString().trim() !== "",
+                            // Ưu tiên lấy từ mảng locations của em
+                            if (ev.locations && ev.locations.length > 0) {
+                              const loc = ev.locations[0];
+                              const parts = [loc.address, loc.district].filter(
+                                (p) => p && p.trim() !== "",
+                              );
+                              return parts.length > 0
+                                ? parts.join(", ")
+                                : "Đang cập nhật địa chỉ...";
+                            }
+                            // Dự phòng nếu dữ liệu nằm ở các trường ngoài mảng
+                            const addrParts = [ev.address, ev.district].filter(
+                              (p) => p && p.trim() !== "",
                             );
-
                             return addrParts.length > 0
                               ? addrParts.join(", ")
                               : "Đang cập nhật địa chỉ...";
@@ -187,12 +196,16 @@ export default function Home() {
                 ))}
 
               {/* Thông báo nếu không khớp cái nào */}
-              {events.filter((ev) =>
-                toNoneTone(
-                  (ev.name || ev.title || "") +
-                    (ev.location || ev.address || ""),
-                ).includes(toNoneTone(searchTerm)),
-              ).length === 0 && (
+              {events.filter((ev) => {
+                const locString = ev.locations
+                  ? ev.locations
+                      .map((l) => `${l.address} ${l.district}`)
+                      .join(" ")
+                  : "";
+                return toNoneTone(
+                  `${ev.name || ev.title} ${locString}`,
+                ).includes(toNoneTone(searchTerm));
+              }).length === 0 && (
                 <div className="suggestion-item no-res">
                   Không tìm thấy kết quả phù hợp
                 </div>
@@ -252,7 +265,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* DANH SÁCH SỰ KIỆN - LUÔN GIỮ NGUYÊN DANH SÁCH BAN ĐẦU */}
+      {/* DANH SÁCH SỰ KIỆN - GIỮ NGUYÊN */}
       <section id="section-am-nhac" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Âm nhạc</h2>
