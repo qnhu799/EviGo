@@ -130,3 +130,14 @@ exports.getEventById = async (req, res) => {
     res.status(500).json({ error: "Lỗi tải chi tiết" });
   }
 };
+
+// --- 🎯 HÀM MỚI BỔ SUNG: Lấy tất cả sự kiện để Admin lọc theo 3 trạng thái ---
+exports.getAllEventsForAdmin = async (req, res) => {
+  try {
+    // Lấy toàn bộ sự kiện từ Database, xếp bài mới nhất lên đầu
+    const events = await Event.find().sort({ createdAt: -1 });
+    res.status(200).json(events);
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi server khi tải dữ liệu cho Admin" });
+  }
+};

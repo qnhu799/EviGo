@@ -9,9 +9,9 @@
 }
 
 .admin-card {
-  background: white; /* Thầy chỉnh lại nền trắng cho sạch sẽ, hoặc em giữ #e3d9f2 tùy ý nhé */
+  background: white; /* Thầy chỉnh lại nền trắng cho sạch sẽ */
   width: 100%;
-  max-width: 1200px; /* Tăng nhẹ để chứa đủ 5-6 cột thông tin */
+  max-width: 1200px;
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -33,28 +33,44 @@
   margin-bottom: 40px;
 }
 
+/* --- Cập nhật Stat Card để hỗ trợ nhấn (Clickable) --- */
 .stat-card {
   padding: 20px;
   border-radius: 12px;
   color: white;
   text-align: center;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  cursor: pointer; /* Đổi sang hình bàn tay để admin biết là bấm được */
+  border: 2px solid transparent;
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Hiệu ứng khi Card đang được chọn để lọc (Active) */
+.stat-card.active-filter {
+  border-color: #280d8c;
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(40, 13, 140, 0.2);
 }
 
 .stat-card.purple { background: #635BFF; }
 .stat-card.green { background: #27ae60; }
 .stat-card.red { background: #e74c3c; }
 
-.stat-card h3 { font-size: 28px; margin-bottom: 5px; font-weight: 800; }
+.stat-card h3 {
+  font-size: 28px;
+  margin-bottom: 5px;
+  font-weight: 800;
+}
 
 .admin-table-section {
   overflow-x: auto;
   border-radius: 8px;
   border: 1px solid #eee;
+  min-height: 200px; /* Tránh bị sụp giao diện khi bảng trống */
 }
 
 .table-caption {
@@ -68,11 +84,11 @@
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  min-width: 900px; /* Đảm bảo bảng không bị quá hẹp khi nhiều cột */
+  min-width: 900px;
 }
 
 .admin-table th {
-  background: #635BFF; /* Đổi màu header sang tím cho chuyên nghiệp */
+  background: #635BFF;
   color: white;
   text-align: left;
   padding: 15px;
@@ -83,17 +99,17 @@
 }
 
 .admin-table td {
-  padding: 18px 15px; /* Tăng padding cho thoáng */
+  padding: 18px 15px;
   border-bottom: 1px solid #eee;
   font-size: 14px;
   vertical-align: middle;
 }
 
 .admin-table tr:hover {
-  background-color: #fcfaff; /* Hiệu ứng hover dòng */
+  background-color: #fcfaff;
 }
 
-/* Các nút thao tác Duyệt/Hủy */
+/* --- Nút thao tác Duyệt/Hủy --- */
 .action-btns {
   display: flex;
   gap: 10px;

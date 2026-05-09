@@ -5,9 +5,11 @@ import "./Admin.css";
 import Swal from "sweetalert2";
 
 const Admin = () => {
-  const [pendingEvents, setPendingEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]); // Chứa tất cả sự kiện lấy từ API
+  const [filterStatus, setFilterStatus] = useState("pending"); // Mặc định lọc sự kiện "Chờ duyệt"
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
   // Hàm lấy thống kê số lượng bài duyệt của riêng Admin này
   const fetchStats = async () => {
@@ -26,23 +28,30 @@ const Admin = () => {
     }
   };
 
-  const fetchPendingEvents = async () => {
+  // Hàm lấy toàn bộ danh sách sự kiện (để có thể lọc theo 3 trạng thái)
+  const fetchAllEvents = async () => {
     try {
       const token = localStorage.getItem("token");
+      // Gọi API lấy toàn bộ sự kiện để lọc ở client
       const response = await axios.get(
-        "http://localhost:5000/api/events/pending",
+        "http://localhost:5000/api/events/all-for-admin",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      setPendingEvents(response.data);
+      setAllEvents(response.data);
+      // Đếm số lượng chờ duyệt cho thẻ màu tím
+      const pending = response.data.filter(
+        (ev) => ev.status === "pending",
+      ).length;
+      setPendingCount(pending);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách chờ duyệt:", error);
+      console.error("Lỗi khi lấy danh sách sự kiện:", error);
     }
   };
 
   useEffect(() => {
-    fetchPendingEvents();
+    fetchAllEvents();
     fetchStats();
   }, []);
 
@@ -63,7 +72,8 @@ const Admin = () => {
         timer: 2000,
       });
 
-      fetchPendingEvents();
+      // CẬP NHẬT LẠI DỮ LIỆU NGAY LẬP TỨC
+      fetchAllEvents();
       fetchStats();
     } catch (error) {
       Swal.fire({
@@ -90,7 +100,8 @@ const Admin = () => {
         confirmButtonColor: "#ff4d4d",
       });
 
-      fetchPendingEvents();
+      // CẬP NHẬT LẠI DỮ LIỆU NGAY LẬP TỨC
+      fetchAllEvents();
       fetchStats();
     } catch (error) {
       Swal.fire({
@@ -101,30 +112,53 @@ const Admin = () => {
     }
   };
 
+  // LOGIC LỌC: Lọc danh sách hiển thị dựa trên nút admin bấm vào
+  const displayedEvents = allEvents.filter((ev) => ev.status === filterStatus);
+
   return (
     <div className="admin-container">
       <div className="admin-card">
         <h1 className="admin-title">Hệ thống Quản trị EviGo</h1>
 
         <div className="admin-stats">
-          <div className="stat-card purple">
-            <h3>{pendingEvents.length}</h3>
+          {/* Nút Sự kiện mới - Tím */}
+          <div
+            className={`stat-card purple ${filterStatus === "pending" ? "active-filter" : ""}`}
+            onClick={() => setFilterStatus("pending")}
+            style={{ cursor: "pointer" }}
+          >
+            <h3>{pendingCount}</h3>
             <p>Sự kiện mới</p>
           </div>
 
-          <div className="stat-card green">
+          {/* Nút Đã duyệt - Xanh */}
+          <div
+            className={`stat-card green ${filterStatus === "approved" ? "active-filter" : ""}`}
+            onClick={() => setFilterStatus("approved")}
+            style={{ cursor: "pointer" }}
+          >
             <h3>{approvedCount}</h3>
             <p>Bạn đã duyệt</p>
           </div>
 
-          <div className="stat-card red">
+          {/* Nút Đã hủy - Đỏ */}
+          <div
+            className={`stat-card red ${filterStatus === "rejected" ? "active-filter" : ""}`}
+            onClick={() => setFilterStatus("rejected")}
+            style={{ cursor: "pointer" }}
+          >
             <h3>{rejectedCount}</h3>
             <p>Đã hủy</p>
           </div>
         </div>
 
         <div className="admin-table-section">
-          <h3 className="table-caption">Danh sách chờ phê duyệt</h3>
+          <h3 className="table-caption">
+            {filterStatus === "pending" && "Danh sách chờ phê duyệt"}
+            {filterStatus === "approved" && "Danh sách sự kiện đã duyệt"}
+            {filterStatus === "rejected" && "Danh sách sự kiện đã hủy"}
+          </h3>
+
           <table className="admin-table">
             <thead>
               <tr>
@@ -137,7 +171,7 @@ const Admin = () => {
               </tr>
             </thead>
             <tbody>
-              {pendingEvents.map((event) => (
+              {displayedEvents.map((event) => (
                 <tr key={event._id}>
                   <td>
                     <a
@@ -248,27 +282,42 @@ const Admin = () => {
                         alignItems: "center",
                       }}
                     >
-                      <button
-                        className="btn-approve"
-                        style={{ padding: "6px 10px" }}
-                        onClick={() => handleApprove(event._id)}
-                      >
-                        Duyệt
-                      </button>
-                      <button
-                        className="btn-reject"
-                        style={{ padding: "6px 10px" }}
-                        onClick={() => handleReject(event._id)}
-                      >
-                        Hủy
-                      </button>
+                      {event.status === "pending" ? (
+                        <>
+                          <button
+                            className="btn-approve"
+                            style={{ padding: "6px 10px" }}
+                            onClick={() => handleApprove(event._id)}
+                          >
+                            Duyệt
+                          </button>
+                          <button
+                            className="btn-reject"
+                            style={{ padding: "6px 10px" }}
+                            onClick={() => handleReject(event._id)}
+                          >
+                            Hủy
+                          </button>
+                        </>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            fontStyle: "italic",
+                            color: "#9ca3af",
+                          }}
+                        >
+                          Đã xử lý
+                        </span>
+                      )}
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {pendingEvents.length === 0 && (
+
+          {displayedEvents.length === 0 && (
             <p
               style={{
                 textAlign: "center",
@@ -276,7 +325,7 @@ const Admin = () => {
                 color: "#6b7280",
               }}
             >
-              Không có sự kiện nào đang chờ duyệt.
+              Không có sự kiện nào trong danh mục này.
             </p>
           )}
         </div>
