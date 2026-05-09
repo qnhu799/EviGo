@@ -32,7 +32,7 @@
   background: #635bff !important;
 }
 
-/* --- Thanh Tìm kiếm (Giữ nguyên) --- */
+/* --- Thanh Tìm kiếm (Đã cố định mốc tọa độ chính xác) --- */
 .search-container {
   width: 100%;
   display: flex;
@@ -49,6 +49,8 @@
   max-width: 800px;
   background: white;
   transition: all 0.3s ease;
+  position: relative; /* QUAN TRỌNG: Mốc để bảng gợi ý không bay lung tung */
+  z-index: 100; /* Thấp hơn Header nhưng đủ để hiển thị */
 }
 
 .search-input-group {
@@ -85,6 +87,87 @@
 .search-submit-btn:hover {
   background-color: #635bff;
   transform: translateY(-2px);
+}
+
+/* --- 🎯 PHẦN CẬP NHẬT: BẢNG GỢI Ý CHI TIẾT & CỐ ĐỊNH VỊ TRÍ --- */
+.search-suggestions-portal {
+  position: absolute;
+  top: 100%; /* Dính sát ngay mép dưới thanh search */
+  left: 0;
+  width: 100%;
+  margin-top: 8px;
+  background: white;
+  border: 1.5px solid #635bff;
+  border-radius: 12px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+  z-index: 999; /* Đảm bảo nằm dưới Header (thường Header là 1000+) */
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 15px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f1f1;
+  transition: 0.2s;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.suggestion-item:hover {
+  background-color: #f8f7ff;
+}
+
+.suggestion-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.suggestion-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.suggestion-name {
+  font-weight: 800;
+  color: #280d8c !important; /* Hiện màu xanh đậm rõ ràng */
+  font-size: 15px;
+  flex: 1;
+}
+
+.suggestion-tag {
+  background: #f0edff;
+  color: #635bff;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+.suggestion-bottom-row {
+  margin-top: 2px;
+}
+
+.suggestion-location {
+  font-size: 12.5px;
+  color: #444 !important; /* Màu địa chỉ đậm rõ nét */
+  line-height: 1.4;
+  display: block;
+}
+
+.no-res {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 25px;
 }
 
 /* --- Danh mục Thể loại (Giữ nguyên) --- */
@@ -157,13 +240,12 @@
   border-color: #635bff;
 }
 
-/* --- FEATURED EVENTS (CẬP NHẬT VỊ TRÍ NÚT) --- */
+/* --- FEATURED EVENTS (Giữ nguyên) --- */
 .featured-events {
   width: 90%;
   max-width: 1200px;
   margin: 60px auto;
   padding: 0 15px;
-  /* Thêm Flexbox xếp dọc */
   display: flex;
   flex-direction: column;
 }
@@ -171,7 +253,7 @@
 .section-header {
   width: 100%;
   display: flex;
-  justify-content: flex-start; /* Tiêu đề ở bên trái */
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 30px;
 }
@@ -187,22 +269,20 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   width: 100%;
-  margin-bottom: 30px; /* Khoảng cách lưới ảnh với nút dưới */
+  margin-bottom: 30px;
 }
 
-/* --- NÚT XEM THÊM (CHÍNH GIỮA PHÍA DƯỚI) --- */
+/* --- NÚT XEM THÊM --- */
 .see-more-btn {
   background: transparent;
   border: 2px solid #635bff;
   color: #635bff;
-  padding: 8px 20px; /* GIỮ NGUYÊN SIZE CŨ */
+  padding: 8px 20px;
   border-radius: 20px;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
   transition: 0.3s ease;
-
-  /* Căn giữa nút */
   margin: 0 auto;
   display: block;
   width: fit-content;

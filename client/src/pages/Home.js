@@ -20,6 +20,8 @@ import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 
 export default function Home() {
   const [events, setEvents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [visibleCounts, setVisibleCounts] = useState({
     amNhac: 3,
@@ -38,27 +40,44 @@ export default function Home() {
         );
         setEvents(res.data);
       } catch (err) {
-        console.error("Lỗi lấy dữ liệu trang chủ:", err);
+        console.error("Lỗi lấy dữ liệu:", err);
       }
     };
     fetchEvents();
   }, []);
+
+  const toNoneTone = (str) => {
+    if (!str) return "";
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase()
+      .trim();
+  };
 
   const getEventsByType = (type, count) => {
     return events.filter((ev) => ev.type === type).slice(0, count);
   };
 
   const handleShowMore = (category) => {
-    setVisibleCounts((prev) => ({
-      ...prev,
-      [category]: prev[category] + 3,
-    }));
+    setVisibleCounts((prev) => ({ ...prev, [category]: prev[category] + 3 }));
   };
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const scrollToEvent = (eventId) => {
+    const element = document.getElementById(eventId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setShowSuggestions(false);
+      setSearchTerm("");
     }
   };
 
@@ -97,17 +116,89 @@ export default function Home() {
         </Swiper>
       </section>
 
-      {/* 2. Thanh Tìm kiếm */}
+      {/* 2. Thanh Tìm kiếm với Dropdown cố định và Địa chỉ đầy đủ */}
       <section className="search-container">
-        <div className="search-wrapper">
+        {/* Style trực tiếp position relative để bảng gợi ý bám chặt vào đây */}
+        <div className="search-wrapper" style={{ position: "relative" }}>
           <div className="search-input-group">
             <input
               type="text"
-              placeholder="Tìm kiếm sự kiện..."
+              placeholder="Tìm kiếm theo tên, địa điểm, giới thiệu..."
               className="search-input-field"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
             />
           </div>
           <button className="search-submit-btn">Tìm kiếm</button>
+
+          {/* BẢNG GỢI Ý THẢ XUỐNG */}
+          {searchTerm.trim() !== "" && showSuggestions && (
+            <div className="search-suggestions-portal">
+              {events
+                .filter((ev) => {
+                  const input = toNoneTone(searchTerm);
+                  const searchable = toNoneTone(
+                    `${ev.name} ${ev.title} ${ev.location} ${ev.address} ${ev.ward} ${ev.district} ${ev.city} ${ev.type}`,
+                  );
+                  return searchable.includes(input);
+                })
+                .slice(0, 6)
+                .map((ev) => (
+                  <div
+                    key={ev._id}
+                    className="suggestion-item"
+                    onClick={() => scrollToEvent(ev._id)}
+                  >
+                    <div className="suggestion-info">
+                      <div className="suggestion-header-row">
+                        <span className="suggestion-name">
+                          {ev.name || ev.title || "Sự kiện không tên"}
+                        </span>
+                        <span className="suggestion-tag">
+                          {ev.type || "Sự kiện"}
+                        </span>
+                      </div>
+                      <div className="suggestion-bottom-row">
+                        <span className="suggestion-location">
+                          📍{" "}
+                          {(() => {
+                            // Hàm gom tất cả các trường địa chỉ chi tiết thành 1 chuỗi
+                            const addrParts = [
+                              ev.address,
+                              ev.ward,
+                              ev.district,
+                              ev.city || ev.location,
+                            ].filter(
+                              (part) => part && part.toString().trim() !== "",
+                            );
+
+                            return addrParts.length > 0
+                              ? addrParts.join(", ")
+                              : "Đang cập nhật địa chỉ...";
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+              {/* Thông báo nếu không khớp cái nào */}
+              {events.filter((ev) =>
+                toNoneTone(
+                  (ev.name || ev.title || "") +
+                    (ev.location || ev.address || ""),
+                ).includes(toNoneTone(searchTerm)),
+              ).length === 0 && (
+                <div className="suggestion-item no-res">
+                  Không tìm thấy kết quả phù hợp
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -161,18 +252,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION: ÂM NHẠC */}
+      {/* DANH SÁCH SỰ KIỆN - LUÔN GIỮ NGUYÊN DANH SÁCH BAN ĐẦU */}
       <section id="section-am-nhac" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Âm nhạc</h2>
         </div>
         <div className="events-grid">
           {getEventsByType("Âm nhạc", visibleCounts.amNhac).map((ev) => (
-            <EventCard key={ev._id} event={ev} />
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
           ))}
-          {getEventsByType("Âm nhạc", visibleCounts.amNhac).length === 0 && (
-            <p className="no-data">Chưa có sự kiện âm nhạc nào.</p>
-          )}
         </div>
         <button
           className="see-more-btn"
@@ -182,17 +272,16 @@ export default function Home() {
         </button>
       </section>
 
-      {/* SECTION: TRIỂN LÃM */}
       <section id="section-trien-lam" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Triễn lãm</h2>
         </div>
         <div className="events-grid">
           {getEventsByType("Triển lãm", visibleCounts.trienLam).map((ev) => (
-            <EventCard key={ev._id} event={ev} />
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
           ))}
-          {getEventsByType("Triển lãm", visibleCounts.trienLam).length ===
-            0 && <p className="no-data">Chưa có triển lãm nào.</p>}
         </div>
         <button
           className="see-more-btn"
@@ -202,7 +291,6 @@ export default function Home() {
         </button>
       </section>
 
-      {/* Khối giới thiệu Bản đồ */}
       <section className="map-cta-container">
         <div className="map-cta-content">
           <h2 className="map-cta-title">Discover Events Around You</h2>
@@ -214,18 +302,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION: ẨM THỰ */}
       <section id="section-am-thuc" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Ẩm thực</h2>
         </div>
         <div className="events-grid">
           {getEventsByType("Ẩm thực", visibleCounts.amThuc).map((ev) => (
-            <EventCard key={ev._id} event={ev} />
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
           ))}
-          {getEventsByType("Ẩm thực", visibleCounts.amThuc).length === 0 && (
-            <p className="no-data">Chưa có sự kiện ẩm thực nào.</p>
-          )}
         </div>
         <button
           className="see-more-btn"
@@ -235,18 +321,16 @@ export default function Home() {
         </button>
       </section>
 
-      {/* SECTION: THỂ THAO */}
       <section id="section-the-thao" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Thể thao</h2>
         </div>
         <div className="events-grid">
           {getEventsByType("Thể thao", visibleCounts.theThao).map((ev) => (
-            <EventCard key={ev._id} event={ev} />
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
           ))}
-          {getEventsByType("Thể thao", visibleCounts.theThao).length === 0 && (
-            <p className="no-data">Chưa có sự kiện thể thao nào.</p>
-          )}
         </div>
         <button
           className="see-more-btn"
@@ -256,17 +340,16 @@ export default function Home() {
         </button>
       </section>
 
-      {/* SECTION: HỌC THUẬT */}
       <section id="section-hoc-thuat" className="featured-events">
         <div className="section-header">
           <h2 className="section-title">Học thuật</h2>
         </div>
         <div className="events-grid">
           {getEventsByType("Học thuật", visibleCounts.hocThuat).map((ev) => (
-            <EventCard key={ev._id} event={ev} />
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
           ))}
-          {getEventsByType("Học thuật", visibleCounts.hocThuat).length ===
-            0 && <p className="no-data">Chưa có sự kiện học thuật nào.</p>}
         </div>
         <button
           className="see-more-btn"

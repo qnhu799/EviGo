@@ -235,7 +235,7 @@ const Admin = () => {
                         fontSize: "13px",
                       }}
                     >
-                      {event.ticketPrice || "Free"}
+                      {event.ticketPrice || "Miễn phí"}
                     </span>
                   </td>
 
