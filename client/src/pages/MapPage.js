@@ -13,7 +13,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
 
-// Cấu hình Icon mặc định - Giữ nguyên của Như
+// Cấu hình Icon mặc định - Giữ nguyên
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -46,13 +46,10 @@ const myLocationIcon = L.icon({
   shadowSize: [50, 50],
 });
 
-// CẬP NHẬT: MapController dùng hàm moveEnd để đảm bảo an toàn, không gây crash
 const MapController = ({ center, radius }) => {
   const map = useMap();
-
   useEffect(() => {
     if (map && center && center[0] && center[1]) {
-      // Dùng timeout cực ngắn để đảm bảo layer đã load xong
       const timer = setTimeout(() => {
         try {
           const circle = L.circle(center, { radius: radius * 1000 });
@@ -61,25 +58,38 @@ const MapController = ({ center, radius }) => {
             duration: 1.5,
           });
         } catch (e) {
-          // Nếu vẫn lỗi, dùng flyTo đơn giản làm phương án dự phòng
           map.flyTo(center, 13);
         }
       }, 100);
       return () => clearTimeout(timer);
     }
   }, [center, radius, map]);
-
   return null;
 };
 
 const MapPage = () => {
   const navigate = useNavigate();
-  const [radius, setRadius] = useState(5); //
-  const [userPos, setUserPos] = useState([10.7719, 106.6983]); //
-  const [mapCenter, setMapCenter] = useState([10.7719, 106.6983]); //
-  const [currentLocationMarker, setCurrentLocationMarker] = useState(null); //
-  const [events, setEvents] = useState([]); //
-  const [selectedEventId, setSelectedEventId] = useState(null); //
+  const [radius, setRadius] = useState(5);
+  const [userPos, setUserPos] = useState([10.7719, 106.6983]);
+  const [mapCenter, setMapCenter] = useState([10.7719, 106.6983]);
+  const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+
+  // State bộ lọc
+  const [selectedType, setSelectedType] = useState("Tất cả");
+  const [selectedTime, setSelectedTime] = useState("Tất cả");
+  const [customDate, setCustomDate] = useState(""); // State lưu ngày chọn từ lịch
+
+  const eventTypes = [
+    "Tất cả",
+    "Âm nhạc",
+    "Triển lãm",
+    "Ẩm thực",
+    "Thể thao",
+    "Học thuật",
+  ];
+  const timeFilters = ["Tất cả", "Hôm nay", "Ngày mai", "Cuối tuần"];
 
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
@@ -137,11 +147,13 @@ const MapPage = () => {
   return (
     <div className="map-page-wrapper">
       <div className="map-page-container">
+        {/* SIDEBAR TRÁI TỐI ƯU */}
         <div className="sidebar left-panel">
-          <h2 className="panel-title">Bộ lọc sự kiện</h2>
-          <div className="panel-content">
-            <div className="filter-group">
-              <label>Tìm kiếm điểm đến</label>
+          <h2 className="panel-title">Bộ lọc sự kiện 🔍</h2>
+          <div className="panel-content scrollable-filters">
+            {/* Nhóm 1: Địa điểm & Định vị */}
+            <div className="filter-card">
+              <label className="filter-label">Tìm kiếm điểm đến</label>
               <div className="search-wrapper">
                 <input
                   type="text"
@@ -150,46 +162,93 @@ const MapPage = () => {
                 />
                 <button className="search-icon-btn">🔍</button>
               </div>
-            </div>
-            <div className="filter-group">
-              <label>V vị trí của tôi</label>
-              <button className="btn-gps-locate" onClick={handleLocate}>
-                📍 Xác định vị trí hiện tại
+              <button
+                className="btn-gps-locate modern-btn"
+                onClick={handleLocate}
+              >
+                📍 Vị trí hiện tại
               </button>
             </div>
-            <div className="filter-group">
-              <label>Bán kính: {radius}km</label>
-              <div className="range-container">
+
+            {/* Nhóm 2: Bán kính */}
+            <div className="filter-card">
+              <div className="label-row">
+                <label className="filter-label">Bán kính</label>
+                <span className="range-value">{radius}km</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={radius}
+                className="filter-range modern-slider"
+                onChange={(e) => setRadius(Number(e.target.value))}
+              />
+            </div>
+
+            {/* Nhóm 3: Thời gian (Có thêm chọn Lịch) */}
+            <div className="filter-card">
+              <label className="filter-label">Thời gian</label>
+              <div className="filter-chips">
+                {timeFilters.map((time) => (
+                  <button
+                    key={time}
+                    className={`chip ${selectedTime === time ? "active" : ""}`}
+                    onClick={() => {
+                      setSelectedTime(time);
+                      setCustomDate(""); // Reset lịch khi chọn nút nhanh
+                    }}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+
+              {/* Ô CHỌN LỊCH */}
+              <div
+                className="date-picker-container"
+                style={{ marginTop: "12px" }}
+              >
                 <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={radius}
-                  className="filter-range"
-                  onChange={(e) => setRadius(Number(e.target.value))}
+                  type="date"
+                  className="modern-date-input"
+                  value={customDate}
+                  onChange={(e) => {
+                    setCustomDate(e.target.value);
+                    if (e.target.value) setSelectedTime("Tùy chọn");
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "8px",
+                    border: "1.5px solid #d1d1f0",
+                    fontSize: "13px",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
                 />
               </div>
             </div>
-            <div className="filter-group">
-              <label>Thể loại</label>
-              <select
-                className="filter-select"
-                style={{
-                  width: "220px",
-                  borderRadius: "10px",
-                  padding: "10px",
-                  border: "1px solid #d1d1f0",
-                }}
-              >
-                <option>Tất cả thể loại</option>
-                <option>Âm nhạc</option>
-                <option>Triển lãm</option>
-                <option>Ẩm thực</option>
-                <option>Thể thao</option>
-                <option>Học thuật</option>
-              </select>
+
+            {/* Nhóm 4: Thể loại */}
+            <div className="filter-card">
+              <label className="filter-label">Thể loại</label>
+              <div className="filter-chips">
+                {eventTypes.map((type) => (
+                  <button
+                    key={type}
+                    className={`chip ${selectedType === type ? "active" : ""}`}
+                    onClick={() => setSelectedType(type)}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
-            <button className="apply-filter-btn">Áp dụng bộ lọc</button>
+
+            <button className="apply-filter-btn modern-apply-btn">
+              Áp dụng bộ lọc ✨
+            </button>
           </div>
         </div>
 
@@ -244,10 +303,7 @@ const MapPage = () => {
                           : new L.Icon.Default()
                       }
                       eventHandlers={{
-                        mouseover: (e) => {
-                          const marker = e.target;
-                          if (marker && marker.openPopup) marker.openPopup();
-                        },
+                        mouseover: (e) => e.target.openPopup(),
                         click: () => setSelectedEventId(ev._id),
                       }}
                     >
