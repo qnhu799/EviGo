@@ -9,7 +9,7 @@
 }
 
 .admin-card {
-  background: white; /* Thầy chỉnh lại nền trắng cho sạch sẽ */
+  background: white;
   width: 100%;
   max-width: 1200px;
   padding: 30px;
@@ -33,27 +33,46 @@
   margin-bottom: 40px;
 }
 
-/* --- Cập nhật Stat Card để hỗ trợ nhấn (Clickable) --- */
+/* --- Stat Card hỗ trợ nhấn (Clickable) --- */
 .stat-card {
-  padding: 20px;
+  padding: 25px 20px;
   border-radius: 12px;
   color: white;
   text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer; /* Đổi sang hình bàn tay để admin biết là bấm được */
-  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 3px solid transparent; /* Tạo không gian cho border khi active */
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Hiệu ứng khi Card đang được chọn để lọc (Active) */
+/* ✨ HIỆU ỨNG KHI ĐANG CHỌN ĐỂ LỌC (ACTIVE) ✨ */
 .stat-card.active-filter {
   border-color: #280d8c;
   transform: scale(1.05);
-  box-shadow: 0 10px 20px rgba(40, 13, 140, 0.2);
+  box-shadow: 0 10px 25px rgba(40, 13, 140, 0.25);
+  position: relative;
+}
+
+/* Thêm biểu tượng check hoặc điểm nhấn khi active */
+.stat-card.active-filter::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-weight: 900;
+  background: white;
+  color: #280d8c;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stat-card.purple { background: #635BFF; }
@@ -61,29 +80,38 @@
 .stat-card.red { background: #e74c3c; }
 
 .stat-card h3 {
-  font-size: 28px;
+  font-size: 32px;
   margin-bottom: 5px;
   font-weight: 800;
 }
 
+.stat-card p {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* --- Quản lý Bảng Dữ Liệu --- */
 .admin-table-section {
   overflow-x: auto;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #eee;
-  min-height: 200px; /* Tránh bị sụp giao diện khi bảng trống */
+  background: #fff;
 }
 
 .table-caption {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   font-size: 18px;
-  color: #333;
-  font-weight: 700;
+  color: #280d8c;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
   min-width: 900px;
 }
 
@@ -91,61 +119,100 @@
   background: #635BFF;
   color: white;
   text-align: left;
-  padding: 15px;
-  font-size: 13px;
+  padding: 18px 15px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .admin-table td {
-  padding: 18px 15px;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
+  padding: 15px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13.5px;
   vertical-align: middle;
 }
 
 .admin-table tr:hover {
-  background-color: #fcfaff;
+  background-color: #f9fafb;
 }
 
-/* --- Nút thao tác Duyệt/Hủy --- */
-.action-btns {
+/* Các chi tiết thông tin trong cột */
+.event-link-title {
+  color: #280d8c;
+  font-weight: 800;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.event-type-badge {
+  background: #f0efff;
+  color: #635bff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.contributor-box {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
+.avatar-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #635bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.permanent-tag {
+  color: #635bff;
+  font-weight: 700;
+  background: #eceaff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+/* Nút Duyệt/Hủy */
+.action-btns {
+  display: flex;
+  gap: 8px;
+}
+
 .btn-approve, .btn-reject {
-  padding: 8px 18px;
+  padding: 8px 14px;
   border: none;
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
+  font-size: 12px;
+  transition: 0.2s;
 }
 
-.btn-approve {
-  background: #ebfbee;
-  color: #27ae60;
-}
-.btn-approve:hover {
-  background: #27ae60;
-  color: white;
-  box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2);
+.btn-approve { background: #ebfbee; color: #27ae60; }
+.btn-approve:hover { background: #27ae60; color: white; }
+
+.btn-reject { background: #fff5f5; color: #e74c3c; }
+.btn-reject:hover { background: #e74c3c; color: white; }
+
+.status-processed-text {
+  font-size: 12px;
+  font-style: italic;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
-.btn-reject {
-  background: #fff5f5;
-  color: #e74c3c;
-}
-.btn-reject:hover {
-  background: #e74c3c;
-  color: white;
-  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
-}
-
-/* Responsive */
+/* Responsive (Giữ nguyên) */
 @media (max-width: 992px) {
   .admin-stats { grid-template-columns: repeat(2, 1fr); }
 }
@@ -153,5 +220,4 @@
 @media (max-width: 768px) {
   .admin-stats { grid-template-columns: 1fr; }
   .admin-card { padding: 15px; }
-  .admin-title { font-size: 20px; }
 }

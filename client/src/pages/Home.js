@@ -3,7 +3,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast";
 import EventCard from "./EventCard";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -74,7 +73,7 @@ export default function Home() {
     })
     .slice(0, 6);
 
-  // Reset index khi Như nhập chữ mới
+  // Reset index khi nhập chữ mới
   useEffect(() => {
     setFocusedIndex(-1);
   }, [searchTerm]);

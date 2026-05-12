@@ -1,6 +1,6 @@
 const Event = require("../models/Event");
 
-// 1. Tạo sự kiện mới (Đóng góp) - CẬP NHẬT GHI NHẬN NGƯỜI ĐÓNG GÓP
+// 1. Tạo sự kiện mới (Đóng góp)
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -23,8 +23,6 @@ exports.createEvent = async (req, res) => {
       isPermanent: String(req.body.isPermanent) === "true",
       isAllDay: String(req.body.isAllDay) === "true",
       closedDays: req.body.closedDays ? JSON.parse(req.body.closedDays) : [],
-
-      // SỬA ĐỔI CHÍNH: Bóc tách đúng giá trị displayName gửi từ Frontend
       contributor: {
         displayName: req.body.contributor || "Người dùng ẩn danh",
         name: req.user ? req.user.username : "",
@@ -42,22 +40,25 @@ exports.createEvent = async (req, res) => {
     await newEvent.save();
     res.status(201).json({ message: "Gửi đóng góp thành công!" });
   } catch (err) {
-    console.error("Lỗi createEvent:", err);
+    console.error("❌ Lỗi createEvent:", err.message);
     res.status(500).json({ error: "Lỗi xử lý dữ liệu đóng góp" });
   }
 };
 
-// 2. Duyệt bài - FIX LỖI "MẤT TÍCH" BẰNG CÁCH ÉP KIỂU STATUS
+// 2. Duyệt bài
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     const adminId = req.user ? req.user.id : null;
 
+    if (!status)
+      return res.status(400).json({ error: "Thiếu trạng thái cập nhật!" });
+
     const updatedEvent = await Event.findByIdAndUpdate(
       id,
       {
-        status: status.toLowerCase(), // Luôn lưu "approved" hoặc "rejected"
+        status: status.toLowerCase(),
         approvedBy: adminId,
       },
       { new: true },
@@ -65,23 +66,26 @@ exports.updateStatus = async (req, res) => {
 
     if (!updatedEvent)
       return res.status(404).json({ error: "Không tìm thấy sự kiện!" });
+
     res.json({
       message: "Cập nhật trạng thái thành công!",
       data: updatedEvent,
     });
   } catch (err) {
+    console.error("❌ Lỗi updateStatus:", err.message);
     res.status(500).json({ error: "Lỗi hệ thống khi duyệt" });
   }
 };
 
-// 3. Lấy danh sách sự kiện ĐÃ DUYỆT - HIỆN TẤT CẢ BÀI ĐÃ DUYỆT TRÊN HỆ THỐNG
+// 3. Lấy danh sách sự kiện ĐÃ DUYỆT
 exports.getApprovedEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: "approved" }).sort({
-      updatedAt: -1,
-    });
-    res.json(events);
+    const events = await Event.find({ status: "approved" })
+      .sort({ updatedAt: -1 })
+      .lean();
+    res.json(events || []);
   } catch (err) {
+    console.error("❌ Lỗi getApprovedEvents:", err.message);
     res.status(500).json({ error: "Lỗi tải danh sách" });
   }
 };
@@ -89,16 +93,17 @@ exports.getApprovedEvents = async (req, res) => {
 // 4. Lấy danh sách sự kiện CHỜ DUYỆT
 exports.getPendingEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: "pending" }).sort({
-      createdAt: -1,
-    });
-    res.json(events);
+    const events = await Event.find({ status: "pending" })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(events || []);
   } catch (err) {
+    console.error("❌ Lỗi getPendingEvents:", err.message);
     res.status(500).json({ error: "Lỗi tải danh sách chờ" });
   }
 };
 
-// 5. Thống kê Admin - HIỆN TỔNG SỐ BÀI TOÀN HỆ THỐNG ĐỂ KHÔNG BỊ TRỐNG
+// 5. Thống kê Admin (Dùng cho 3 thẻ màu)
 exports.getAdminStats = async (req, res) => {
   try {
     const [approvedCount, rejectedCount, pendingCount] = await Promise.all([
@@ -108,6 +113,7 @@ exports.getAdminStats = async (req, res) => {
     ]);
     res.json({ approvedCount, rejectedCount, pendingCount });
   } catch (err) {
+    console.error("❌ Lỗi getAdminStats:", err.message);
     res.status(500).json({ error: "Lỗi lấy thống kê" });
   }
 };
@@ -115,9 +121,12 @@ exports.getAdminStats = async (req, res) => {
 // 6. Xóa sự kiện
 exports.deleteEvent = async (req, res) => {
   try {
-    await Event.findByIdAndDelete(req.params.id);
+    const deleted = await Event.findByIdAndDelete(req.params.id);
+    if (!deleted)
+      return res.status(404).json({ message: "Không tìm thấy để xóa" });
     res.json({ message: "Xóa sự kiện thành công!" });
   } catch (err) {
+    console.error("❌ Lỗi deleteEvent:", err.message);
     res.status(500).json({ error: "Lỗi khi xóa" });
   }
 };
@@ -125,20 +134,28 @@ exports.deleteEvent = async (req, res) => {
 // 7. Chi tiết sự kiện
 exports.getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findById(req.params.id).lean();
     if (!event) return res.status(404).json({ message: "Không tìm thấy!" });
     res.json(event);
   } catch (err) {
+    console.error("❌ Lỗi getEventById:", err.message);
     res.status(500).json({ error: "Lỗi tải chi tiết" });
   }
 };
 
-// --- 🎯 HÀM MỚI BỔ SUNG: Lấy tất cả sự kiện để Admin lọc theo 3 trạng thái ---
+// 8. HÀM FIX LỖI 500: Lấy tất cả sự kiện (Admin lọc)
 exports.getAllEventsForAdmin = async (req, res) => {
   try {
-    const events = await Event.find().sort({ createdAt: -1 });
-    res.status(200).json(events);
+    // .lean() cực kỳ quan trọng để Frontend nhận JSON thuần
+    const events = await Event.find({}).sort({ createdAt: -1 }).lean();
+    res.status(200).json(events || []);
   } catch (err) {
-    res.status(500).json({ error: "Lỗi server khi tải dữ liệu cho Admin" });
+    console.error("‼️ LỖI NGHIÊM TRỌNG TẠI getAllEventsForAdmin:", err);
+    res
+      .status(500)
+      .json({
+        error: "Lỗi server khi tải dữ liệu cho Admin",
+        details: err.message,
+      });
   }
 };
