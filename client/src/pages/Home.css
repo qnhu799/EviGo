@@ -407,6 +407,13 @@
   transform: scale(1.05);
 }
 
+.suggestion-item.focused {
+    background-color: rgba(99, 91, 255, 0.15); /* Màu tím đặc trưng EviGo */
+    border-left: 4px solid #635bff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
 /* --- Responsive (Giữ nguyên) --- */
 @media (max-width: 1024px) {
   .events-grid {

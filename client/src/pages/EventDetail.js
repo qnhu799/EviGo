@@ -19,25 +19,16 @@ export default function EventDetail() {
     "Thứ 7",
   ];
 
-  // HÀM QUAN TRỌNG: Đã cập nhật để bóc tách chữ "server/" nếu có
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
     if (path.startsWith("http")) return path;
-
-    // 1. Chuẩn hóa dấu gạch ngược từ database Windows sang gạch xuôi
     let cleanPath = path.replace(/\\/g, "/");
-
-    // 2. Nếu đường dẫn bị dính "server/uploads/...", mình bỏ chữ "server/" đi
     if (cleanPath.startsWith("server/")) {
       cleanPath = cleanPath.replace("server/", "");
     }
-
-    // 3. Kiểm tra nếu path đã chứa sẵn "uploads/" thì nối trực tiếp với Domain
     if (cleanPath.startsWith("uploads/")) {
       return `http://localhost:5000/${cleanPath}`;
     }
-
-    // 4. Nếu path chỉ là tên file đơn thuần, mới nối thêm "/uploads/"
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
@@ -63,7 +54,6 @@ export default function EventDetail() {
       <div className="ed-error">Không tìm thấy sự kiện này rồi Như ơi!</div>
     );
 
-  // Banner ưu tiên ảnh 'image' (cover), nếu không có thì lấy ảnh đầu tiên trong album
   const mainBanner = getFullImageUrl(
     event.image || (event.images && event.images[0]),
   );
@@ -74,9 +64,11 @@ export default function EventDetail() {
         <img src={mainBanner} alt="Banner" className="ed-hero-img" />
         <div className="ed-hero-overlay">
           <div className="ed-container">
-            <button className="ed-btn-back" onClick={() => navigate("/")}>
+            {/* CẬP NHẬT QUAN TRỌNG: Dùng navigate(-1) để quay về đúng trạng thái MapPage */}
+            <button className="ed-btn-back" onClick={() => navigate(-1)}>
               <i className="fas fa-chevron-left"></i> Quay lại
             </button>
+
             <div className="ed-hero-content">
               <span className="ed-badge">{event.type}</span>
               <h1 className="ed-main-title">{event.title}</h1>
@@ -95,7 +87,6 @@ export default function EventDetail() {
             <p className="ed-desc">{event.description}</p>
           </section>
 
-          {/* Album ảnh - Xử lý hiển thị mảng ảnh đóng góp */}
           {event.images && event.images.length > 0 && (
             <section className="ed-card">
               <h2 className="ed-section-title">Album hình ảnh</h2>
@@ -176,7 +167,6 @@ export default function EventDetail() {
               </div>
               <div className="ed-text-box">
                 <small>Cung cấp bởi</small>
-                {/* --- CẬP NHẬT: Ưu tiên displayName để hiện tên Như xịn hơn --- */}
                 <p>
                   {event.contributor?.displayName ||
                     event.contributor?.name ||

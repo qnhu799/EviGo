@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 import EventCard from "./EventCard";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -19,9 +20,11 @@ import imgTheThao from "../assets/theloaisukien/thethao.png";
 import imgHocThuat from "../assets/theloaisukien/hocthuat.png";
 
 export default function Home() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1); // Quản lý dòng đang chọn bằng bàn phím
 
   const [visibleCounts, setVisibleCounts] = useState({
     amNhac: 3,
@@ -57,28 +60,87 @@ export default function Home() {
       .trim();
   };
 
-  const getEventsByType = (type, count) => {
-    return events.filter((ev) => ev.type === type).slice(0, count);
-  };
+  // Lọc danh sách gợi ý để dùng chung cho cả Render và Keyboard Logic
+  const filteredSuggestions = events
+    .filter((ev) => {
+      const input = toNoneTone(searchTerm);
+      const locString = ev.locations
+        ? ev.locations.map((l) => `${l.address} ${l.district}`).join(" ")
+        : "";
+      const searchable = toNoneTone(
+        `${ev.name || ev.title} ${ev.type} ${locString}`,
+      );
+      return searchable.includes(input);
+    })
+    .slice(0, 6);
 
-  const handleShowMore = (category) => {
-    setVisibleCounts((prev) => ({ ...prev, [category]: prev[category] + 3 }));
-  };
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  // Reset index khi Như nhập chữ mới
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [searchTerm]);
 
   const scrollToEvent = (eventId) => {
     const element = document.getElementById(eventId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Hiệu ứng highlight nhẹ cho Card
+      element.style.transition = "0.5s";
+      element.style.transform = "scale(1.05)";
+      setTimeout(() => {
+        element.style.transform = "scale(1)";
+      }, 1000);
+
       setShowSuggestions(false);
       setSearchTerm("");
+    } else {
+      // Nếu bài này đang bị ẩn do mảng hiển thị hạn chế, thì đẩy sang Map để lọc
+      navigate("/map", { state: { keyword: searchTerm } });
     }
+  };
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) return;
+    // Chuyển sang trang Map kèm từ khóa
+    navigate("/map", { state: { keyword: searchTerm } });
+  };
+
+  // --- LOGIC BÀN PHÍM THÔNG MINH ---
+  const handleKeyDown = (e) => {
+    if (searchTerm.trim() === "" || filteredSuggestions.length === 0) {
+      if (e.key === "Enter") handleSearch();
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusedIndex((prev) =>
+        prev < filteredSuggestions.length - 1 ? prev + 1 : prev,
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === "Enter") {
+      if (focusedIndex >= 0) {
+        // Nếu đang chọn một gợi ý cụ thể: Cuộn tới đó
+        e.preventDefault();
+        scrollToEvent(filteredSuggestions[focusedIndex]._id);
+      } else {
+        // Nếu không chọn dòng nào: Tìm kiếm tổng quát
+        handleSearch();
+      }
+    }
+  };
+
+  const handleCategoryClick = (categoryName) => {
+    navigate("/map", { state: { category: categoryName } });
+  };
+
+  const getEventsByType = (type, count) =>
+    events.filter((ev) => ev.type === type).slice(0, count);
+
+  const handleShowMore = (category) => {
+    setVisibleCounts((prev) => ({ ...prev, [category]: prev[category] + 3 }));
   };
 
   return (
@@ -116,7 +178,7 @@ export default function Home() {
         </Swiper>
       </section>
 
-      {/* 2. Thanh Tìm kiếm với Dropdown cố định và Địa chỉ lấy từ mảng locations */}
+      {/* 2. Thanh Tìm kiếm */}
       <section className="search-container">
         <div className="search-wrapper" style={{ position: "relative" }}>
           <div className="search-input-group">
@@ -130,86 +192,38 @@ export default function Home() {
                 setShowSuggestions(true);
               }}
               onFocus={() => setShowSuggestions(true)}
+              onKeyDown={handleKeyDown} // SỰ KIỆN BÀN PHÍM MỚI
             />
           </div>
-          <button className="search-submit-btn">Tìm kiếm</button>
+          <button className="search-submit-btn" onClick={handleSearch}>
+            Tìm kiếm
+          </button>
 
           {/* BẢNG GỢI Ý THẢ XUỐNG */}
           {searchTerm.trim() !== "" && showSuggestions && (
             <div className="search-suggestions-portal">
-              {events
-                .filter((ev) => {
-                  const input = toNoneTone(searchTerm);
-                  // Gom tất cả thông tin tìm kiếm bao gồm cả các trường trong mảng locations
-                  const locString = ev.locations
-                    ? ev.locations
-                        .map((l) => `${l.address} ${l.district}`)
-                        .join(" ")
-                    : "";
-                  const searchable = toNoneTone(
-                    `${ev.name} ${ev.title} ${ev.type} ${locString} ${ev.district}`,
-                  );
-                  return searchable.includes(input);
-                })
-                .slice(0, 6)
-                .map((ev) => (
-                  <div
-                    key={ev._id}
-                    className="suggestion-item"
-                    onClick={() => scrollToEvent(ev._id)}
-                  >
-                    <div className="suggestion-info">
-                      <div className="suggestion-header-row">
-                        <span className="suggestion-name">
-                          {ev.name || ev.title || "Sự kiện không tên"}
-                        </span>
-                        <span className="suggestion-tag">
-                          {ev.type || "Sự kiện"}
-                        </span>
-                      </div>
-                      <div className="suggestion-bottom-row">
-                        <span className="suggestion-location">
-                          📍{" "}
-                          {(() => {
-                            // Ưu tiên lấy từ mảng locations của em
-                            if (ev.locations && ev.locations.length > 0) {
-                              const loc = ev.locations[0];
-                              const parts = [loc.address, loc.district].filter(
-                                (p) => p && p.trim() !== "",
-                              );
-                              return parts.length > 0
-                                ? parts.join(", ")
-                                : "Đang cập nhật địa chỉ...";
-                            }
-                            // Dự phòng nếu dữ liệu nằm ở các trường ngoài mảng
-                            const addrParts = [ev.address, ev.district].filter(
-                              (p) => p && p.trim() !== "",
-                            );
-                            return addrParts.length > 0
-                              ? addrParts.join(", ")
-                              : "Đang cập nhật địa chỉ...";
-                          })()}
-                        </span>
-                      </div>
+              {filteredSuggestions.map((ev, index) => (
+                <div
+                  key={ev._id}
+                  className={`suggestion-item ${index === focusedIndex ? "focused" : ""}`} // CLASS HIGHLIGHT
+                  onClick={() => scrollToEvent(ev._id)}
+                  onMouseEnter={() => setFocusedIndex(index)}
+                >
+                  <div className="suggestion-info">
+                    <div className="suggestion-header-row">
+                      <span className="suggestion-name">
+                        {ev.name || ev.title}
+                      </span>
+                      <span className="suggestion-tag">{ev.type}</span>
+                    </div>
+                    <div className="suggestion-bottom-row">
+                      <span className="suggestion-location">
+                        📍 {ev.locations?.[0]?.address || "Hồ Chí Minh City"}
+                      </span>
                     </div>
                   </div>
-                ))}
-
-              {/* Thông báo nếu không khớp cái nào */}
-              {events.filter((ev) => {
-                const locString = ev.locations
-                  ? ev.locations
-                      .map((l) => `${l.address} ${l.district}`)
-                      .join(" ")
-                  : "";
-                return toNoneTone(
-                  `${ev.name || ev.title} ${locString}`,
-                ).includes(toNoneTone(searchTerm));
-              }).length === 0 && (
-                <div className="suggestion-item no-res">
-                  Không tìm thấy kết quả phù hợp
                 </div>
-              )}
+              ))}
             </div>
           )}
         </div>
@@ -220,41 +234,16 @@ export default function Home() {
         <h2 className="categories-title">Thể loại sự kiện</h2>
         <div className="categories-grid">
           {[
-            {
-              id: 1,
-              name: "Âm nhạc",
-              image: imgAmNhac,
-              targetId: "section-am-nhac",
-            },
-            {
-              id: 2,
-              name: "Triễn lãm",
-              image: imgTrienLam,
-              targetId: "section-trien-lam",
-            },
-            {
-              id: 3,
-              name: "Ẩm thực",
-              image: imgAmThuc,
-              targetId: "section-am-thuc",
-            },
-            {
-              id: 4,
-              name: "Thể thao",
-              image: imgTheThao,
-              targetId: "section-the-thao",
-            },
-            {
-              id: 5,
-              name: "Học thuật",
-              image: imgHocThuat,
-              targetId: "section-hoc-thuat",
-            },
+            { id: 1, name: "Âm nhạc", image: imgAmNhac },
+            { id: 2, name: "Triển lãm", image: imgTrienLam },
+            { id: 3, name: "Ẩm thực", image: imgAmThuc },
+            { id: 4, name: "Thể thao", image: imgTheThao },
+            { id: 5, name: "Học thuật", image: imgHocThuat },
           ].map((cat) => (
             <div
               className="category-item"
               key={cat.id}
-              onClick={() => scrollToSection(cat.targetId)}
+              onClick={() => handleCategoryClick(cat.name)}
             >
               <div className="category-circle-placeholder">
                 <img src={cat.image} alt={cat.name} className="category-img" />
@@ -265,11 +254,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* DANH SÁCH SỰ KIỆN - GIỮ NGUYÊN */}
+      {/* DANH SÁCH SỰ KIỆN THEO LOẠI */}
       <section id="section-am-nhac" className="featured-events">
-        <div className="section-header">
-          <h2 className="section-title">Âm nhạc</h2>
-        </div>
+        <h2 className="section-title">Âm nhạc</h2>
         <div className="events-grid">
           {getEventsByType("Âm nhạc", visibleCounts.amNhac).map((ev) => (
             <div id={ev._id} key={ev._id}>
@@ -286,9 +273,7 @@ export default function Home() {
       </section>
 
       <section id="section-trien-lam" className="featured-events">
-        <div className="section-header">
-          <h2 className="section-title">Triễn lãm</h2>
-        </div>
+        <h2 className="section-title">Triển lãm</h2>
         <div className="events-grid">
           {getEventsByType("Triển lãm", visibleCounts.trienLam).map((ev) => (
             <div id={ev._id} key={ev._id}>
@@ -316,9 +301,7 @@ export default function Home() {
       </section>
 
       <section id="section-am-thuc" className="featured-events">
-        <div className="section-header">
-          <h2 className="section-title">Ẩm thực</h2>
-        </div>
+        <h2 className="section-title">Ẩm thực</h2>
         <div className="events-grid">
           {getEventsByType("Ẩm thực", visibleCounts.amThuc).map((ev) => (
             <div id={ev._id} key={ev._id}>
@@ -335,9 +318,7 @@ export default function Home() {
       </section>
 
       <section id="section-the-thao" className="featured-events">
-        <div className="section-header">
-          <h2 className="section-title">Thể thao</h2>
-        </div>
+        <h2 className="section-title">Thể thao</h2>
         <div className="events-grid">
           {getEventsByType("Thể thao", visibleCounts.theThao).map((ev) => (
             <div id={ev._id} key={ev._id}>
@@ -348,25 +329,6 @@ export default function Home() {
         <button
           className="see-more-btn"
           onClick={() => handleShowMore("theThao")}
-        >
-          Xem thêm
-        </button>
-      </section>
-
-      <section id="section-hoc-thuat" className="featured-events">
-        <div className="section-header">
-          <h2 className="section-title">Học thuật</h2>
-        </div>
-        <div className="events-grid">
-          {getEventsByType("Học thuật", visibleCounts.hocThuat).map((ev) => (
-            <div id={ev._id} key={ev._id}>
-              <EventCard event={ev} />
-            </div>
-          ))}
-        </div>
-        <button
-          className="see-more-btn"
-          onClick={() => handleShowMore("hocThuat")}
         >
           Xem thêm
         </button>
