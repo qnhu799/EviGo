@@ -23,12 +23,10 @@ export default function EventDetail() {
     if (!path) return "/default-banner.jpg";
     if (path.startsWith("http")) return path;
     let cleanPath = path.replace(/\\/g, "/");
-    if (cleanPath.startsWith("server/")) {
+    if (cleanPath.startsWith("server/"))
       cleanPath = cleanPath.replace("server/", "");
-    }
-    if (cleanPath.startsWith("uploads/")) {
+    if (cleanPath.startsWith("uploads/"))
       return `http://localhost:5000/${cleanPath}`;
-    }
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
@@ -64,14 +62,19 @@ export default function EventDetail() {
         <img src={mainBanner} alt="Banner" className="ed-hero-img" />
         <div className="ed-hero-overlay">
           <div className="ed-container">
-            {/* CẬP NHẬT QUAN TRỌNG: Dùng navigate(-1) để quay về đúng trạng thái MapPage */}
+            {/* NÚT QUAY LẠI THÔNG MINH */}
             <button className="ed-btn-back" onClick={() => navigate(-1)}>
-              <i className="fas fa-chevron-left"></i> Quay lại
+              Quay lại
             </button>
 
             <div className="ed-hero-content">
-              <span className="ed-badge">{event.type}</span>
+              {/* Badge thể loại hiện phía trên tiêu đề */}
+              <div className="ed-badge-wrapper">
+                <span className="ed-badge">{event.type}</span>
+              </div>
+
               <h1 className="ed-main-title">{event.title}</h1>
+
               <p className="ed-hero-loc">
                 📍 {event.locations && event.locations[0]?.address}
               </p>

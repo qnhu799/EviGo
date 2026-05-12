@@ -23,7 +23,7 @@ export default function Home() {
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [focusedIndex, setFocusedIndex] = useState(-1); // Quản lý dòng đang chọn bằng bàn phím
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
   const [visibleCounts, setVisibleCounts] = useState({
     amNhac: 3,
@@ -59,7 +59,6 @@ export default function Home() {
       .trim();
   };
 
-  // Lọc danh sách gợi ý để dùng chung cho cả Render và Keyboard Logic
   const filteredSuggestions = events
     .filter((ev) => {
       const input = toNoneTone(searchTerm);
@@ -73,7 +72,6 @@ export default function Home() {
     })
     .slice(0, 6);
 
-  // Reset index khi nhập chữ mới
   useEffect(() => {
     setFocusedIndex(-1);
   }, [searchTerm]);
@@ -82,35 +80,28 @@ export default function Home() {
     const element = document.getElementById(eventId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      // Hiệu ứng highlight nhẹ cho Card
       element.style.transition = "0.5s";
       element.style.transform = "scale(1.05)";
       setTimeout(() => {
         element.style.transform = "scale(1)";
       }, 1000);
-
       setShowSuggestions(false);
       setSearchTerm("");
     } else {
-      // Nếu bài này đang bị ẩn do mảng hiển thị hạn chế, thì đẩy sang Map để lọc
       navigate("/map", { state: { keyword: searchTerm } });
     }
   };
 
   const handleSearch = () => {
     if (!searchTerm.trim()) return;
-    // Chuyển sang trang Map kèm từ khóa
     navigate("/map", { state: { keyword: searchTerm } });
   };
 
-  // --- LOGIC BÀN PHÍM THÔNG MINH ---
   const handleKeyDown = (e) => {
     if (searchTerm.trim() === "" || filteredSuggestions.length === 0) {
       if (e.key === "Enter") handleSearch();
       return;
     }
-
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setFocusedIndex((prev) =>
@@ -121,18 +112,34 @@ export default function Home() {
       setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
     } else if (e.key === "Enter") {
       if (focusedIndex >= 0) {
-        // Nếu đang chọn một gợi ý cụ thể: Cuộn tới đó
         e.preventDefault();
         scrollToEvent(filteredSuggestions[focusedIndex]._id);
       } else {
-        // Nếu không chọn dòng nào: Tìm kiếm tổng quát
         handleSearch();
       }
     }
   };
 
+  // --- CẬP NHẬT: Hàm cuộn trang tại chỗ ---
   const handleCategoryClick = (categoryName) => {
-    navigate("/map", { state: { category: categoryName } });
+    const categoryMap = {
+      "Âm nhạc": "section-am-nhac",
+      "Triển lãm": "section-trien-lam",
+      "Ẩm thực": "section-am-thuc",
+      "Thể thao": "section-the-thao",
+      "Học thuật": "section-hoc-thuat",
+    };
+
+    const targetId = categoryMap[categoryName];
+    const element = document.getElementById(targetId);
+
+    if (element) {
+      // Cuộn mượt đến danh mục
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      // Nếu không tìm thấy (ví dụ trang khác), thì mới bay sang Map
+      navigate("/map", { state: { category: categoryName } });
+    }
   };
 
   const getEventsByType = (type, count) =>
@@ -156,24 +163,14 @@ export default function Home() {
           loop={true}
           className="mySwiper"
         >
-          <SwiperSlide>
-            <div
-              className="slide-item"
-              style={{ backgroundImage: `url(${banner1})` }}
-            ></div>
-          </SwiperSlide>
-          <SwiperSlide>
-            <div
-              className="slide-item"
-              style={{ backgroundImage: `url(${banner2})` }}
-            ></div>
-          </SwiperSlide>
-          <SwiperSlide>
-            <div
-              className="slide-item"
-              style={{ backgroundImage: `url(${banner3})` }}
-            ></div>
-          </SwiperSlide>
+          {[banner1, banner2, banner3].map((bn, idx) => (
+            <SwiperSlide key={idx}>
+              <div
+                className="slide-item"
+                style={{ backgroundImage: `url(${bn})` }}
+              ></div>
+            </SwiperSlide>
+          ))}
         </Swiper>
       </section>
 
@@ -191,20 +188,19 @@ export default function Home() {
                 setShowSuggestions(true);
               }}
               onFocus={() => setShowSuggestions(true)}
-              onKeyDown={handleKeyDown} // SỰ KIỆN BÀN PHÍM MỚI
+              onKeyDown={handleKeyDown}
             />
           </div>
           <button className="search-submit-btn" onClick={handleSearch}>
             Tìm kiếm
           </button>
 
-          {/* BẢNG GỢI Ý THẢ XUỐNG */}
           {searchTerm.trim() !== "" && showSuggestions && (
             <div className="search-suggestions-portal">
               {filteredSuggestions.map((ev, index) => (
                 <div
                   key={ev._id}
-                  className={`suggestion-item ${index === focusedIndex ? "focused" : ""}`} // CLASS HIGHLIGHT
+                  className={`suggestion-item ${index === focusedIndex ? "focused" : ""}`}
                   onClick={() => scrollToEvent(ev._id)}
                   onMouseEnter={() => setFocusedIndex(index)}
                 >
@@ -243,6 +239,7 @@ export default function Home() {
               className="category-item"
               key={cat.id}
               onClick={() => handleCategoryClick(cat.name)}
+              style={{ cursor: "pointer" }}
             >
               <div className="category-circle-placeholder">
                 <img src={cat.image} alt={cat.name} className="category-img" />
@@ -328,6 +325,24 @@ export default function Home() {
         <button
           className="see-more-btn"
           onClick={() => handleShowMore("theThao")}
+        >
+          Xem thêm
+        </button>
+      </section>
+
+      {/* Section Học thuật (Bổ sung để nút nhấn có chỗ nhảy tới) */}
+      <section id="section-hoc-thuat" className="featured-events">
+        <h2 className="section-title">Học thuật</h2>
+        <div className="events-grid">
+          {getEventsByType("Học thuật", visibleCounts.hocThuat).map((ev) => (
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
+          ))}
+        </div>
+        <button
+          className="see-more-btn"
+          onClick={() => handleShowMore("hocThuat")}
         >
           Xem thêm
         </button>
