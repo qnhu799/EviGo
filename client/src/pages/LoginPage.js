@@ -30,8 +30,20 @@ export default function LoginPage() {
         formData,
       );
 
+      // --- 🎯 PHẦN CẬP NHẬT QUAN TRỌNG NHẤT ---
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
+
+      // Lưu đúng email từ Database trả về để trang Profile hiển thị chuẩn
+      localStorage.setItem("email", res.data.user.email);
+
+      // Lưu ngày tham gia nếu Backend có trả về (để hiện trên Profile)
+      if (res.data.user.createdAt) {
+        const date = new Date(res.data.user.createdAt);
+        const joinedDate = `Tháng ${String(date.getMonth() + 1).padStart(2, "0")}, ${date.getFullYear()}`;
+        localStorage.setItem("joinedDate", joinedDate);
+      }
+      // ----------------------------------------
 
       let userRole = res.data.user.role || "user";
       if (formData.email === "qnhu799@gmail.com") {
