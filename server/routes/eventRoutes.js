@@ -19,10 +19,6 @@ router.post(
 // TẠM THỜI: Bỏ protect và adminOnly để em có thể Duyệt bài ngay lập tức
 router.get("/stats", eventController.getAdminStats);
 router.get("/pending", eventController.getPendingEvents);
-
-// --- DÒNG CẬP NHẬT MỚI: Lấy tất cả sự kiện để Admin lọc Tím/Xanh/Đỏ ---
-router.get("/all-for-admin", eventController.getAllEventsForAdmin);
-
 router.patch("/update-status/:id", eventController.updateStatus);
 router.delete("/delete/:id", eventController.deleteEvent);
 
