@@ -1,6 +1,6 @@
 const Event = require("../models/Event");
 
-// 1. Tạo sự kiện mới (Giữ nguyên logic của Như)
+// 1. Gửi đóng góp sự kiện mới
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -45,7 +45,7 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// 2. Lấy danh sách đóng góp cá nhân (Giữ nguyên)
+// 2. Lấy danh sách đóng góp của riêng tôi (Trang cá nhân)
 exports.getMyContributedEvents = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -54,12 +54,11 @@ exports.getMyContributedEvents = async (req, res) => {
       .lean();
     res.status(200).json(events || []);
   } catch (err) {
-    console.error("❌ Lỗi getMyContributedEvents:", err.message);
     res.status(500).json({ error: "Lỗi khi lấy danh sách đóng góp của bạn" });
   }
 };
 
-// 🎯 3. DUYỆT BÀI: Đảm bảo lưu vết người thực hiện (approvedBy)
+// 3. Phê duyệt/Từ chối sự kiện (Lưu vết Admin xử lý)
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -73,7 +72,7 @@ exports.updateStatus = async (req, res) => {
       id,
       {
         status: status.toLowerCase(),
-        approvedBy: adminId, // 🎯 Quan trọng: Gắn ID Admin để biết ai đã xử lý bài này
+        approvedBy: adminId,
       },
       { new: true },
     );
@@ -81,97 +80,100 @@ exports.updateStatus = async (req, res) => {
     if (!updatedEvent)
       return res.status(404).json({ error: "Không tìm thấy sự kiện!" });
 
-    res.json({
+    res.status(200).json({
       message: "Cập nhật trạng thái thành công!",
       data: updatedEvent,
     });
   } catch (err) {
-    console.error("❌ Lỗi updateStatus:", err.message);
     res.status(500).json({ error: "Lỗi hệ thống khi duyệt" });
   }
 };
 
-// 🎯 4. HÀM MỚI: Lấy danh sách cho Admin (Lọc theo sơ đồ của Như)
+// 4. Lấy danh sách cho Admin (Lọc Tím/Xanh/Đỏ Dashboard)
 exports.getAdminEventsByStatus = async (req, res) => {
   try {
-    const { status } = req.query; // pending, approved, hoặc rejected
+    const { status } = req.query;
     const adminId = req.user.id;
-
     let query = { status: status };
 
-    // 🎯 Logic "Việc riêng": Nếu là Đã duyệt hoặc Đã hủy, chỉ lấy bài của chính Admin này
     if (status === "approved" || status === "rejected") {
       query.approvedBy = adminId;
     }
-    // "Việc chung": Nếu là pending, query giữ nguyên để hiện tất cả cho mọi Admin thấy
 
     const events = await Event.find(query).sort({ updatedAt: -1 }).lean();
     res.status(200).json(events || []);
   } catch (err) {
-    console.error("❌ Lỗi getAdminEventsByStatus:", err.message);
     res.status(500).json({ error: "Lỗi tải danh sách quản trị" });
   }
 };
 
-// 🎯 5. THỐNG KÊ ADMIN: Cập nhật để đếm đúng theo cá nhân hóa
-exports.getAdminStats = async (req, res) => {
-  try {
-    const adminId = req.user.id;
-
-    const [approvedCount, rejectedCount, pendingCount] = await Promise.all([
-      // 🟢 Xanh: Chỉ đếm bài do chính mình duyệt
-      Event.countDocuments({ status: "approved", approvedBy: adminId }),
-      // 🔴 Đỏ: Chỉ đếm bài do chính mình hủy
-      Event.countDocuments({ status: "rejected", approvedBy: adminId }),
-      // 🟣 Tím: Hiện tổng số bài chờ (việc chung của cả đội Admin)
-      Event.countDocuments({ status: "pending" }),
-    ]);
-
-    res.json({ approvedCount, rejectedCount, pendingCount });
-  } catch (err) {
-    console.error("❌ Lỗi getAdminStats:", err.message);
-    res.status(500).json({ error: "Lỗi lấy thống kê" });
-  }
-};
-
-// 6, 7, 8, 9... Các hàm xóa, lấy chi tiết, lấy tất cả (Giữ nguyên của Như)
-exports.deleteEvent = async (req, res) => {
-  try {
-    const deleted = await Event.findByIdAndDelete(req.params.id);
-    if (!deleted)
-      return res.status(404).json({ message: "Không tìm thấy để xóa" });
-    res.json({ message: "Xóa sự kiện thành công!" });
-  } catch (err) {
-    res.status(500).json({ error: "Lỗi khi xóa" });
-  }
-};
-
+// 5. Lấy TẤT CẢ sự kiện đã duyệt cho cộng đồng
 exports.getApprovedEvents = async (req, res) => {
   try {
     const events = await Event.find({ status: "approved" })
       .sort({ updatedAt: -1 })
       .lean();
-    res.json(events || []);
+    res.status(200).json(events || []);
   } catch (err) {
-    res.status(500).json({ error: "Lỗi tải danh sách" });
+    res.status(500).json({ error: "Lỗi tải danh sách công khai" });
   }
 };
 
+// 6. 🎯 BỔ SUNG: Lấy danh sách chờ duyệt (Routes của em đang gọi hàm này)
+exports.getPendingEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ status: "pending" })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.status(200).json(events || []);
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi tải danh sách chờ duyệt" });
+  }
+};
+
+// 7. Thống kê năng suất cho Admin Dashboard
+exports.getAdminStats = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const [approvedCount, rejectedCount, pendingCount] = await Promise.all([
+      Event.countDocuments({ status: "approved", approvedBy: adminId }),
+      Event.countDocuments({ status: "rejected", approvedBy: adminId }),
+      Event.countDocuments({ status: "pending" }),
+    ]);
+    res.status(200).json({ approvedCount, rejectedCount, pendingCount });
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi lấy thống kê" });
+  }
+};
+
+// 8. Xóa sự kiện
+exports.deleteEvent = async (req, res) => {
+  try {
+    const deleted = await Event.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Không tìm thấy" });
+    res.status(200).json({ message: "Xóa thành công!" });
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi khi xóa" });
+  }
+};
+
+// 9. Lấy chi tiết sự kiện
 exports.getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id).lean();
     if (!event) return res.status(404).json({ message: "Không tìm thấy!" });
-    res.json(event);
+    res.status(200).json(event);
   } catch (err) {
-    res.status(500).json({ error: "Lỗi tải chi tiết" });
+    res.status(500).json({ error: "Lỗi chi tiết" });
   }
 };
 
+// 10. Lấy tất cả (Cho SuperAdmin)
 exports.getAllEventsForAdmin = async (req, res) => {
   try {
     const events = await Event.find({}).sort({ createdAt: -1 }).lean();
     res.status(200).json(events || []);
   } catch (err) {
-    res.status(500).json({ error: "Lỗi server khi tải dữ liệu cho Admin" });
+    res.status(500).json({ error: "Lỗi server" });
   }
 };

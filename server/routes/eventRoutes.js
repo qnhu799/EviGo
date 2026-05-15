@@ -1,47 +1,59 @@
 const express = require("express");
 const router = express.Router();
 const eventController = require("../controllers/eventController");
-const { protect, adminOnly, canContribute } = require("../authMiddleware");
+const { protect, adminOnly } = require("../authMiddleware");
 const upload = require("../middleware/multerConfig");
 
 // ---------------------------------------------------------
-// 1. [CÔNG KHAI] - Cho khách xem trên trang chủ/bản đồ
+// 1. [CÔNG KHAI] - Không cần đăng nhập
 // ---------------------------------------------------------
 router.get("/approved", eventController.getApprovedEvents);
 
 // ---------------------------------------------------------
-// 2. [NGƯỜI DÙNG] - Quản lý đóng góp cá nhân
+// 2. [ADMIN/SUPERADMIN] - Phân quyền cao nhất (Để lên trên để ưu tiên)
 // ---------------------------------------------------------
+router.get("/stats", protect, adminOnly, eventController.getAdminStats);
+router.get("/pending", protect, adminOnly, eventController.getPendingEvents);
+router.get(
+  "/admin-list",
+  protect,
+  adminOnly,
+  eventController.getAdminEventsByStatus,
+);
+router.get(
+  "/all-for-admin",
+  protect,
+  adminOnly,
+  eventController.getAllEventsForAdmin,
+);
 
-// 🎯 QUAN TRỌNG: Lấy danh sách đóng góp của riêng tài khoản đang đăng nhập
-// Phải có middleware 'protect' để lấy được req.user.id
+router.patch(
+  "/update-status/:id",
+  protect,
+  adminOnly,
+  eventController.updateStatus,
+);
+router.delete("/delete/:id", protect, adminOnly, eventController.deleteEvent);
+
+// ---------------------------------------------------------
+// 3. [NGƯỜI DÙNG] - Quản lý cá nhân
+// ---------------------------------------------------------
 router.get(
   "/my-contributions",
   protect,
   eventController.getMyContributedEvents,
 );
 
-// Gửi đóng góp sự kiện mới
-// Lưu ý: Khi nào test xong, Như nên bật lại 'protect' để bảo mật nhé
 router.post(
   "/contribute",
+  protect,
   upload.array("images", 5),
   eventController.createEvent,
 );
 
 // ---------------------------------------------------------
-// 3. [ADMIN] - Quản lý, Thống kê & Phê duyệt
+// 4. [CHI TIẾT] - Phải để cuối cùng
 // ---------------------------------------------------------
-router.get("/stats", eventController.getAdminStats);
-router.get("/pending", eventController.getPendingEvents);
-router.get("/all-for-admin", eventController.getAllEventsForAdmin);
-router.patch("/update-status/:id", eventController.updateStatus);
-router.delete("/delete/:id", eventController.deleteEvent);
-
-// ---------------------------------------------------------
-// 4. [CHI TIẾT] - Lấy thông tin 1 sự kiện cụ thể
-// ---------------------------------------------------------
-// LUÔN ĐỂ CUỐI CÙNG để không bị tranh chấp với các route GET khác
 router.get("/:id", eventController.getEventById);
 
 module.exports = router;
