@@ -30,40 +30,55 @@ export default function LoginPage() {
         formData,
       );
 
-      // --- 🎯 PHẦN CẬP NHẬT QUAN TRỌNG NHẤT ---
+      // 🎯 BƯỚC QUAN TRỌNG: Quét sạch localStorage cũ để dọn chỗ cho dữ liệu THẬT
+      localStorage.clear();
+
+      // 1. Lưu Token và thông tin cơ bản
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
-
-      // Lưu đúng email từ Database trả về để trang Profile hiển thị chuẩn
       localStorage.setItem("email", res.data.user.email);
 
-      // Lưu ngày tham gia nếu Backend có trả về (để hiện trên Profile)
+      // 2. Xử lý ngày tham gia (Format chuẩn: Tháng MM, YYYY)
       if (res.data.user.createdAt) {
         const date = new Date(res.data.user.createdAt);
-        const joinedDate = `Tháng ${String(date.getMonth() + 1).padStart(2, "0")}, ${date.getFullYear()}`;
-        localStorage.setItem("joinedDate", joinedDate);
+        const joinedDate = date.toLocaleDateString("vi-VN", {
+          month: "long",
+          year: "numeric",
+        });
+        // Viết hoa chữ cái đầu của tháng cho đẹp
+        const formattedDate =
+          joinedDate.charAt(0).toUpperCase() + joinedDate.slice(1);
+        localStorage.setItem("joinedDate", formattedDate);
       }
-      // ----------------------------------------
 
+      // 3. Xác định quyền hạn (Role)
       let userRole = res.data.user.role || "user";
+
+      // Đặc cách cho tài khoản chính của Như
       if (formData.email === "qnhu799@gmail.com") {
         userRole = "superadmin";
       }
       localStorage.setItem("role", userRole);
+
+      // 4. Thông báo cập nhật Auth cho Navbar/Header
       window.dispatchEvent(new Event("authChange"));
 
+      // 5. Hiển thị thông báo thành công
       toast.success(`Mừng ${res.data.user.username} trở lại!`, {
         duration: 3000,
         icon: userRole === "superadmin" ? "👑" : "👋",
       });
 
+      // 6. Điều hướng dựa trên Role
       if (userRole === "superadmin" || userRole === "admin") {
         navigate("/admindashboard");
       } else {
         navigate("/");
       }
     } catch (err) {
-      const errMsg = err.response?.data?.message || "Lỗi rồi Evier ơi!";
+      const errMsg =
+        err.response?.data?.message ||
+        "Lỗi rồi Evier ơi! Kiểm tra lại email/mật khẩu nhé.";
       toast.error(errMsg);
       setError(errMsg);
     }

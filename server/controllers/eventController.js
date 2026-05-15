@@ -1,6 +1,6 @@
 const Event = require("../models/Event");
 
-// 1. Tạo sự kiện mới (Đóng góp)
+// 1. Tạo sự kiện mới (Giữ nguyên logic của Như)
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -23,9 +23,9 @@ exports.createEvent = async (req, res) => {
       isPermanent: String(req.body.isPermanent) === "true",
       isAllDay: String(req.body.isAllDay) === "true",
       closedDays: req.body.closedDays ? JSON.parse(req.body.closedDays) : [],
-      contributor: {
-        displayName: req.body.contributor || "Người dùng ẩn danh",
-        name: req.user ? req.user.username : "",
+      contributor: req.user ? req.user.id : null,
+      contributorInfo: {
+        displayName: req.body.contributorName || "Người dùng ẩn danh",
         contact: req.body.contributorContact || "",
       },
       status: "pending",
@@ -45,7 +45,21 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// 2. Duyệt bài
+// 2. Lấy danh sách đóng góp cá nhân (Giữ nguyên)
+exports.getMyContributedEvents = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const events = await Event.find({ contributor: userId })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.status(200).json(events || []);
+  } catch (err) {
+    console.error("❌ Lỗi getMyContributedEvents:", err.message);
+    res.status(500).json({ error: "Lỗi khi lấy danh sách đóng góp của bạn" });
+  }
+};
+
+// 🎯 3. DUYỆT BÀI: Đảm bảo lưu vết người thực hiện (approvedBy)
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -59,7 +73,7 @@ exports.updateStatus = async (req, res) => {
       id,
       {
         status: status.toLowerCase(),
-        approvedBy: adminId,
+        approvedBy: adminId, // 🎯 Quan trọng: Gắn ID Admin để biết ai đã xử lý bài này
       },
       { new: true },
     );
@@ -77,40 +91,42 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// 3. Lấy danh sách sự kiện ĐÃ DUYỆT
-exports.getApprovedEvents = async (req, res) => {
+// 🎯 4. HÀM MỚI: Lấy danh sách cho Admin (Lọc theo sơ đồ của Như)
+exports.getAdminEventsByStatus = async (req, res) => {
   try {
-    const events = await Event.find({ status: "approved" })
-      .sort({ updatedAt: -1 })
-      .lean();
-    res.json(events || []);
+    const { status } = req.query; // pending, approved, hoặc rejected
+    const adminId = req.user.id;
+
+    let query = { status: status };
+
+    // 🎯 Logic "Việc riêng": Nếu là Đã duyệt hoặc Đã hủy, chỉ lấy bài của chính Admin này
+    if (status === "approved" || status === "rejected") {
+      query.approvedBy = adminId;
+    }
+    // "Việc chung": Nếu là pending, query giữ nguyên để hiện tất cả cho mọi Admin thấy
+
+    const events = await Event.find(query).sort({ updatedAt: -1 }).lean();
+    res.status(200).json(events || []);
   } catch (err) {
-    console.error("❌ Lỗi getApprovedEvents:", err.message);
-    res.status(500).json({ error: "Lỗi tải danh sách" });
+    console.error("❌ Lỗi getAdminEventsByStatus:", err.message);
+    res.status(500).json({ error: "Lỗi tải danh sách quản trị" });
   }
 };
 
-// 4. Lấy danh sách sự kiện CHỜ DUYỆT
-exports.getPendingEvents = async (req, res) => {
-  try {
-    const events = await Event.find({ status: "pending" })
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json(events || []);
-  } catch (err) {
-    console.error("❌ Lỗi getPendingEvents:", err.message);
-    res.status(500).json({ error: "Lỗi tải danh sách chờ" });
-  }
-};
-
-// 5. Thống kê Admin (Dùng cho 3 thẻ màu)
+// 🎯 5. THỐNG KÊ ADMIN: Cập nhật để đếm đúng theo cá nhân hóa
 exports.getAdminStats = async (req, res) => {
   try {
+    const adminId = req.user.id;
+
     const [approvedCount, rejectedCount, pendingCount] = await Promise.all([
-      Event.countDocuments({ status: "approved" }),
-      Event.countDocuments({ status: "rejected" }),
+      // 🟢 Xanh: Chỉ đếm bài do chính mình duyệt
+      Event.countDocuments({ status: "approved", approvedBy: adminId }),
+      // 🔴 Đỏ: Chỉ đếm bài do chính mình hủy
+      Event.countDocuments({ status: "rejected", approvedBy: adminId }),
+      // 🟣 Tím: Hiện tổng số bài chờ (việc chung của cả đội Admin)
       Event.countDocuments({ status: "pending" }),
     ]);
+
     res.json({ approvedCount, rejectedCount, pendingCount });
   } catch (err) {
     console.error("❌ Lỗi getAdminStats:", err.message);
@@ -118,7 +134,7 @@ exports.getAdminStats = async (req, res) => {
   }
 };
 
-// 6. Xóa sự kiện
+// 6, 7, 8, 9... Các hàm xóa, lấy chi tiết, lấy tất cả (Giữ nguyên của Như)
 exports.deleteEvent = async (req, res) => {
   try {
     const deleted = await Event.findByIdAndDelete(req.params.id);
@@ -126,36 +142,36 @@ exports.deleteEvent = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy để xóa" });
     res.json({ message: "Xóa sự kiện thành công!" });
   } catch (err) {
-    console.error("❌ Lỗi deleteEvent:", err.message);
     res.status(500).json({ error: "Lỗi khi xóa" });
   }
 };
 
-// 7. Chi tiết sự kiện
+exports.getApprovedEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ status: "approved" })
+      .sort({ updatedAt: -1 })
+      .lean();
+    res.json(events || []);
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi tải danh sách" });
+  }
+};
+
 exports.getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id).lean();
     if (!event) return res.status(404).json({ message: "Không tìm thấy!" });
     res.json(event);
   } catch (err) {
-    console.error("❌ Lỗi getEventById:", err.message);
     res.status(500).json({ error: "Lỗi tải chi tiết" });
   }
 };
 
-// 8. HÀM FIX LỖI 500: Lấy tất cả sự kiện (Admin lọc)
 exports.getAllEventsForAdmin = async (req, res) => {
   try {
-    // .lean() cực kỳ quan trọng để Frontend nhận JSON thuần
     const events = await Event.find({}).sort({ createdAt: -1 }).lean();
     res.status(200).json(events || []);
   } catch (err) {
-    console.error("‼️ LỖI NGHIÊM TRỌNG TẠI getAllEventsForAdmin:", err);
-    res
-      .status(500)
-      .json({
-        error: "Lỗi server khi tải dữ liệu cho Admin",
-        details: err.message,
-      });
+    res.status(500).json({ error: "Lỗi server khi tải dữ liệu cho Admin" });
   }
 };

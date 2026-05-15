@@ -38,7 +38,6 @@ function LocationMarker({ position, index, formData, setFormData }) {
     async click(e) {
       const { lat, lng } = e.latlng;
       try {
-        // Gọi API lấy địa chỉ từ tọa độ
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
         );
@@ -62,7 +61,6 @@ function LocationMarker({ position, index, formData, setFormData }) {
         setFormData({ ...formData, locations: newLocs });
       } catch (err) {
         console.error("Lỗi lấy địa chỉ:", err);
-        // Dự phòng: Nếu lỗi API thì chỉ lấy tọa độ
         const newLocs = [...formData.locations];
         newLocs[index] = {
           ...newLocs[index],
@@ -119,7 +117,6 @@ const ContributePage = () => {
     }
   };
 
-  // --- HÀM MỚI: Lấy vị trí hiện tại của người dùng ---
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
       Swal.fire("Lỗi", "Trình duyệt của em không hỗ trợ định vị!", "error");
@@ -284,7 +281,8 @@ const ContributePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- LOGIC GHI NHẬN NGƯỜI ĐÓNG GÓP ---
+    // --- 🎯 LOGIC CẬP NHẬT: LẤY TOKEN VÀ USERNAME ---
+    const token = localStorage.getItem("token");
     const contributorName =
       localStorage.getItem("username") || "Người dùng ẩn danh";
 
@@ -320,8 +318,8 @@ const ContributePage = () => {
 
     const dataToSend = new FormData();
     dataToSend.append("title", formData.title);
-    dataToSend.append("contributor", contributorName); // Thêm tên người đóng góp vào đây
-    dataToSend.append("type", typeString); // Gửi chuỗi các loại sự kiện
+    dataToSend.append("contributorName", contributorName);
+    dataToSend.append("type", typeString);
     dataToSend.append("ticketPrice", formData.ticketPrice);
     dataToSend.append("description", formData.description);
     dataToSend.append("isAllDay", formData.isAllDay);
@@ -345,7 +343,13 @@ const ContributePage = () => {
       const response = await axios.post(
         "http://localhost:5000/api/events/contribute",
         dataToSend,
-        { headers: { "Content-Type": "multipart/form-data" } },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            // 🎯 Gửi kèm Token để Backend biết Như là ai và lưu ID vào Database
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       if (response.status === 201) {
@@ -365,7 +369,7 @@ const ContributePage = () => {
       Swal.fire({
         icon: "error",
         title: "Lỗi rồi...",
-        text: "Vẫn lỗi rồi, Evier kiểm tra Terminal Backend nhé!",
+        text: "Vẫn lỗi rồi, Evier kiểm tra lại nhé!",
         confirmButtonColor: "#ff4d4d",
       });
     }
@@ -822,7 +826,6 @@ const ContributePage = () => {
               />
             )}
 
-            {/* PHẦN BẢN ĐỒ CÓ NÚT ĐỊNH VỊ TẠI CHỖ */}
             <div style={{ position: "relative" }}>
               <button
                 type="button"

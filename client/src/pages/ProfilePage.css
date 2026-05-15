@@ -11,7 +11,7 @@
 
 .profile-card {
   width: 100%;
-  max-width: 600px;
+  max-width: 800px; /* Tăng nhẹ chiều rộng để Grid sự kiện hiện đẹp hơn */
   background: white;
   border-radius: 25px;
   box-shadow: 0 15px 35px rgba(40, 13, 140, 0.1);
@@ -37,12 +37,12 @@
   transition: transform 0.3s ease;
 }
 
-/* 🎯 HỆ THỐNG BADGE DANH HIỆU MỚI */
+/* 🎯 HỆ THỐNG BADGE DANH HIỆU */
 .rank-badge {
   position: absolute;
   bottom: -5px;
   left: 50%;
-  transform: translateX(-50%); /* Căn giữa badge dưới avatar */
+  transform: translateX(-50%);
   white-space: nowrap;
   padding: 4px 15px;
   border-radius: 20px;
@@ -53,10 +53,9 @@
   z-index: 2;
 }
 
-/* Màu sắc theo từng cấp bậc */
-.tier-starter { background: #cd7f32; } /* Đồng */
-.tier-connector { background: #95a5a6; } /* Bạc */
-.tier-explorer { background: #f1c40f; color: #280d8c; } /* Vàng */
+.tier-starter { background: #cd7f32; }
+.tier-connector { background: #95a5a6; }
+.tier-explorer { background: #f1c40f; color: #280d8c; }
 .tier-ambassador {
   background: #bc13fe;
   box-shadow: 0 0 15px rgba(188, 19, 254, 0.4);
@@ -115,7 +114,6 @@
   transform: translateY(-3px);
 }
 
-/* Hiệu ứng khi Tab đang active */
 .active-tab {
   background-color: rgba(99, 91, 255, 0.08);
   border-bottom: 3px solid #635bff;
@@ -127,7 +125,7 @@
 
 .no-click { cursor: default; }
 
-/* CONTENT AREA */
+/* 🎯 PHẦN CẬP NHẬT: HIỂN THỊ DANH SÁCH SỰ KIỆN */
 .profile-content h3 {
   text-align: left;
   color: #280d8c;
@@ -137,6 +135,13 @@
   padding-left: 5px;
 }
 
+.profile-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
 .empty-state {
   padding: 40px 20px;
   background: #f9f9ff;
@@ -144,6 +149,12 @@
   color: #888;
   font-size: 14px;
   border: 1px dashed #e0e0ff;
+}
+
+.loading-text {
+  padding: 40px;
+  color: #635bff;
+  font-weight: bold;
 }
 
 .contribute-now-btn {
@@ -161,4 +172,15 @@
 .contribute-now-btn:hover {
   background: #4b44d1;
   box-shadow: 0 5px 15px rgba(99, 91, 255, 0.3);
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .profile-events-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-stats {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
 }

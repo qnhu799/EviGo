@@ -11,7 +11,7 @@ export default function Header() {
 
   const checkAuth = () => {
     const savedName = localStorage.getItem("username");
-    const savedRole = localStorage.getItem("role")?.toLowerCase(); // Chuyển về chữ thường để so sánh cho chuẩn
+    const savedRole = localStorage.getItem("role")?.toLowerCase();
     setUsername(savedName);
     setRole(savedRole);
   };
@@ -54,23 +54,19 @@ export default function Header() {
 
       <div className="menu-container">
         <nav className="menu-links">
-          {/* QUYỀN KHÁCH: Luôn luôn thấy */}
+          {/* 🌍 CẤP 1 - KHÁCH: Luôn hiện */}
           <Link to="/">Trang chủ</Link>
           <Link to="/map">Bản đồ</Link>
 
-          {/* QUYỀN THÀNH VIÊN TRỞ LÊN: Thấy thêm Đóng góp */}
-          {username &&
-            (role === "member" ||
-              role === "organizer" ||
-              role === "admin" ||
-              role === "superadmin") && <Link to="/contribute">Đóng góp</Link>}
+          {/* 👤 CẤP 2 - THÀNH VIÊN: Chỉ hiện khi đã đăng nhập (role tồn tại) */}
+          {username && <Link to="/contribute">Đóng góp</Link>}
 
-          {/* QUYỀN QUẢN TRỊ VIÊN TRỞ LÊN: Thấy thêm Quản lý */}
+          {/* 🛡️ CẤP 3 - QUẢN TRỊ VIÊN: Phải là admin hoặc superadmin */}
           {(role === "admin" || role === "superadmin") && (
             <Link to="/admin">Quản lý</Link>
           )}
 
-          {/* QUYỀN SUPERADMIN: Thấy thêm Dashboard màu vàng nổi bật */}
+          {/* 👑 CẤP 4 - SUPERADMIN: Dashboard đặc biệt */}
           {role === "superadmin" && (
             <Link
               to="/admindashboard"
@@ -133,14 +129,7 @@ export default function Header() {
                   </Link>
                   <div className="popup-divider"></div>
                   <button
-                    className="popup-link"
-                    style={{
-                      border: "none",
-                      background: "none",
-                      width: "100%",
-                      textAlign: "left",
-                      cursor: "pointer",
-                    }}
+                    className="popup-link logout-btn-style"
                     onClick={handleLogout}
                   >
                     Đăng xuất

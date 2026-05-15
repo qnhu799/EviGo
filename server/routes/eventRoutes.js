@@ -10,9 +10,19 @@ const upload = require("../middleware/multerConfig");
 router.get("/approved", eventController.getApprovedEvents);
 
 // ---------------------------------------------------------
-// 2. [NGƯỜI DÙNG] - Gửi đóng góp sự kiện mới
+// 2. [NGƯỜI DÙNG] - Quản lý đóng góp cá nhân
 // ---------------------------------------------------------
-// TẠM THỜI: Bỏ protect/canContribute để Như test nhanh từ Frontend
+
+// 🎯 QUAN TRỌNG: Lấy danh sách đóng góp của riêng tài khoản đang đăng nhập
+// Phải có middleware 'protect' để lấy được req.user.id
+router.get(
+  "/my-contributions",
+  protect,
+  eventController.getMyContributedEvents,
+);
+
+// Gửi đóng góp sự kiện mới
+// Lưu ý: Khi nào test xong, Như nên bật lại 'protect' để bảo mật nhé
 router.post(
   "/contribute",
   upload.array("images", 5),
@@ -22,26 +32,16 @@ router.post(
 // ---------------------------------------------------------
 // 3. [ADMIN] - Quản lý, Thống kê & Phê duyệt
 // ---------------------------------------------------------
-// Lấy 3 con số thống kê cho thẻ màu (Tím, Xanh, Đỏ)
 router.get("/stats", eventController.getAdminStats);
-
-// Lấy danh sách chỉ những bài đang "Chờ duyệt"
 router.get("/pending", eventController.getPendingEvents);
-
-// 🎯 DÒNG QUAN TRỌNG: Lấy tất cả sự kiện để Admin lọc (Fix lỗi 500)
-// Phải đặt TRÊN route "/:id" để không bị nhận nhầm
 router.get("/all-for-admin", eventController.getAllEventsForAdmin);
-
-// Cập nhật trạng thái (Duyệt/Hủy)
 router.patch("/update-status/:id", eventController.updateStatus);
-
-// Xóa sự kiện khỏi hệ thống
 router.delete("/delete/:id", eventController.deleteEvent);
 
 // ---------------------------------------------------------
 // 4. [CHI TIẾT] - Lấy thông tin 1 sự kiện cụ thể
 // ---------------------------------------------------------
-// LUÔN ĐỂ CUỐI CÙNG vì ":id" là một biến động (dynamic param)
+// LUÔN ĐỂ CUỐI CÙNG để không bị tranh chấp với các route GET khác
 router.get("/:id", eventController.getEventById);
 
 module.exports = router;
