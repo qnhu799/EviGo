@@ -1,6 +1,6 @@
 const Event = require("../models/Event");
 
-// 1. Gửi đóng góp sự kiện mới
+// 1. Gửi đóng góp sự kiện mới (🎯 CẬP NHẬT: Cơ chế bốc dữ liệu đa tầng từ req.body và req.user)
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -15,6 +15,17 @@ exports.createEvent = async (req, res) => {
       ? req.files.map((f) => f.path.replace(/\\/g, "/"))
       : [];
 
+    // 🎯 CHIẾN THUẬT QUÉT TÊN TÀI KHOẢN:
+    // Ưu tiên 1: Tên do Frontend bốc từ localStorage nộp lên (req.body.contributorName)
+    // Ưu tiên 2: Tên giải mã từ Token (req.user)
+    // Ưu tiên 3: Nếu hệ thống lỗi hoàn toàn mới để User EviGo
+    const activeUsername =
+      req.body.contributorName ||
+      (req.user ? req.user.username || req.user.name : "User EviGo");
+    const activeDisplayName =
+      req.body.contributorName ||
+      (req.user ? req.user.displayName || req.user.username : "User EviGo");
+
     const eventData = {
       ...req.body,
       locations,
@@ -23,10 +34,14 @@ exports.createEvent = async (req, res) => {
       isPermanent: String(req.body.isPermanent) === "true",
       isAllDay: String(req.body.isAllDay) === "true",
       closedDays: req.body.closedDays ? JSON.parse(req.body.closedDays) : [],
-      contributor: req.user ? req.user.id : null,
-      contributorInfo: {
-        displayName: req.body.contributorName || "Người dùng ẩn danh",
-        contact: req.body.contributorContact || "",
+
+      // 🎯 ĐỒNG BỘ KHỚP KHÍT: Ghi trực tiếp tên tài khoản thật vào object contributor của Database
+      contributor: {
+        name: activeUsername.trim(),
+        displayName: activeDisplayName.trim(),
+        contact: req.user
+          ? req.user.email || ""
+          : req.body.contributorContact || "",
       },
       status: "pending",
     };
@@ -48,8 +63,8 @@ exports.createEvent = async (req, res) => {
 // 2. Lấy danh sách đóng góp cá nhân
 exports.getMyContributedEvents = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const events = await Event.find({ contributor: userId })
+    const activeUser = req.user ? req.user.username || req.user.name : "";
+    const events = await Event.find({ "contributor.name": activeUser })
       .sort({ createdAt: -1 })
       .lean();
     res.status(200).json(events || []);
@@ -91,7 +106,23 @@ exports.getAdminEventsByStatus = async (req, res) => {
       query.approvedBy = adminId;
     }
 
-    const events = await Event.find(query).sort({ updatedAt: -1 }).lean();
+    const rawEvents = await Event.find(query).sort({ updatedAt: -1 }).lean();
+
+    // Bảo hiểm dữ liệu cũ: Chỉ đắp chữ nếu bài đăng lịch sử bị khuyết hoàn toàn object contributor
+    const events = rawEvents.map((event) => {
+      if (
+        !event.contributor ||
+        (!event.contributor.displayName && !event.contributor.name)
+      ) {
+        event.contributor = {
+          name: event.contributorName || "User EviGo",
+          displayName: event.contributorName || "User EviGo",
+          contact: "",
+        };
+      }
+      return event;
+    });
+
     res.status(200).json(events || []);
   } catch (err) {
     res.status(500).json({ error: "Lỗi tải danh sách quản trị" });
@@ -113,9 +144,25 @@ exports.getApprovedEvents = async (req, res) => {
 // 6. Lấy danh sách chờ duyệt (Việc chung Admin)
 exports.getPendingEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: "pending" })
+    const rawEvents = await Event.find({ status: "pending" })
       .sort({ createdAt: -1 })
       .lean();
+
+    // Trả về nguyên vẹn dữ liệu contributor thật do hàm createEvent lưu xuống
+    const events = rawEvents.map((event) => {
+      if (
+        !event.contributor ||
+        (!event.contributor.displayName && !event.contributor.name)
+      ) {
+        event.contributor = {
+          name: event.contributorName || "User EviGo",
+          displayName: event.contributorName || "User EviGo",
+          contact: "",
+        };
+      }
+      return event;
+    });
+
     res.status(200).json(events || []);
   } catch (err) {
     res.status(500).json({ error: "Lỗi tải danh sách chờ duyệt" });

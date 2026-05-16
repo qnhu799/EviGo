@@ -43,11 +43,11 @@ const eventSchema = new mongoose.Schema(
       default: null,
     },
 
-    // --- Cập nhật: Thông tin người đóng góp ---
+    // --- 🎯 CẬP NHẬT: GIỮ NGUYÊN OBJECT NHƯNG THAY ĐỔI GIÁ TRỊ PHÒNG NGỪA ---
     contributor: {
-      name: { type: String }, // Để lưu username (ví dụ: lequynhnhu)
-      displayName: { type: String, default: "Ẩn danh" }, // Để lưu tên hiển thị (ví dụ: Lê Quỳnh Như)
-      contact: { type: String },
+      name: { type: String, default: "User EviGo" },
+      displayName: { type: String, default: "User EviGo" }, // Đổi về User EviGo để thống nhất bộ lọc
+      contact: { type: String, default: "" },
     },
   },
   { timestamps: true },

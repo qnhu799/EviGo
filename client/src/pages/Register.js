@@ -30,8 +30,9 @@ export default function Register() {
     setError("");
 
     try {
+      // 🎯 CHỖ CẬP NHẬT: Thêm /auth để thông mạch với server.js Backend
       const response = await axios.post(
-        "http://localhost:5000/api/register",
+        "http://localhost:5000/api/auth/register",
         formData,
       );
 
@@ -53,7 +54,7 @@ export default function Register() {
 
       window.dispatchEvent(new Event("authChange"));
 
-      // 2. SỬ DỤNG TOAST THAY CHO ALERT
+      // Giữ nguyên logic Toast thông báo xịn sò của Như
       if (userRole === "superadmin") {
         toast.success("Chào mừng Super Admin! Quyền tối thượng đã kích hoạt.", {
           duration: 3000,

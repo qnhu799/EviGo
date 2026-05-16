@@ -180,31 +180,40 @@ const Admin = () => {
               <tbody>
                 {displayedEvents.length > 0 ? (
                   displayedEvents.map((event) => {
-                    // 🎯 BỘ LỌC KIỂM TRA 3 LỚP: Chống hiển thị chữ "Ẩn danh" khi Backend rỗng chuỗi
-                    const rawInfoName =
+                    // 🎯 TRIỆT ĐỂ: Quét sạch toàn bộ các thuộc tính lưu trữ tiềm năng trả về từ Database
+                    const nameFromContributor =
+                      event.contributor?.displayName || event.contributor?.name;
+                    const nameFromContrName = event.contributorName;
+                    const nameFromInfo =
                       event.contributorInfo?.displayName ||
                       event.contributorInfo?.username;
-                    const rawContrName = event.contributorName;
-                    const savedLocalName =
-                      localStorage.getItem("username") ||
-                      localStorage.getItem("Username");
 
-                    let finalDisplayName = "Cộng tác viên EviGo";
+                    let finalDisplayName = "User EviGo";
 
+                    // Ưu tiên số 1: Đọc từ object 'contributor' chuẩn hóa mới
                     if (
-                      typeof rawInfoName === "string" &&
-                      rawInfoName.trim().length > 0 &&
-                      rawInfoName !== "Ẩn danh"
+                      typeof nameFromContributor === "string" &&
+                      nameFromContributor.trim().length > 0 &&
+                      nameFromContributor !== "Cộng tác viên" &&
+                      nameFromContributor !== "Ẩn danh"
                     ) {
-                      finalDisplayName = rawInfoName;
-                    } else if (
-                      typeof rawContrName === "string" &&
-                      rawContrName.trim().length > 0 &&
-                      rawContrName !== "Ẩn danh"
+                      finalDisplayName = nameFromContributor;
+                    }
+                    // Ưu tiên số 2: Đọc từ trường contributorName dự phòng do Form đẩy lên thẳng
+                    else if (
+                      typeof nameFromContrName === "string" &&
+                      nameFromContrName.trim().length > 0 &&
+                      nameFromContrName !== "Ẩn danh"
                     ) {
-                      finalDisplayName = rawContrName;
-                    } else if (savedLocalName) {
-                      finalDisplayName = savedLocalName; // Phương án dự phòng tự động nhận diện tài khoản em
+                      finalDisplayName = nameFromContrName;
+                    }
+                    // Ưu tiên số 3: Đọc từ object cũ contributorInfo nếu là dữ liệu lịch sử
+                    else if (
+                      typeof nameFromInfo === "string" &&
+                      nameFromInfo.trim().length > 0 &&
+                      nameFromInfo !== "Người dùng ẩn danh"
+                    ) {
+                      finalDisplayName = nameFromInfo;
                     }
 
                     return (
