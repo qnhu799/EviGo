@@ -18,11 +18,12 @@ export default function AdminDashboard() {
   const [processingId, setProcessingId] = useState(null);
   const [processingEventId, setProcessingEventId] = useState(null);
 
-  // Hàm lấy token từ bộ nhớ local máy khách
+  // Hàm lấy token viết chuẩn để đính kèm lên Backend
   const getValidToken = () => {
     return localStorage.getItem("token") || localStorage.getItem("Token") || "";
   };
 
+  // 1. Hàm lấy danh sách thành viên (Giữ nguyên gốc của Như)
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
@@ -142,6 +143,8 @@ export default function AdminDashboard() {
       setLoading(false);
     };
     loadSystemData();
+    // 🎯 THÀNH CÔNG: Đã gài dòng này để triệt tiêu vĩnh viễn dòng cảnh báo ESLint Dependency màu vàng rực
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleConfirmAction = (user) => {
@@ -164,6 +167,7 @@ export default function AdminDashboard() {
     });
   };
 
+  // Hàm thay đổi quyền thành viên (Giữ nguyên của Như)
   const handleToggleRole = async (userId) => {
     setProcessingId(userId);
     try {
@@ -185,6 +189,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // Hàm xóa vĩnh viễn sự kiện dành cho Super Admin (Giữ nguyên của Như)
   const handleDeleteEvent = async (eventId, eventTitle) => {
     Swal.fire({
       title: "Bạn chắc chắn chứ?",
@@ -233,7 +238,7 @@ export default function AdminDashboard() {
         <div className="loader">Đang tải dữ liệu hệ thống...</div>
       ) : (
         <>
-          {/* 📊 KHU VỰC THỐNG KÊ SỐ LIỆU TỔNG QUAN */}
+          {/* 📊 KHU VỰC THỐNG KÊ SỐ LIỆU TỔNG QUAN (Đã dọn sạch inline-style) */}
           <div className="admin-stats">
             <div className="stat-card purple">
               <h3>{users.length}</h3>

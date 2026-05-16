@@ -13,7 +13,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Marker Leaflet
+// Fix Marker Leaflet (Giữ nguyên cấu hình chuẩn của Như)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -104,7 +104,6 @@ const ContributePage = () => {
     "Học thuật",
   ];
 
-  // Hàm lấy token thông minh chống lỗi lệch chữ Token hoa / token thường
   const getValidToken = () => {
     return localStorage.getItem("token") || localStorage.getItem("Token") || "";
   };
@@ -250,7 +249,7 @@ const ContributePage = () => {
   };
 
   const addLocation = () => {
-    const newLocs = (HornedLocs) => [
+    const newLocs = [
       ...formData.locations,
       { address: "", district: "", lat: 10.871, lng: 106.792 },
     ];
@@ -286,7 +285,6 @@ const ContributePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- 🎯 LOGIC CẬP NHẬT: ĐẢM BẢO LẤY ĐÚNG TOKEN ---
     const token = getValidToken();
     if (!token) {
       Swal.fire({
@@ -302,6 +300,10 @@ const ContributePage = () => {
       localStorage.getItem("username") ||
       localStorage.getItem("Username") ||
       "Người dùng ẩn danh";
+
+    // 🎯 ĐỒNG BỘ ĐỊNH DANH: Trích xuất chính xác ID tài khoản từ localStorage
+    const contributorId =
+      localStorage.getItem("userId") || localStorage.getItem("id") || "";
 
     const finalTypes = [...selectedTypes];
     if (isOtherSelected && otherType.trim() !== "") {
@@ -336,6 +338,12 @@ const ContributePage = () => {
     const dataToSend = new FormData();
     dataToSend.append("title", formData.title);
     dataToSend.append("contributorName", contributorName);
+
+    // 🎯 ĐÍNH KÈM CHÍ MẠNG: Gài ID tài khoản thật vào FormData nộp lên Server
+    if (contributorId) {
+      dataToSend.append("contributorId", contributorId);
+    }
+
     dataToSend.append("type", typeString);
     dataToSend.append("ticketPrice", formData.ticketPrice);
     dataToSend.append("description", formData.description);
@@ -363,7 +371,6 @@ const ContributePage = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            // Gửi kèm Token chuẩn hóa Bearer lên Backend
             Authorization: `Bearer ${token}`,
           },
         },
@@ -377,7 +384,8 @@ const ContributePage = () => {
           confirmButtonColor: "#635bff",
         }).then((result) => {
           if (result.isConfirmed) {
-            navigate("/");
+            // 🎯 ĐIỀU HƯỚNG CHUẨN: Chuyển hướng thẳng về trang cá nhân để cập nhật dữ liệu mới
+            navigate("/profile");
           }
         });
       }

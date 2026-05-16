@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast"; // 🎯 Đã import thêm để bắn thông báo mượt mà
 import "./EventDetail.css";
 
 export default function EventDetail() {
@@ -8,6 +9,9 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // 🎯 TÍNH NĂNG MỚI: State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
+  const [savedEventIds, setSavedEventIds] = useState([]);
 
   const dayNames = [
     "Chủ Nhật",
@@ -19,6 +23,11 @@ export default function EventDetail() {
     "Thứ 7",
   ];
 
+  // Hàm lấy token từ bộ nhớ cục bộ
+  const getValidToken = () => {
+    return localStorage.getItem("token") || localStorage.getItem("Token") || "";
+  };
+
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
     if (path.startsWith("http")) return path;
@@ -28,6 +37,50 @@ export default function EventDetail() {
     if (cleanPath.startsWith("uploads/"))
       return `http://localhost:5000/${cleanPath}`;
     return `http://localhost:5000/uploads/${cleanPath}`;
+  };
+
+  // 🎯 TÍNH NĂNG MỚI: Tải danh sách ID sự kiện đã lưu của tài khoản đang đăng nhập
+  const fetchSavedEventIds = async () => {
+    try {
+      const token = getValidToken();
+      if (!token) return; // Nếu khách vãng lai chưa đăng nhập thì bỏ qua
+
+      const response = await axios.get(
+        "http://localhost:5000/api/events/saved-events-ids",
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSavedEventIds(response.data || []);
+    } catch (err) {
+      console.error("Lỗi đồng bộ danh sách đã lưu ở chi tiết:", err.message);
+    }
+  };
+
+  // 🎯 TÍNH NĂNG MỚI: Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện
+  const handleToggleSaveEvent = async (eventId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        toast.error("Vui lòng đăng nhập để sử dụng tính năng lưu này! 🔒");
+        return;
+      }
+
+      const response = await axios.post(
+        `http://localhost:5000/api/events/save-event/${eventId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.isSaved) {
+        setSavedEventIds((prev) => [...prev, eventId]);
+        toast.success("Đã lưu sự kiện thành công! 🔖");
+      } else {
+        setSavedEventIds((prev) => prev.filter((id) => id !== eventId));
+        toast.success("Đã xóa khỏi danh sách lưu!");
+      }
+    } catch (err) {
+      console.error("Lỗi thao tác lưu bài:", err.message);
+      toast.error("Thao tác lưu thất bại, vui lòng thử lại!");
+    }
   };
 
   useEffect(() => {
@@ -42,7 +95,9 @@ export default function EventDetail() {
         setLoading(false);
       }
     };
+
     fetchDetail();
+    fetchSavedEventIds(); // 🎯 Chạy nạp đồng thời danh sách đã lưu để hiển thị màu nút cho đúng
   }, [id]);
 
   if (loading)
@@ -73,7 +128,21 @@ export default function EventDetail() {
                 <span className="ed-badge">{event.type}</span>
               </div>
 
-              <h1 className="ed-main-title">{event.title}</h1>
+              {/* 🎯 GÀI KHU VỰC TIÊU ĐỀ + NÚT BẤM BOOKMARK TOÀN CỤC CHẠY CHO MỌI ACCOUNT */}
+              <div className="ed-title-action-row">
+                <h1 className="ed-main-title">{event.title}</h1>
+                <button
+                  className={`ed-btn-bookmark ${savedEventIds.includes(event._id) ? "is-saved" : ""}`}
+                  onClick={() => handleToggleSaveEvent(event._id)}
+                  title={
+                    savedEventIds.includes(event._id)
+                      ? "Bỏ lưu sự kiện"
+                      : "Lưu sự kiện"
+                  }
+                >
+                  {savedEventIds.includes(event._id) ? "🔖" : "🤍"}
+                </button>
+              </div>
 
               <p className="ed-hero-loc">
                 📍 {event.locations && event.locations[0]?.address}

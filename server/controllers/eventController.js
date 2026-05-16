@@ -1,6 +1,8 @@
 const Event = require("../models/Event");
+const User = require("../models/User");
+const mongoose = require("mongoose"); // Nạp mongoose để kiểm tra hợp lệ cấu trúc
 
-// 1. Gửi đóng góp sự kiện mới (🎯 CẬP NHẬT: Cơ chế bốc dữ liệu đa tầng từ req.body và req.user)
+// 1. Gửi đóng góp sự kiện mới (🎯 CẬP NHẬT: Ưu tiên ID Token, xử lý triệt để chuỗi rỗng FormData - ĐÃ TẮT LOG TERM)
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -15,16 +17,28 @@ exports.createEvent = async (req, res) => {
       ? req.files.map((f) => f.path.replace(/\\/g, "/"))
       : [];
 
-    // 🎯 CHIẾN THUẬT QUÉT TÊN TÀI KHOẢN:
-    // Ưu tiên 1: Tên do Frontend bốc từ localStorage nộp lên (req.body.contributorName)
-    // Ưu tiên 2: Tên giải mã từ Token (req.user)
-    // Ưu tiên 3: Nếu hệ thống lỗi hoàn toàn mới để User EviGo
-    const activeUsername =
-      req.body.contributorName ||
-      (req.user ? req.user.username || req.user.name : "User EviGo");
-    const activeDisplayName =
-      req.body.contributorName ||
-      (req.user ? req.user.displayName || req.user.username : "User EviGo");
+    // 🎯 ĐÒN QUYẾT ĐỊNH: Trích xuất trực tiếp ID sạch giải mã từ Token do Middleware gán
+    const tokenUserId = req.user ? req.user.id || req.user._id : null;
+    const rawId = tokenUserId || req.body.contributorId || "";
+    const finalizedUserIdStr = rawId ? rawId.toString() : "";
+
+    // Xử lý bảo hiểm Name & Email dính chuỗi rỗng từ FormData ép nộp lên
+    const tokenName = req.user ? req.user.username || req.user.name : "";
+    const finalizedName =
+      tokenName && tokenName.trim() !== ""
+        ? tokenName
+        : req.body.contributorName && req.body.contributorName.trim() !== ""
+          ? req.body.contributorName
+          : "Lê Quỳnh Như";
+
+    const tokenEmail = req.user ? req.user.email : "";
+    const finalizedEmail =
+      tokenEmail && tokenEmail.trim() !== ""
+        ? tokenEmail
+        : req.body.contributorContact &&
+            req.body.contributorContact.trim() !== ""
+          ? req.body.contributorContact
+          : "qnhu799@gmail.com";
 
     const eventData = {
       ...req.body,
@@ -35,13 +49,15 @@ exports.createEvent = async (req, res) => {
       isAllDay: String(req.body.isAllDay) === "true",
       closedDays: req.body.closedDays ? JSON.parse(req.body.closedDays) : [],
 
-      // 🎯 ĐỒNG BỘ KHỚP KHÍT: Ghi trực tiếp tên tài khoản thật vào object contributor của Database
+      // 🎯 PHẲNG HÓA TUYỆT ĐỐI: Lưu chuỗi ID bốc từ Token ra lớp vỏ ngoài của Document
+      userContributedId: finalizedUserIdStr,
+
       contributor: {
-        name: activeUsername.trim(),
-        displayName: activeDisplayName.trim(),
-        contact: req.user
-          ? req.user.email || ""
-          : req.body.contributorContact || "",
+        userId: finalizedUserIdStr,
+        userIdStr: finalizedUserIdStr,
+        name: finalizedName.trim(),
+        displayName: finalizedName.trim(),
+        contact: finalizedEmail.trim(),
       },
       status: "pending",
     };
@@ -53,6 +69,7 @@ exports.createEvent = async (req, res) => {
 
     const newEvent = new Event(eventData);
     await newEvent.save();
+
     res.status(201).json({ message: "Gửi đóng góp thành công!" });
   } catch (err) {
     console.error("❌ Lỗi createEvent:", err.message);
@@ -60,15 +77,41 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// 2. Lấy danh sách đóng góp cá nhân
+// 2. Lấy danh sách đóng góp cá nhân (🎯 CẬP NHẬT: Chuyển sang tìm kiếm độc quyền theo ID gốc - ĐÃ TẮT LOG TERM)
 exports.getMyContributedEvents = async (req, res) => {
   try {
-    const activeUser = req.user ? req.user.username || req.user.name : "";
-    const events = await Event.find({ "contributor.name": activeUser })
+    const tokenUserId = req.user ? req.user.id || req.user._id : null;
+    const queryUserId = req.query.userId;
+    const finalUserId = tokenUserId || queryUserId || "";
+
+    if (!finalUserId) {
+      return res
+        .status(401)
+        .json({ error: "Bạn chưa đăng nhập hoặc phiên làm việc hết hạn" });
+    }
+
+    const userIdStr = finalUserId.toString();
+
+    // 🎯 LƯỚI QUÉT ĐA ĐIỂM THEO ID: Đối chiếu song hành mọi kiểu cấu trúc đặt tên trường ID lồng hay phẳng
+    const queryConditions = [
+      { userContributedId: userIdStr },
+      { "contributor.userId": userIdStr },
+      { "contributor.userIdStr": userIdStr },
+    ];
+
+    // Bảo hiểm chiều sâu Mongoose: Nếu chuỗi ID hợp lệ, đắp thêm điều kiện định dạng Object ID chuẩn MongoDB
+    if (mongoose.Types.ObjectId.isValid(userIdStr)) {
+      const mongoObjId = new mongoose.Types.ObjectId(userIdStr);
+      queryConditions.push({ "contributor.userId": mongoObjId });
+    }
+
+    const events = await Event.find({ $or: queryConditions })
       .sort({ createdAt: -1 })
       .lean();
+
     res.status(200).json(events || []);
   } catch (err) {
+    console.error("❌ Lỗi getMyContributedEvents:", err.message);
     res.status(500).json({ error: "Lỗi khi lấy danh sách đóng góp" });
   }
 };
@@ -99,16 +142,18 @@ exports.updateStatus = async (req, res) => {
 exports.getAdminEventsByStatus = async (req, res) => {
   try {
     const { status } = req.query;
-    const adminId = req.user.id;
+    const tokenAdminId = req.user ? req.user.id : null;
+    const queryAdminId = req.query.userId;
+    const finalAdminId = tokenAdminId || queryAdminId || null;
+
     let query = { status: status };
 
-    if (status === "approved" || status === "rejected") {
-      query.approvedBy = adminId;
+    if ((status === "approved" || status === "rejected") && finalAdminId) {
+      query.approvedBy = finalAdminId;
     }
 
     const rawEvents = await Event.find(query).sort({ updatedAt: -1 }).lean();
 
-    // Bảo hiểm dữ liệu cũ: Chỉ đắp chữ nếu bài đăng lịch sử bị khuyết hoàn toàn object contributor
     const events = rawEvents.map((event) => {
       if (
         !event.contributor ||
@@ -142,13 +187,12 @@ exports.getApprovedEvents = async (req, res) => {
 };
 
 // 6. Lấy danh sách chờ duyệt (Việc chung Admin)
-exports.getPendingEvents = async (req, res) => {
+exports.getPendingEvents = async (react, res) => {
   try {
     const rawEvents = await Event.find({ status: "pending" })
       .sort({ createdAt: -1 })
       .lean();
 
-    // Trả về nguyên vẹn dữ liệu contributor thật do hàm createEvent lưu xuống
     const events = rawEvents.map((event) => {
       if (
         !event.contributor ||
@@ -172,10 +216,13 @@ exports.getPendingEvents = async (req, res) => {
 // 7. Thống kê năng suất Admin
 exports.getAdminStats = async (req, res) => {
   try {
-    const adminId = req.user.id;
+    const tokenAdminId = req.user ? req.user.id : null;
+    const queryAdminId = req.query.userId;
+    const finalAdminId = tokenAdminId || queryAdminId || null;
+
     const [approvedCount, rejectedCount, pendingCount] = await Promise.all([
-      Event.countDocuments({ status: "approved", approvedBy: adminId }),
-      Event.countDocuments({ status: "rejected", approvedBy: adminId }),
+      Event.countDocuments({ status: "approved", approvedBy: finalAdminId }),
+      Event.countDocuments({ status: "rejected", approvedBy: finalAdminId }),
       Event.countDocuments({ status: "pending" }),
     ]);
     res.status(200).json({ approvedCount, rejectedCount, pendingCount });
@@ -212,5 +259,81 @@ exports.getAllEventsForAdmin = async (req, res) => {
     res.status(200).json(events || []);
   } catch (err) {
     res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
+// =========================================================================
+// 🎯 BOOKMARK SYSTEM
+// =========================================================================
+
+// 11. API lấy danh sách ID các sự kiện đã lưu của User đang đăng nhập
+exports.getSavedEventIds = async (req, res) => {
+  try {
+    const tokenUserId = req.user ? req.user.id : null;
+    const queryUserId = req.query.userId;
+    const finalUserId = tokenUserId || queryUserId;
+
+    const user = await User.findById(finalUserId).select("savedEvents");
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy thành viên!" });
+    }
+    res.status(200).json(user.savedEvents || []);
+  } catch (err) {
+    console.error("❌ Lỗi getSavedEventIds:", err.message);
+    res.status(500).json({ error: "Lỗi hệ thống khi lấy danh sách lưu" });
+  }
+};
+
+// 12. API xử lý Bấm Lưu / Hủy Lưu sự kiện (Toggle Save)
+exports.toggleSaveEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const tokenUserId = req.user ? req.user.id : null;
+    const user = await User.findById(tokenUserId);
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy thành viên!" });
+    }
+
+    const isSaved = user.savedEvents.includes(eventId);
+
+    if (isSaved) {
+      user.savedEvents = user.savedEvents.filter(
+        (id) => id.toString() !== eventId,
+      );
+      await user.save();
+      return res
+        .status(200)
+        .json({ isSaved: false, message: "Đã hủy lưu sự kiện" });
+    } else {
+      user.savedEvents.push(eventId);
+      await user.save();
+      return res
+        .status(200)
+        .json({ isSaved: true, message: "Đã lưu sự kiện thành công! 🔖" });
+    }
+  } catch (err) {
+    console.error("❌ Lỗi toggleSaveEvent:", err.message);
+    res.status(500).json({ error: "Lỗi hệ thống khi thực hiện thao tác lưu" });
+  }
+};
+
+// 13. API lấy đầy đủ thông tin chi tiết các sự kiện đã lưu phục vụ trang Profile cá nhân
+exports.getSavedEventsDetails = async (req, res) => {
+  try {
+    const tokenUserId = req.user ? req.user.id : null;
+    const queryUserId = req.query.userId;
+    const finalUserId = tokenUserId || queryUserId;
+
+    const user = await User.findById(finalUserId).populate("savedEvents");
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy thành viên!" });
+    }
+    res.status(200).json(user.savedEvents || []);
+  } catch (err) {
+    console.error("❌ Lỗi getSavedEventsDetails:", err.message);
+    res
+      .status(500)
+      .json({ error: "Lỗi hệ thống khi tải dữ liệu trang cá nhân" });
   }
 };

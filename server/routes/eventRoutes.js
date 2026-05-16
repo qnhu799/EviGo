@@ -7,8 +7,8 @@ const upload = require("../middleware/multerConfig");
 // 1. [CÔNG KHAI] - Không cần đăng nhập
 router.get("/approved", eventController.getApprovedEvents);
 
-// 2. [ADMIN/SUPERADMIN] - Quản lý & Phê duyệt
-router.get("/stats", protect, adminOnly, eventController.getAdminStats);
+// 2. [ADMIN/SUPERADMIN] - Quản lý & Phê duyệt (🎯 CẬP NHẬT: Cho phép bốc thêm userId parameter để đồng bộ trang Profile)
+router.get("/stats", protect, eventController.getAdminStats);
 router.get("/pending", protect, adminOnly, eventController.getPendingEvents);
 router.get(
   "/admin-list",
@@ -30,7 +30,7 @@ router.patch(
 );
 router.delete("/delete/:id", protect, adminOnly, eventController.deleteEvent);
 
-// 3. [NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP] - Quản lý cá nhân
+// 3. [NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP] - Quản lý cá nhân & Tiện ích
 router.get(
   "/my-contributions",
   protect,
@@ -41,6 +41,17 @@ router.post(
   protect,
   upload.array("images", 5),
   eventController.createEvent,
+);
+
+// 🎯 TÍNH NĂNG MỚI: Định tuyến API xử lý hệ thống Lưu sự kiện yêu thích (Bookmark System)
+router.get("/saved-events-ids", protect, eventController.getSavedEventIds);
+router.post("/save-event/:eventId", protect, eventController.toggleSaveEvent);
+
+// 🎯 ĐƯỜNG TRUYỀN MỚI: Lấy đầy đủ thông tin chi tiết các sự kiện đã lưu nộp cho trang Profile cá nhân
+router.get(
+  "/saved-events-details",
+  protect,
+  eventController.getSavedEventsDetails,
 );
 
 // 4. [CHI TIẾT] - Luôn để dưới cùng

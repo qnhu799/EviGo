@@ -11,7 +11,7 @@
 
 .profile-card {
   width: 100%;
-  max-width: 800px; /* Tăng nhẹ chiều rộng để Grid sự kiện hiện đẹp hơn */
+  max-width: 850px; /* Tăng nhẹ chiều rộng lên 850px giúp các cột hàng ngang hiển thị rộng rãi, không bị co chữ */
   background: white;
   border-radius: 25px;
   box-shadow: 0 15px 35px rgba(40, 13, 140, 0.1);
@@ -125,7 +125,6 @@
 
 .no-click { cursor: default; }
 
-/* 🎯 PHẦN CẬP NHẬT: HIỂN THỊ DANH SÁCH SỰ KIỆN */
 .profile-content h3 {
   text-align: left;
   color: #280d8c;
@@ -135,12 +134,147 @@
   padding-left: 5px;
 }
 
-.profile-events-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+/* ========================================================================= */
+/* 🎯 ĐOẠN CẬP NHẬT MỚI: HỆ THỐNG DANH SÁCH HÀNG NGANG (ROW LAYOUT) TINH GỌN */
+/* ========================================================================= */
+
+/* Khung ngoài bọc danh sách, xếp các hàng theo chiều dọc */
+.profile-events-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
   width: 100%;
 }
+
+/* Định dạng một dòng sự kiện phẳng dẹt */
+.profile-event-row-item {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr; /* Chia tỉ lệ 4 cột ngay ngắn */
+  align-items: center;
+  background: white;
+  padding: 14px 20px;
+  border-radius: 16px;
+  border: 1px solid #eef0f8;
+  box-shadow: 0 4px 10px rgba(40, 13, 140, 0.01);
+  cursor: pointer;
+  text-align: left; /* Đưa text về căn lề trái chuẩn cấu trúc bảng */
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hiệu ứng nhích nhẹ sang phải cực tinh tế khi hover */
+.profile-event-row-item:hover {
+  transform: translateX(4px);
+  border-color: #635bff;
+  box-shadow: 0 6px 16px rgba(99, 91, 255, 0.06);
+}
+
+/* Cột Tiêu đề chính */
+.row-col-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.row-index {
+  font-size: 13px;
+  font-weight: 800;
+  color: #c3c6f9;
+}
+
+.row-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.row-event-title {
+  color: #280d8c;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Dài quá tự cắt chữ thành dấu ... */
+}
+
+.row-event-type {
+  font-size: 10px;
+  font-weight: 700;
+  color: #635bff;
+  background: #f0efff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* Các cột thông tin chữ phụ (Địa điểm, Thời gian) */
+.row-col-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 10px;
+  overflow: hidden;
+}
+
+.row-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.row-value-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cột chứa badge trạng thái cuối dòng */
+.row-col-status {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Thẻ kén trạng thái phẳng dẹt, mượt mà */
+.status-row-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 30px;
+  text-align: center;
+  min-width: 90px;
+  white-space: nowrap;
+}
+
+/* Phối màu Pastel theo trạng thái */
+.status-row-badge.pending {
+  background: #f3e8ff;
+  color: #a855f7; /* Chờ duyệt màu tím */
+}
+
+.status-row-badge.approved {
+  background: #d1fae5;
+  color: #10b981; /* Đã duyệt màu xanh lá */
+}
+
+.status-row-badge.rejected {
+  background: #fee2e2;
+  color: #ef4444; /* Từ chối màu đỏ */
+}
+
+.status-row-badge.saved {
+  background: #e0f2fe;
+  color: #0284c7; /* Đã lưu màu xanh dương */
+}
+
+/* ========================================================================= */
 
 .empty-state {
   padding: 40px 20px;
@@ -151,7 +285,7 @@
   border: 1px dashed #e0e0ff;
 }
 
-.loading-text {
+.loading-spinner { /* Thay thế tinh gọn class cũ */
   padding: 40px;
   color: #635bff;
   font-weight: bold;
@@ -175,10 +309,18 @@
 }
 
 /* RESPONSIVE */
-@media (max-width: 600px) {
-  .profile-events-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  .profile-event-row-item {
+    grid-template-columns: 1fr; /* Trên mobile bẻ dọc hàng thành khối nhỏ */
+    gap: 10px;
+    padding: 15px;
   }
+  .row-col-status {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
   .profile-stats {
     flex-wrap: wrap;
     gap: 15px;

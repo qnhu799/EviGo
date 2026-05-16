@@ -1,21 +1,19 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const EventCard = ({ event }) => {
+// 🎯 CẬP NHẬT: Nhận thêm thuộc tính showStatus với mặc định là false để bảo vệ các trang khác
+const EventCard = ({ event, showStatus = false }) => {
   const navigate = useNavigate();
 
-  // Hàm xử lý hiển thị ảnh: Ưu tiên ảnh thật -> Nếu không có dùng ảnh mẫu của web
+  // Hàm xử lý hiển thị ảnh: Ưu tiên ảnh thật -> Nếu không có dùng ảnh mẫu của web (Giữ nguyên gốc của Như)
   const getEventThumbnail = (eventData) => {
-    // 1. Kiểm tra nếu có ảnh từ database (do Như đóng góp qua form)
     if (eventData.image) {
-      // Nếu là link web (http) thì dùng luôn, nếu là file local thì nối link server
       if (eventData.image.startsWith("http")) return eventData.image;
 
       const cleanPath = eventData.image.replace(/\\/g, "/");
       return `http://localhost:5000/${cleanPath}`;
     }
 
-    // 2. Nếu không có ảnh thật, trả về ảnh mẫu của EviGo (Dùng ảnh minh họa chuyên nghiệp)
     return "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
   };
 
@@ -37,7 +35,6 @@ const EventCard = ({ event }) => {
           src={getEventThumbnail(event)}
           alt={event.title}
           className="event-image"
-          // Xử lý nếu link ảnh thật bị lỗi thì quay về ảnh mẫu ngay lập tức
           onError={(e) => {
             e.target.src =
               "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
@@ -66,6 +63,47 @@ const EventCard = ({ event }) => {
             {event.ticketPrice || "Miễn phí vào cổng"}
           </span>
         </div>
+
+        {/* 🎯 ĐOẠN TỐI ƯU MỚI: Chỉ xuất hiện khi có lệnh bật công tắc showStatus từ trang Profile nộp qua */}
+        {showStatus && event.status && (
+          <div
+            className="profile-status-bar"
+            style={{
+              marginTop: "12px",
+              paddingTop: "10px",
+              borderTop: "1px dashed #eee",
+            }}
+          >
+            <span
+              className={`status-badge-mini ${event.status}`}
+              style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                padding: "4px 12px",
+                borderRadius: "30px",
+                display: "inline-block",
+                background:
+                  event.status === "approved"
+                    ? "#d1fae5"
+                    : event.status === "rejected"
+                      ? "#fee2e2"
+                      : "#f3e8ff",
+                color:
+                  event.status === "approved"
+                    ? "#10b981"
+                    : event.status === "rejected"
+                      ? "#ef4444"
+                      : "#a855f7",
+              }}
+            >
+              {event.status === "approved"
+                ? "🟢 Đã duyệt"
+                : event.status === "rejected"
+                  ? "🔴 Từ chối"
+                  : "🟣 Chờ duyệt"}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

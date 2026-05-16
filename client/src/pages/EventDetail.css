@@ -1,5 +1,4 @@
-/* --- EventDetail.css --- */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;600;800&display=swap');
 
 :root {
   --primary-purple: #280d8c;
@@ -66,16 +65,51 @@
   font-weight: 600;
 }
 
+/* 🎯 CẬP NHẬT: Hàng ngang bọc Tiêu đề và nút bấm Trái tim để chúng song hành */
+.ed-title-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  margin: 15px 0;
+}
+
+/* Triệt tiêu margin cũ của tiêu đề để không bị lệch hàng */
 .ed-main-title {
   color: white;
   font-size: 48px;
   font-weight: 800;
-  margin: 15px 0;
+  margin: 0 !important;
+  line-height: 1.2;
 }
 
-.ed-hero-loc {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 18px;
+/* 🎯 CẬP NHẬT: Xóa sạch khung viền vuông trắng, trả lại trái tim trong suốt hòa vào nền Hero */
+.ed-btn-bookmark {
+  background: transparent !important; /* Đuổi cái hộp trắng vuông đáng ghét đi */
+  border: none !important;             /* Bỏ viền mặc định */
+  outline: none !important;
+  cursor: pointer;
+  font-size: 2.5rem;                  /* Tăng nhẹ size icon cho cân bằng với font 48px của tên bài */
+  padding: 0 !important;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  opacity: 0.7;                       /* Trạng thái chưa lưu mờ nhẹ ẩn vào overlay tím */
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ed-btn-bookmark:hover {
+  transform: scale(1.25);
+  opacity: 1;
+}
+
+/* 💖 TRẠNG THÁI ACTIVE: Phát sáng nhẹ khi Như đã bấm lưu sự kiện thành công */
+.ed-btn-bookmark.is-saved {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); /* Tỏa sáng nhẹ trên nền hero tối */
+  animation: popBookmark 0.35s ease;
 }
 
 /* Grid Layout */
@@ -98,10 +132,9 @@
   margin-bottom: 30px;
 }
 
-/* --- PHẦN CẬP NHẬT: FIX KHUNG ALBUM HÌNH ẢNH --- */
+/* --- FIX KHUNG ALBUM HÌNH ẢNH CỦA NHƯ --- */
 .ed-gallery-grid {
   display: grid;
-  /* Tự động chia cột đều và đẹp */
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   margin-top: 20px;
@@ -109,7 +142,6 @@
 
 .ed-gallery-item {
   width: 100%;
-  /* Ép khung về tỷ lệ 16:9 chuẩn banner */
   aspect-ratio: 16 / 9;
   border-radius: 16px;
   overflow: hidden;
@@ -120,17 +152,14 @@
 .ed-gallery-img-content {
   width: 100%;
   height: 100%;
-  /* QUAN TRỌNG: Giúp ảnh lấp đầy khung mà không bị lệch hay méo */
   object-fit: cover;
   transition: transform 0.4s ease;
   display: block;
 }
 
 .ed-gallery-img-content:hover {
-  /* Hiệu ứng zoom nhẹ khi Như di chuột qua */
   transform: scale(1.08);
 }
-/* ------------------------------------------- */
 
 .ed-section-title {
   color: var(--primary-purple);
@@ -266,6 +295,14 @@
 }
 
 .ed-btn-outline:hover { border-color: var(--accent-purple); color: var(--accent-purple); }
+
+/* Hiệu ứng giật nảy tim nhẹ khi click lưu bài đăng thành công */
+@keyframes popBookmark {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.4); }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
 
 /* Responsive */
 @media (max-width: 992px) {
