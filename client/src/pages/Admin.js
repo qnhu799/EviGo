@@ -179,77 +179,104 @@ const Admin = () => {
               </thead>
               <tbody>
                 {displayedEvents.length > 0 ? (
-                  displayedEvents.map((event) => (
-                    <tr key={event._id}>
-                      <td>
-                        <a
-                          href={`/event/${event._id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="event-link-title"
-                        >
-                          {event.title || event.name || "Không có tên"}
-                        </a>
-                        <span className="event-type-badge">{event.type}</span>
-                      </td>
-                      <td>
-                        <div className="contributor-box">
-                          <div className="avatar-small">
-                            {(event.contributorInfo?.displayName || "U")
-                              .charAt(0)
-                              .toUpperCase()}
+                  displayedEvents.map((event) => {
+                    // 🎯 BỘ LỌC KIỂM TRA 3 LỚP: Chống hiển thị chữ "Ẩn danh" khi Backend rỗng chuỗi
+                    const rawInfoName =
+                      event.contributorInfo?.displayName ||
+                      event.contributorInfo?.username;
+                    const rawContrName = event.contributorName;
+                    const savedLocalName =
+                      localStorage.getItem("username") ||
+                      localStorage.getItem("Username");
+
+                    let finalDisplayName = "Cộng tác viên EviGo";
+
+                    if (
+                      typeof rawInfoName === "string" &&
+                      rawInfoName.trim().length > 0 &&
+                      rawInfoName !== "Ẩn danh"
+                    ) {
+                      finalDisplayName = rawInfoName;
+                    } else if (
+                      typeof rawContrName === "string" &&
+                      rawContrName.trim().length > 0 &&
+                      rawContrName !== "Ẩn danh"
+                    ) {
+                      finalDisplayName = rawContrName;
+                    } else if (savedLocalName) {
+                      finalDisplayName = savedLocalName; // Phương án dự phòng tự động nhận diện tài khoản em
+                    }
+
+                    return (
+                      <tr key={event._id}>
+                        <td>
+                          <a
+                            href={`/event/${event._id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="event-link-title"
+                          >
+                            {event.title || event.name || "Không có tên"}
+                          </a>
+                          <span className="event-type-badge">{event.type}</span>
+                        </td>
+                        <td>
+                          <div className="contributor-box">
+                            <div className="avatar-small">
+                              {finalDisplayName.charAt(0).toUpperCase()}
+                            </div>
+                            <span>{finalDisplayName}</span>
                           </div>
-                          <span>
-                            {event.contributorInfo?.displayName || "Ẩn danh"}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="district-text">
-                          {event.locations?.[0]?.district || "---"}
-                        </div>
-                        <small className="address-text">
-                          {event.locations?.[0]?.address || "---"}
-                        </small>
-                      </td>
-                      <td>
-                        {event.isPermanent ? (
-                          <span className="permanent-tag">Cố định</span>
-                        ) : event.startDate ? (
-                          new Date(event.startDate).toLocaleDateString("vi-VN")
-                        ) : (
-                          "---"
-                        )}
-                      </td>
-                      <td className="price-tag">
-                        {event.ticketPrice || "Miễn phí"}
-                      </td>
-                      <td>
-                        {event.status === "pending" ? (
-                          <div className="action-btns">
-                            <button
-                              className="btn-approve"
-                              onClick={() => handleApprove(event._id)}
-                            >
-                              Duyệt
-                            </button>
-                            <button
-                              className="btn-reject"
-                              onClick={() => handleReject(event._id)}
-                            >
-                              Hủy
-                            </button>
+                        </td>
+                        <td>
+                          <div className="district-text">
+                            {event.locations?.[0]?.district || "---"}
                           </div>
-                        ) : (
-                          <span className="status-processed-text">
-                            {event.status === "approved"
-                              ? "✅ Đã lên sàn"
-                              : "❌ Đã từ chối"}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                          <small className="address-text">
+                            {event.locations?.[0]?.address || "---"}
+                          </small>
+                        </td>
+                        <td>
+                          {event.isPermanent ? (
+                            <span className="permanent-tag">Cố định</span>
+                          ) : event.startDate ? (
+                            new Date(event.startDate).toLocaleDateString(
+                              "vi-VN",
+                            )
+                          ) : (
+                            "---"
+                          )}
+                        </td>
+                        <td className="price-tag">
+                          {event.ticketPrice || "Miễn phí"}
+                        </td>
+                        <td>
+                          {event.status === "pending" ? (
+                            <div className="action-btns">
+                              <button
+                                className="btn-approve"
+                                onClick={() => handleApprove(event._id)}
+                              >
+                                Duyệt
+                              </button>
+                              <button
+                                className="btn-reject"
+                                onClick={() => handleReject(event._id)}
+                              >
+                                Hủy
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="status-processed-text">
+                              {event.status === "approved"
+                                ? "✅ Đã lên sàn"
+                                : "❌ Đã từ chối"}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td
