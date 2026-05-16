@@ -33,7 +33,7 @@ export default function LoginPage() {
       // 🎯 BƯỚC QUAN TRỌNG: Quét sạch localStorage cũ để dọn chỗ cho dữ liệu THẬT
       localStorage.clear();
 
-      // 1. Lưu Token và thông tin cơ bản
+      // 1. Lưu Token và thông tin cơ bản (Dùng chữ thường 'token')
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
       localStorage.setItem("email", res.data.user.email);
@@ -69,9 +69,9 @@ export default function LoginPage() {
         icon: userRole === "superadmin" ? "👑" : "👋",
       });
 
-      // 6. Điều hướng dựa trên Role
+      // 6. Điều hướng dựa trên Role (🎯 Sửa từ /admindashboard thành /admin cho khớp component)
       if (userRole === "superadmin" || userRole === "admin") {
-        navigate("/admindashboard");
+        navigate("/admin");
       } else {
         navigate("/");
       }

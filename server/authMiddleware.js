@@ -5,7 +5,10 @@ const protect = (req, res, next) => {
   let token = req.headers.authorization;
   if (token && token.startsWith("Bearer")) {
     try {
-      const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+      // 🎯 ĐỒNG BỘ KHÓA BÍ MẬT: Khớp khít với khóa dùng trong file authRoutes.js
+      const jwtSecret = process.env.JWT_SECRET || "EviGo_Secret_Key_997";
+
+      const decoded = jwt.verify(token.split(" ")[1], jwtSecret);
       req.user = decoded;
       next();
     } catch (error) {
@@ -16,9 +19,12 @@ const protect = (req, res, next) => {
   }
 };
 
-// 2. Chỉ cho phép Admin
+// 2. Chỉ cho phép Admin (🎯 CẬP NHẬT: Cho phép cả superadmin đi vào)
 const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  if (
+    req.user &&
+    (req.user.role === "admin" || req.user.role === "superadmin")
+  ) {
     next();
   } else {
     res
@@ -27,11 +33,14 @@ const adminOnly = (req, res, next) => {
   }
 };
 
-// 3. Cho phép Admin VÀ Thành viên đóng góp
+// 3. Cho phép Admin VÀ Thành viên đóng góp (🎯 CẬP NHẬT: Mở rộng cho mọi role, kể cả user thường và superadmin đều đóng góp được)
 const canContribute = (req, res, next) => {
   if (
     req.user &&
-    (req.user.role === "admin" || req.user.role === "organizer")
+    (req.user.role === "user" ||
+      req.user.role === "admin" ||
+      req.user.role === "superadmin" ||
+      req.user.role === "organizer")
   ) {
     next();
   } else {

@@ -11,10 +11,20 @@ const Admin = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Hàm tiện ích để lấy token (Chống lỗi lệch chữ Token viết hoa / viết thường)
+  const getValidToken = () => {
+    return localStorage.getItem("token") || localStorage.getItem("Token") || "";
+  };
+
   // 1. Lấy thống kê số lượng (Đếm cá nhân cho Xanh/Đỏ, đếm Chung cho Tím)
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        console.warn("⚠️ Không tìm thấy Token trong LocalStorage!");
+        return;
+      }
+
       const response = await axios.get(
         "http://localhost:5000/api/events/stats",
         { headers: { Authorization: `Bearer ${token}` } },
@@ -23,7 +33,7 @@ const Admin = () => {
       setRejectedCount(response.data.rejectedCount || 0);
       setPendingCount(response.data.pendingCount || 0);
     } catch (error) {
-      console.error("Lỗi thống kê:", error);
+      console.error("❌ Lỗi thống kê:", error.response?.data || error.message);
     }
   };
 
@@ -31,7 +41,12 @@ const Admin = () => {
   const fetchEventsByStatus = async (status) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
+      if (!token) {
+        setDisplayedEvents([]);
+        return;
+      }
+
       // Gọi API mới để lấy bài: Pending (Tất cả) | Approved/Rejected (Của tôi)
       const response = await axios.get(
         `http://localhost:5000/api/events/admin-list?status=${status}`,
@@ -39,7 +54,10 @@ const Admin = () => {
       );
       setDisplayedEvents(response.data || []);
     } catch (error) {
-      console.error("Lỗi lấy danh sách sự kiện:", error);
+      console.error(
+        "❌ Lỗi lấy danh sách sự kiện:",
+        error.response?.data || error.message,
+      );
       setDisplayedEvents([]);
     } finally {
       setLoading(false);
@@ -50,11 +68,12 @@ const Admin = () => {
   useEffect(() => {
     fetchEventsByStatus(filterStatus);
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterStatus]);
 
   const handleApprove = async (id) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
       await axios.patch(
         `http://localhost:5000/api/events/update-status/${id}`,
         { status: "approved" },
@@ -80,7 +99,7 @@ const Admin = () => {
 
   const handleReject = async (id) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getValidToken();
       await axios.patch(
         `http://localhost:5000/api/events/update-status/${id}`,
         { status: "rejected" },

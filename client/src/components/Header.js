@@ -10,6 +10,14 @@ export default function Header() {
   const popupRef = useRef(null);
 
   const checkAuth = () => {
+    // Tự động kiểm tra cả Token thật tránh đọc nhầm dữ liệu ẩn
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("Token");
+    if (!token) {
+      setUsername(null);
+      setRole(null);
+      return;
+    }
     const savedName = localStorage.getItem("username");
     const savedRole = localStorage.getItem("role")?.toLowerCase();
     setUsername(savedName);
@@ -58,7 +66,7 @@ export default function Header() {
           <Link to="/">Trang chủ</Link>
           <Link to="/map">Bản đồ</Link>
 
-          {/* 👤 CẤP 2 - THÀNH VIÊN: Chỉ hiện khi đã đăng nhập (role tồn tại) */}
+          {/* 👤 CẤP 2 - THÀNH VIÊN: Chỉ hiện khi đã đăng nhập */}
           {username && <Link to="/contribute">Đóng góp</Link>}
 
           {/* 🛡️ CẤP 3 - QUẢN TRỊ VIÊN: Phải là admin hoặc superadmin */}

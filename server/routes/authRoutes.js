@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
+const jwt = require("jsonwebtoken"); // 🎯 BỔ SUNG: Khai báo thư viện JWT để sinh token xịn
 
 router.post("/register", async (req, res) => {
   try {
@@ -46,9 +47,18 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Mật khẩu không đúng!" });
     }
 
+    // 🎯 LOGIC CẬP NHẬT: Ký một Token thật sự chứa id và role của user
+    // Sử dụng mã bí mật dự phòng nếu em chưa cấu hình file .env
+    const jwtSecret = process.env.JWT_SECRET || "EviGo_Secret_Key_997";
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      jwtSecret,
+      { expiresIn: "1d" }, // Token có hạn trong vòng 1 ngày
+    );
+
     res.status(200).json({
       message: `Chào mừng ${user.role === "superadmin" ? "Super Admin" : "Evier"} quay trở lại!`,
-      token: "fake-jwt-token-for-now",
+      token: token, // ✨ ĐÃ THAY ĐỔI: Trả về biến token thật vừa ký thay vì chuỗi fake cũ
       user: {
         id: user._id,
         username: user.username,
@@ -69,12 +79,10 @@ router.put("/update-role", async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy người dùng!" });
 
     if (user.email === "qnhu799@gmail.com") {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Quyền trùm cuối là bất biến, Như không thể hạ quyền chính mình!",
-        });
+      return res.status(403).json({
+        message:
+          "Quyền trùm cuối là bất biến, Như không thể hạ quyền chính mình!",
+      });
     }
 
     const newRole = user.role === "admin" ? "user" : "admin";

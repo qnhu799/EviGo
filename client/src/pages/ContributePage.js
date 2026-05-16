@@ -104,6 +104,11 @@ const ContributePage = () => {
     "Học thuật",
   ];
 
+  // Hàm lấy token thông minh chống lỗi lệch chữ Token hoa / token thường
+  const getValidToken = () => {
+    return localStorage.getItem("token") || localStorage.getItem("Token") || "";
+  };
+
   const handleTypeToggle = (type) => {
     if (type === "Khác") {
       setIsOtherSelected(!isOtherSelected);
@@ -245,7 +250,7 @@ const ContributePage = () => {
   };
 
   const addLocation = () => {
-    const newLocs = [
+    const newLocs = (HornedLocs) => [
       ...formData.locations,
       { address: "", district: "", lat: 10.871, lng: 106.792 },
     ];
@@ -281,10 +286,22 @@ const ContributePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- 🎯 LOGIC CẬP NHẬT: LẤY TOKEN VÀ USERNAME ---
-    const token = localStorage.getItem("token");
+    // --- 🎯 LOGIC CẬP NHẬT: ĐẢM BẢO LẤY ĐÚNG TOKEN ---
+    const token = getValidToken();
+    if (!token) {
+      Swal.fire({
+        icon: "error",
+        title: "Chưa đăng nhập!",
+        text: "Vui lòng đăng nhập tài khoản trước khi gửi đóng góp nhé Evier!",
+        confirmButtonColor: "#ff4d4d",
+      });
+      return;
+    }
+
     const contributorName =
-      localStorage.getItem("username") || "Người dùng ẩn danh";
+      localStorage.getItem("username") ||
+      localStorage.getItem("Username") ||
+      "Người dùng ẩn danh";
 
     const finalTypes = [...selectedTypes];
     if (isOtherSelected && otherType.trim() !== "") {
@@ -346,7 +363,7 @@ const ContributePage = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            // 🎯 Gửi kèm Token để Backend biết Như là ai và lưu ID vào Database
+            // Gửi kèm Token chuẩn hóa Bearer lên Backend
             Authorization: `Bearer ${token}`,
           },
         },
@@ -365,7 +382,10 @@ const ContributePage = () => {
         });
       }
     } catch (error) {
-      console.error("Lỗi:", error.response?.data || error.message);
+      console.error(
+        "❌ Lỗi gửi đóng góp:",
+        error.response?.data || error.message,
+      );
       Swal.fire({
         icon: "error",
         title: "Lỗi rồi...",
