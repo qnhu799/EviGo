@@ -309,3 +309,87 @@
   .ed-main-grid { grid-template-columns: 1fr; }
   .ed-sidebar { position: static; }
 }
+
+/* =========================================================================
+   🎯 SIÊU CẬP NHẬT: STYLE NÚT LƯU TRÁI TIM ĐỎ PHÁT QUANG (RED GLOW)
+   (Ghi đè lên đoạn .ed-btn-save-large cũ ở cuối file, giữ nguyên code trên)
+   ========================================================================= */
+
+.ed-btn-save-large {
+  width: 100%;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+
+  /* Trạng thái chưa lưu: Gradient tím chuyển sắc huyền bí sâu thẳm */
+  background: linear-gradient(135deg, #1e1b4b 0%, var(--primary-purple) 50%, #3b20a6 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(40, 13, 140, 0.2);
+}
+
+/* Hiệu ứng tia sáng quét qua khi hover giúp nút sinh động */
+.ed-btn-save-large::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: 0.75s;
+  z-index: -1;
+}
+
+.ed-btn-save-large:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(40, 13, 140, 0.35);
+}
+
+.ed-btn-save-large:hover::before {
+  left: 150%;
+}
+
+/* ❤️ TRẠNG THÁI ĐÃ LƯU: Đổi sang Gradient Hồng Đỏ Đậm và Tỏa bóng phát quang Đỏ (Red Glow) */
+.ed-btn-save-large.is-saved {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  /* Đổ bóng tỏa sáng màu đỏ rực rỡ, đặc sắc */
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 4px 15px rgba(220, 38, 38, 0.4) !important;
+  animation: popHeartGlow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hiệu ứng giật nảy khối kết hợp bung tỏa sắc đỏ khi bấm thích */
+@keyframes popHeartGlow {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.2); /* Chớp sáng đỏ nhẹ khi nhấn */
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}

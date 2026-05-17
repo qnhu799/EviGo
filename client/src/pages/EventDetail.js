@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import toast from "react-hot-toast"; // 🎯 Đã import thêm để bắn thông báo mượt mà
+import axios from "react-dom";
+import axiosInstance from "axios"; // Đảm bảo dùng đúng thư viện axios của em
+import toast from "react-hot-toast"; // Bắn thông báo mượt mà
 import "./EventDetail.css";
 
 export default function EventDetail() {
@@ -10,7 +11,7 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🎯 TÍNH NĂNG MỚI: State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
+  // 🎯 TÍNH NĂNG: State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
   const [savedEventIds, setSavedEventIds] = useState([]);
 
   const dayNames = [
@@ -39,13 +40,13 @@ export default function EventDetail() {
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
-  // 🎯 TÍNH NĂNG MỚI: Tải danh sách ID sự kiện đã lưu của tài khoản đang đăng nhập
+  // 🎯 TÍNH NĂNG: Tải danh sách ID sự kiện đã lưu của tài khoản đang đăng nhập
   const fetchSavedEventIds = async () => {
     try {
       const token = getValidToken();
       if (!token) return; // Nếu khách vãng lai chưa đăng nhập thì bỏ qua
 
-      const response = await axios.get(
+      const response = await axiosInstance.get(
         "http://localhost:5000/api/events/saved-events-ids",
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -55,7 +56,7 @@ export default function EventDetail() {
     }
   };
 
-  // 🎯 TÍNH NĂNG MỚI: Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện
+  // 🎯 TÍNH NĂNG: Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện lớn hình trái tim
   const handleToggleSaveEvent = async (eventId) => {
     try {
       const token = getValidToken();
@@ -64,7 +65,7 @@ export default function EventDetail() {
         return;
       }
 
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `http://localhost:5000/api/events/save-event/${eventId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
@@ -72,7 +73,7 @@ export default function EventDetail() {
 
       if (response.data.isSaved) {
         setSavedEventIds((prev) => [...prev, eventId]);
-        toast.success("Đã lưu sự kiện thành công! 🔖");
+        toast.success("Đã thêm vào danh sách yêu thích! ❤️");
       } else {
         setSavedEventIds((prev) => prev.filter((id) => id !== eventId));
         toast.success("Đã xóa khỏi danh sách lưu!");
@@ -87,7 +88,9 @@ export default function EventDetail() {
     window.scrollTo(0, 0);
     const fetchDetail = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+        const res = await axiosInstance.get(
+          `http://localhost:5000/api/events/${id}`,
+        );
         setEvent(res.data);
         setLoading(false);
       } catch (err) {
@@ -97,7 +100,7 @@ export default function EventDetail() {
     };
 
     fetchDetail();
-    fetchSavedEventIds(); // 🎯 Chạy nạp đồng thời danh sách đã lưu để hiển thị màu nút cho đúng
+    fetchSavedEventIds(); // Chạy nạp đồng thời danh sách đã lưu để hiển thị màu nút cho đúng
   }, [id]);
 
   if (loading)
@@ -110,6 +113,8 @@ export default function EventDetail() {
   const mainBanner = getFullImageUrl(
     event.image || (event.images && event.images[0]),
   );
+
+  const isCurrentEventSaved = savedEventIds.includes(event._id);
 
   return (
     <div className="ed-wrapper">
@@ -128,20 +133,9 @@ export default function EventDetail() {
                 <span className="ed-badge">{event.type}</span>
               </div>
 
-              {/* 🎯 GÀI KHU VỰC TIÊU ĐỀ + NÚT BẤM BOOKMARK TOÀN CỤC CHẠY CHO MỌI ACCOUNT */}
+              {/* Tiêu đề phẳng dọn sạch hoàn toàn icon bookmark cũ rườm rà */}
               <div className="ed-title-action-row">
                 <h1 className="ed-main-title">{event.title}</h1>
-                <button
-                  className={`ed-btn-bookmark ${savedEventIds.includes(event._id) ? "is-saved" : ""}`}
-                  onClick={() => handleToggleSaveEvent(event._id)}
-                  title={
-                    savedEventIds.includes(event._id)
-                      ? "Bỏ lưu sự kiện"
-                      : "Lưu sự kiện"
-                  }
-                >
-                  {savedEventIds.includes(event._id) ? "🔖" : "🤍"}
-                </button>
               </div>
 
               <p className="ed-hero-loc">
@@ -249,6 +243,15 @@ export default function EventDetail() {
                 </span>
               </div>
             </div>
+
+            {/* 🎯 NÚT LƯU TRÁI TIM ĐỎ: Tự động đổi text và icon thời gian thực theo mảng dữ liệu */}
+            <button
+              className={`ed-btn-save-large ${isCurrentEventSaved ? "is-saved" : ""}`}
+              onClick={() => handleToggleSaveEvent(event._id)}
+            >
+              {isCurrentEventSaved ? "Đã yêu thích ❤️" : "Lưu sự kiện 🤍"}
+            </button>
+
             <button className="ed-btn-primary">Lên lịch đi ngay!</button>
           </div>
         </aside>

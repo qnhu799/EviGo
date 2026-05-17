@@ -263,7 +263,7 @@ exports.getAllEventsForAdmin = async (req, res) => {
 };
 
 // =========================================================================
-// 🎯 BOOKMARK SYSTEM
+// 🎯 BOOKMARK SYSTEM (ĐÃ CẬP NHẬT ĐỒNG BỘ TÀI KHOẢN ĐỘC QUYỀN TRÁI TIM ĐỎ)
 // =========================================================================
 
 // 11. API lấy danh sách ID các sự kiện đã lưu của User đang đăng nhập
@@ -304,13 +304,16 @@ exports.toggleSaveEvent = async (req, res) => {
       await user.save();
       return res
         .status(200)
-        .json({ isSaved: false, message: "Đã hủy lưu sự kiện" });
+        .json({ isSaved: false, message: "Đã xóa khỏi danh sách lưu!" });
     } else {
       user.savedEvents.push(eventId);
       await user.save();
       return res
         .status(200)
-        .json({ isSaved: true, message: "Đã lưu sự kiện thành công! 🔖" });
+        .json({
+          isSaved: true,
+          message: "Đã thêm vào danh sách yêu thích! ❤️",
+        });
     }
   } catch (err) {
     console.error("❌ Lỗi toggleSaveEvent:", err.message);
@@ -325,11 +328,18 @@ exports.getSavedEventsDetails = async (req, res) => {
     const queryUserId = req.query.userId;
     const finalUserId = tokenUserId || queryUserId;
 
+    // populate("savedEvents") kết hợp loại bỏ các bản ghi null lỗi bảo hiểm
     const user = await User.findById(finalUserId).populate("savedEvents");
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy thành viên!" });
     }
-    res.status(200).json(user.savedEvents || []);
+
+    // Lưới lọc bảo hiểm: Loại bỏ phần tử null nếu bài viết gốc bị admin xóa khỏi db
+    const cleanSavedEvents = (user.savedEvents || []).filter(
+      (event) => event !== null,
+    );
+
+    res.status(200).json(cleanSavedEvents);
   } catch (err) {
     console.error("❌ Lỗi getSavedEventsDetails:", err.message);
     res
