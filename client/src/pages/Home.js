@@ -33,6 +33,9 @@ export default function Home() {
     hocThuat: 3,
   });
 
+  // 🎯 TÍNH NĂNG MỚI: Quản lý số lượng hiển thị riêng biệt cho khu vực "Tất cả sự kiện"
+  const [allEventsCount, setAllEventsCount] = useState(3);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     const fetchEvents = async () => {
@@ -120,7 +123,6 @@ export default function Home() {
     }
   };
 
-  // --- CẬP NHẬT: Hàm cuộn trang tại chỗ ---
   const handleCategoryClick = (categoryName) => {
     const categoryMap = {
       "Âm nhạc": "section-am-nhac",
@@ -134,10 +136,8 @@ export default function Home() {
     const element = document.getElementById(targetId);
 
     if (element) {
-      // Cuộn mượt đến danh mục
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
-      // Nếu không tìm thấy (ví dụ trang khác), thì mới bay sang Map
       navigate("/map", { state: { category: categoryName } });
     }
   };
@@ -330,7 +330,6 @@ export default function Home() {
         </button>
       </section>
 
-      {/* Section Học thuật (Bổ sung để nút nhấn có chỗ nhảy tới) */}
       <section id="section-hoc-thuat" className="featured-events">
         <h2 className="section-title">Học thuật</h2>
         <div className="events-grid">
@@ -346,6 +345,30 @@ export default function Home() {
         >
           Xem thêm
         </button>
+      </section>
+
+      {/* =========================================================================
+          🎯 KHU VỰC MỚI: TẤT CẢ SỰ KIỆN TỔNG HỢP (ĐỒNG BỘ CARD & PHÂN TRANG)
+          ========================================================================= */}
+      <section className="featured-events all-events-section-wrapper">
+        <h2 className="section-title">Tất cả sự kiện</h2>
+        <div className="events-grid">
+          {events.slice(0, allEventsCount).map((ev) => (
+            <div id={ev._id} key={ev._id}>
+              <EventCard event={ev} />
+            </div>
+          ))}
+        </div>
+
+        {/* Nút Xem thêm tự động ẩn khi giao diện đã kéo hết data từ MongoDB */}
+        {allEventsCount < events.length && (
+          <button
+            className="see-more-btn all-events-more-btn"
+            onClick={() => setAllEventsCount((prev) => prev + 3)}
+          >
+            Xem thêm
+          </button>
+        )}
       </section>
     </div>
   );

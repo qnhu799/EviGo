@@ -311,8 +311,8 @@
 }
 
 /* =========================================================================
-   🎯 SIÊU CẬP NHẬT: STYLE NÚT LƯU TRÁI TIM ĐỎ PHÁT QUANG (RED GLOW)
-   (Ghi đè lên đoạn .ed-btn-save-large cũ ở cuối file, giữ nguyên code trên)
+   🎯 SIÊU CẬP NHẬT: STYLE NÚT LƯU SỰ KIỆN ĐẶC SẮC (GLOW & GRADIENT)
+   (Ghi đè lên đoạn .ed-btn-save-large cũ ở cuối file, giữ nguyên code trên của Như)
    ========================================================================= */
 
 .ed-btn-save-large {
@@ -321,7 +321,7 @@
   position: relative;
   overflow: hidden;
 
-  /* Trạng thái chưa lưu: Gradient tím chuyển sắc huyền bí sâu thẳm */
+  /* Trạng thái chưa lưu: Gradient tím chuyển từ đậm sang accent tinh tế */
   background: linear-gradient(135deg, #1e1b4b 0%, var(--primary-purple) 50%, #3b20a6 100%);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -340,7 +340,7 @@
   box-shadow: 0 4px 15px rgba(40, 13, 140, 0.2);
 }
 
-/* Hiệu ứng tia sáng quét qua khi hover giúp nút sinh động */
+/* Hiệu ứng tia sáng quét qua (Shimmer Effect) khi hover giúp nút cực kỳ sinh động */
 .ed-btn-save-large::before {
   content: '';
   position: absolute;
@@ -352,7 +352,7 @@
     to right,
     rgba(255, 255, 255, 0) 0%,
     rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0) 100%
+    rgba(255, 255, 255, 0) 100-----
   );
   transform: skewX(-25deg);
   transition: 0.75s;
@@ -365,28 +365,28 @@
 }
 
 .ed-btn-save-large:hover::before {
-  left: 150%;
+  left: 150%; /* Tia sáng quét ngang qua nút khi di chuột */
 }
 
-/* ❤️ TRẠNG THÁI ĐÃ LƯU: Đổi sang Gradient Hồng Đỏ Đậm và Tỏa bóng phát quang Đỏ (Red Glow) */
+/* 💖 TRẠNG THÁI ĐÃ LƯU: Đổi sang Gradient Neon và Phát sáng Neon tỏa rộng (Glow Effect) */
 .ed-btn-save-large.is-saved {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, #8b5cf6 100%) !important;
   color: #ffffff !important;
   border-color: transparent !important;
-  /* Đổ bóng tỏa sáng màu đỏ rực rỡ, đặc sắc */
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 4px 15px rgba(220, 38, 38, 0.4) !important;
-  animation: popHeartGlow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Đổ bóng phát quang màu tím cực kỳ đặc sắc */
+  box-shadow: 0 0 20px rgba(99, 91, 255, 0.6), 0 4px 15px rgba(99, 91, 255, 0.4) !important;
+  animation: popButtonGlow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Hiệu ứng giật nảy khối kết hợp bung tỏa sắc đỏ khi bấm thích */
-@keyframes popHeartGlow {
+/* Hiệu ứng giật nảy khối kết hợp bung tỏa ánh sáng khi click */
+@keyframes popButtonGlow {
   0% {
     transform: scale(1);
     filter: brightness(1);
   }
   50% {
     transform: scale(1.05);
-    filter: brightness(1.2); /* Chớp sáng đỏ nhẹ khi nhấn */
+    filter: brightness(1.3); /* Chớp sáng nhẹ tại thời điểm bấm */
   }
   100% {
     transform: scale(1);

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-// 1. Kiểm tra xem có đăng nhập chưa (🎯 NÂNG CẤP TỐI CAO: Quét sạch ID, Tên, Email đa tầng Payload - ĐÃ TẮT LOG TERM)
+// 1. Kiểm tra xem có đăng nhập chưa (🎯 NÂNG CẤP TỐI CAO: Quét sạch ID, Tên, Email đa tầng Payload)
 const protect = (req, res, next) => {
   let token = req.headers.authorization;
   if (token && token.startsWith("Bearer")) {
@@ -62,12 +62,18 @@ const protect = (req, res, next) => {
         email: finalizedEmail.trim(), // Khóa chặt email sạch tìm được phục vụ lưới quét đối chiếu
       };
 
-      // 🎯 ĐH ĐÃ ẨN DÒNG CONSOLE.LOG THỪA TẠI ĐÂY GIÚP TRÌNH ĐIỀU KHIỂN SẠCH SẼ CHUYÊN NGHIỆP
+      // Bật nhẹ dòng log hỗ trợ Như kiểm tra trạng thái user trong Terminal khi nhấn gửi bình luận
+      console.log(
+        "✅ [Auth OK] Người dùng thực hiện hành động:",
+        req.user.username,
+      );
 
       next();
     } catch (error) {
       console.error("❌ Lỗi giải mã Token bảo mật:", error.message);
-      res.status(401).json({ message: "Phiên làm việc hết hạn!" });
+      res
+        .status(401)
+        .json({ message: "Phiên làm việc hết hạn hoặc token không hợp lệ!" });
     }
   } else {
     res.status(401).json({ message: "Vui lòng đăng nhập để tiếp tục!" });

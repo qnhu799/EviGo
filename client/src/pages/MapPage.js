@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -7,7 +7,7 @@ import {
   Circle,
   useMap,
 } from "react-leaflet";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // 🎯 Thêm useLocation để bắt dữ liệu từ Card gửi sang
 import axios from "axios";
 import toast from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
@@ -71,16 +71,36 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
-const MapController = ({ center, radius }) => {
+// 🎯 BỘ ĐIỀU KHIỂN NÂNG CẤP: Tự động điều hướng và kích hoạt mở toang Popup theo ID sự kiện
+const MapDataAndFocusController = ({
+  center,
+  radius,
+  focusEventId,
+  markerRefs,
+}) => {
   const map = useMap();
+
   useEffect(() => {
-    if (map && center && center[0] && center[1]) {
+    // Ưu tiên 1: Nếu có lệnh focus chính xác vào 1 sự kiện từ Card nhảy sang
+    if (focusEventId && markerRefs.current[focusEventId]) {
+      const targetMarker = markerRefs.current[focusEventId];
+      const targetLatLng = targetMarker.getLatLng();
+
+      const timer = setTimeout(() => {
+        map.flyTo(targetLatLng, 16, { duration: 1.2 }); // Bay cận cảnh zoom mức 16 nhìn rõ đường
+        targetMarker.openPopup(); // 🎯 BẬT popup lên lập tức cho Như
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+    // Ưu tiên 2: Bay theo bán kính tìm kiếm thông thường của bộ lọc
+    else if (center && center[0] && center[1]) {
       const timer = setTimeout(() => {
         try {
           const circle = L.circle(center, { radius: radius * 1000 });
           map.flyToBounds(circle.getBounds(), {
             padding: [40, 40],
-            duration: 1.5,
+            duration: 1.2,
           });
         } catch (e) {
           map.flyTo(center, 13);
@@ -88,12 +108,18 @@ const MapController = ({ center, radius }) => {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [center, radius, map]);
+  }, [center, radius, focusEventId, map, markerRefs]);
+
   return null;
 };
 
 const MapPage = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Hook đón nhận gói dữ liệu state gửi từ EventCard
+
+  // Mảng Refs lưu trữ tham chiếu toàn bộ Marker đang hiển thị để gọi hàm .openPopup() bằng code
+  const markerRefs = useRef({});
+
   const [isFiltered, setIsFiltered] = useState(false);
   const [isLocationFixed, setIsLocationFixed] = useState(false);
   const [radius, setRadius] = useState(5);
@@ -120,7 +146,8 @@ const MapPage = () => {
   const timeFilters = ["Tất cả", "Hôm nay", "Ngày mai", "Cuối tuần"];
 
   const getFullImageUrl = (path) => {
-    if (!path) return "/default-banner.jpg";
+    if (!path)
+      return "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
     if (path.startsWith("http")) return path;
     return `http://localhost:5000/${path.replace(/\\/g, "/")}`;
   };
@@ -133,6 +160,7 @@ const MapPage = () => {
       : address;
   };
 
+  // 🎯 ĐÓN NHẬN DỮ LIỆU TỪ EVENTCARD SANG KHI TRANG MAP VỪA NẠP
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -141,12 +169,22 @@ const MapPage = () => {
         );
         setEvents(res.data);
         setFilteredEvents(res.data);
+
+        // Sau khi nạp dữ liệu xong, kiểm tra xem Router có mang theo vị trí chỉ định không
+        if (location.state && location.state.eventId) {
+          const { lat, lng, eventId } = location.state;
+          setMapCenter([lat, lng]);
+          setSelectedEventId(eventId);
+
+          // Nếu nhấn từ card sang, tự động điền thông tin vị trí tượng trưng cho đỡ trống form lọc
+          setStartLocation(location.state.keyword || "Sự kiện được chọn");
+        }
       } catch (err) {
         console.error("Lỗi lấy dữ liệu:", err);
       }
     };
     fetchEvents();
-  }, []);
+  }, [location.state]);
 
   const handleSearchLocation = async () => {
     if (!startLocation.trim()) return;
@@ -287,6 +325,7 @@ const MapPage = () => {
     setSelectedTimes(["Tất cả"]);
     setSelectedTypes(["Tất cả"]);
     setCustomDate("");
+    setSelectedEventId(null);
   };
 
   const handleLocate = () => {
@@ -428,23 +467,9 @@ const MapPage = () => {
               >
                 Áp dụng bộ lọc ✨
               </button>
-              {isFiltered && (
-                <button
-                  className="show-all-btn"
-                  onClick={handleShowAll}
-                  style={{
-                    background: "#eee",
-                    color: "#333",
-                    border: "none",
-                    padding: "10px",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                  }}
-                >
-                  Xem tất cả sự kiện 🔄
-                </button>
-              )}
+              <button className="show-all-btn" onClick={handleShowAll}>
+                Xem tất cả sự kiện 🔄
+              </button>
             </div>
           </div>
         </div>
@@ -459,7 +484,14 @@ const MapPage = () => {
               attribution="&copy; Google Maps"
               url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
             />
-            <MapController center={mapCenter} radius={radius} />
+            {/* 🎯 Kích hoạt bộ điều phối mượt mà mới */}
+            <MapDataAndFocusController
+              center={mapCenter}
+              radius={radius}
+              focusEventId={selectedEventId}
+              markerRefs={markerRefs}
+            />
+
             {currentLocationMarker && (
               <>
                 <Marker position={currentLocationMarker} icon={myLocationIcon}>
@@ -481,6 +513,7 @@ const MapPage = () => {
                 />
               </>
             )}
+
             {events.map((ev) =>
               ev.locations?.map((loc, i) => {
                 const isMatched = filteredEvents.some(
@@ -495,6 +528,10 @@ const MapPage = () => {
                     key={`${ev._id}-${i}`}
                     position={[parseFloat(loc.lat), parseFloat(loc.lng)]}
                     icon={markerIcon}
+                    // 🎯 Gán phần tử Marker vào mảng Refs lưu trữ theo ID sự kiện
+                    ref={(el) => {
+                      if (el) markerRefs.current[ev._id] = el;
+                    }}
                     eventHandlers={{
                       mouseover: (e) => e.target.openPopup(),
                       click: () => setSelectedEventId(ev._id),
@@ -502,30 +539,70 @@ const MapPage = () => {
                   >
                     <Popup maxWidth={280}>
                       <div className="map-click-box">
+                        {/* 🎯 SỬA LỖI HÌNH H2: Thêm onError bẫy lỗi tự nạp ảnh Unsplash chuyên nghiệp nếu link database hỏng */}
                         <img
                           src={getFullImageUrl(ev.image)}
-                          alt="ev"
+                          alt={ev.title}
                           className="popup-img"
+                          style={{
+                            width: "100%",
+                            height: "130px",
+                            objectFit: "cover",
+                            borderRadius: "14px 14px 0 0",
+                            display: "block",
+                          }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
+                          }}
                         />
-                        <h4>{ev.title}</h4>
-                        {isFiltered && isMatched && (
-                          <span
+
+                        <div style={{ padding: "12px" }}>
+                          <h4
                             style={{
-                              color: "#635bff",
-                              fontWeight: "bold",
-                              fontSize: "10px",
+                              margin: "0 0 6px 0",
+                              fontSize: "14.5px",
+                              fontWeight: "700",
+                              color: "#2d2d2d",
                             }}
                           >
-                            ✨ Khớp bộ lọc
-                          </span>
-                        )}
-                        <p className="popup-addr">{loc.address}</p>
-                        <button
-                          className="btn-go-here"
-                          onClick={() => navigate(`/event/${ev._id}`)}
-                        >
-                          Xem chi tiết
-                        </button>
+                            {ev.title}
+                          </h4>
+
+                          {isFiltered && isMatched && (
+                            <span
+                              style={{
+                                color: "#635bff",
+                                fontWeight: "bold",
+                                fontSize: "10px",
+                                display: "block",
+                                marginBottom: "6px",
+                              }}
+                            >
+                              ✨ Khớp bộ lọc
+                            </span>
+                          )}
+
+                          <p
+                            className="popup-addr"
+                            style={{
+                              margin: "0 0 12px 0",
+                              fontSize: "12.5px",
+                              color: "#666",
+                              lineHeight: "1.4",
+                            }}
+                          >
+                            {loc.address}
+                          </p>
+
+                          <button
+                            className="btn-go-here"
+                            onClick={() => navigate(`/event/${ev._id}`)}
+                          >
+                            Xem chi tiết
+                          </button>
+                        </div>
                       </div>
                     </Popup>
                   </Marker>
@@ -545,9 +622,16 @@ const MapPage = () => {
             {(isFiltered ? filteredEvents : events).length > 0 ? (
               (isFiltered ? filteredEvents : events).map((ev) => (
                 <div
-                  className="event-item-card clickable"
+                  className={`event-item-card clickable ${selectedEventId === ev._id ? "active-focus-card" : ""}`}
                   key={ev._id}
                   onClick={() => navigate(`/event/${ev._id}`)}
+                  style={{
+                    border:
+                      selectedEventId === ev._id
+                        ? "1.5px solid #635bff"
+                        : "1px solid #eee",
+                    background: selectedEventId === ev._id ? "#f5f4ff" : "#fff",
+                  }}
                 >
                   <div className="event-info">
                     <h4>{ev.title}</h4>

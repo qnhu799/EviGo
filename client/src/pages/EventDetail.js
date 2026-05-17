@@ -1,9 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "react-dom";
-import axiosInstance from "axios"; // Đảm bảo dùng đúng thư viện axios của em
-import toast from "react-hot-toast"; // Bắn thông báo mượt mà
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import axiosInstance from "axios"; // Sử dụng duy nhất instance axios cấu hình chuẩn của Như
+import toast from "react-hot-toast";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import "./EventDetail.css";
+
+// Khắc phục lỗi mất icon Marker mặc định của Leaflet trên môi trường React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -11,8 +24,13 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🎯 TÍNH NĂNG: State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
+  // State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
   const [savedEventIds, setSavedEventIds] = useState([]);
+
+  // Quản lý phân khu bình luận và đánh giá sao
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [rating, setRating] = useState(5);
 
   const dayNames = [
     "Chủ Nhật",
@@ -25,9 +43,9 @@ export default function EventDetail() {
   ];
 
   // Hàm lấy token từ bộ nhớ cục bộ
-  const getValidToken = () => {
+  const getValidToken = useCallback(() => {
     return localStorage.getItem("token") || localStorage.getItem("Token") || "";
-  };
+  }, []);
 
   const getFullImageUrl = (path) => {
     if (!path) return "/default-banner.jpg";
@@ -40,11 +58,11 @@ export default function EventDetail() {
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
-  // 🎯 TÍNH NĂNG: Tải danh sách ID sự kiện đã lưu của tài khoản đang đăng nhập
-  const fetchSavedEventIds = async () => {
+  // 🎯 ĐÃ TỐI ƯU: Bọc hàm bằng useCallback để triệt tiêu Warning ESLint
+  const fetchSavedEventIds = useCallback(async () => {
     try {
       const token = getValidToken();
-      if (!token) return; // Nếu khách vãng lai chưa đăng nhập thì bỏ qua
+      if (!token) return;
 
       const response = await axiosInstance.get(
         "http://localhost:5000/api/events/saved-events-ids",
@@ -54,9 +72,21 @@ export default function EventDetail() {
     } catch (err) {
       console.error("Lỗi đồng bộ danh sách đã lưu ở chi tiết:", err.message);
     }
-  };
+  }, [getValidToken]);
 
-  // 🎯 TÍNH NĂNG: Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện lớn hình trái tim
+  // 🎯 ĐÃ TỐI ƯU: Bọc hàm bằng useCallback giúp React quản lý vòng đời chuẩn chỉ
+  const fetchEventComments = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        `http://localhost:5000/api/comments/event/${id}`,
+      );
+      setComments(response.data || []);
+    } catch (err) {
+      console.error("Lỗi nạp bình luận:", err.message);
+    }
+  }, [id]);
+
+  // Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện lớn hình trái tim
   const handleToggleSaveEvent = async (eventId) => {
     try {
       const token = getValidToken();
@@ -84,6 +114,54 @@ export default function EventDetail() {
     }
   };
 
+  // Điều hướng mở tab Google Maps chỉ đường theo tọa độ GIS
+  const handleOpenGoogleDirections = () => {
+    const firstLoc = event?.locations?.[0];
+    if (firstLoc && firstLoc.lat && firstLoc.lng) {
+      const url = `http://googleusercontent.com/maps.google.com/maps?daddr=${firstLoc.lat},${firstLoc.lng}`;
+      window.open(url, "_blank");
+    } else {
+      toast.error("Không tìm thấy tọa độ GIS của địa điểm này!");
+    }
+  };
+
+  // Submit đẩy bình luận & số sao lên API
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) {
+      toast.error("Như ơi, nhập nội dung đánh giá trước nha! 🌸");
+      return;
+    }
+
+    try {
+      const token = getValidToken();
+      if (!token) {
+        toast.error("Vui lòng đăng nhập để bình luận! 🔒");
+        return;
+      }
+
+      const response = await axiosInstance.post(
+        "http://localhost:5000/api/comments/add",
+        {
+          eventId: id,
+          content: newComment,
+          rating: Number(rating),
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast.success("Đã đăng tải đánh giá của Như thành công! ✨");
+
+      const addedComment = response.data.comment || response.data;
+      setComments((prev) => [addedComment, ...prev]); // Cập nhật danh sách bình luận thời gian thực
+      setNewComment("");
+      setRating(5);
+    } catch (err) {
+      console.error("Lỗi đăng bình luận:", err.message);
+      toast.error(err.response?.data?.message || "Gửi bình luận thất bại rồi!");
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     const fetchDetail = async () => {
@@ -94,14 +172,15 @@ export default function EventDetail() {
         setEvent(res.data);
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi lấy dữ liệu:", err);
+        console.error("Lỗi lấy dữ liệu chi tiết:", err);
         setLoading(false);
       }
     };
 
     fetchDetail();
-    fetchSavedEventIds(); // Chạy nạp đồng thời danh sách đã lưu để hiển thị màu nút cho đúng
-  }, [id]);
+    fetchSavedEventIds();
+    fetchEventComments();
+  }, [id, fetchSavedEventIds, fetchEventComments]); // 🎯 ĐÃ ĐỒNG BỘ: Điền đầy đủ mảng dependencies chuẩn mực
 
   if (loading)
     return <div className="ed-loading">Đang tải thông tin EviGo...</div>;
@@ -116,24 +195,26 @@ export default function EventDetail() {
 
   const isCurrentEventSaved = savedEventIds.includes(event._id);
 
+  const mapPosition =
+    event.locations && event.locations[0]
+      ? [parseFloat(event.locations[0].lat), parseFloat(event.locations[0].lng)]
+      : [10.7719, 106.6983];
+
   return (
     <div className="ed-wrapper">
       <header className="ed-hero">
         <img src={mainBanner} alt="Banner" className="ed-hero-img" />
         <div className="ed-hero-overlay">
           <div className="ed-container">
-            {/* NÚT QUAY LẠI THÔNG MINH */}
             <button className="ed-btn-back" onClick={() => navigate(-1)}>
               Quay lại
             </button>
 
             <div className="ed-hero-content">
-              {/* Badge thể loại hiện phía trên tiêu đề */}
               <div className="ed-badge-wrapper">
                 <span className="ed-badge">{event.type}</span>
               </div>
 
-              {/* Tiêu đề phẳng dọn sạch hoàn toàn icon bookmark cũ rườm rà */}
               <div className="ed-title-action-row">
                 <h1 className="ed-main-title">{event.title}</h1>
               </div>
@@ -172,17 +253,232 @@ export default function EventDetail() {
 
           <section className="ed-card">
             <h2 className="ed-section-title">Các địa điểm diễn ra</h2>
-            <div className="ed-location-list">
+            <div className="ed-location-list" style={{ marginBottom: "15px" }}>
               {event.locations?.map((loc, index) => (
                 <div key={index} className="ed-loc-item">
                   <p>
                     <strong>Địa điểm {index + 1}:</strong> {loc.address}
                   </p>
                   <small className="ed-gis-text">
-                    GIS: {loc.lat}, {loc.lng} - {loc.district}
+                    🌐 GIS: {loc.lat}, {loc.lng} - {loc.district}
                   </small>
                 </div>
               ))}
+            </div>
+
+            <div
+              className="ed-detail-map-box"
+              style={{
+                width: "100%",
+                height: "260px",
+                borderRadius: "14px",
+                overflow: "hidden",
+                border: "1px solid #d1d1f0",
+              }}
+            >
+              <MapContainer
+                center={mapPosition}
+                zoom={15}
+                style={{ height: "100%", width: "100%" }}
+                scrollWheelZoom={false}
+              >
+                <TileLayer
+                  attribution="© Google Maps"
+                  url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
+                />
+                <Marker position={mapPosition}>
+                  <Popup>
+                    <strong>{event.title}</strong>
+                    <br />
+                    {event.locations?.[0]?.address}
+                  </Popup>
+                </Marker>
+              </MapContainer>
+            </div>
+          </section>
+
+          <section className="ed-card ed-comments-section">
+            <h2 className="ed-section-title">Bình luận & Đánh giá</h2>
+
+            <form onSubmit={handleCommentSubmit} className="ed-comment-form">
+              <div
+                className="ed-rating-picker"
+                style={{
+                  marginBottom: "10px",
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  color: "#280d8c",
+                }}
+              >
+                <label style={{ marginRight: "10px" }}>
+                  Như đánh giá sự kiện này mấy sao:
+                </label>
+                <select
+                  value={rating}
+                  onChange={(e) => setRating(Number(e.target.value))}
+                  style={{
+                    padding: "6px",
+                    borderRadius: "8px",
+                    border: "1.5px solid #d1d1f0",
+                    fontWeight: "600",
+                    outline: "none",
+                  }}
+                >
+                  <option value="5">⭐⭐⭐⭐⭐ (5 sao)</option>
+                  <option value="4">⭐⭐⭐⭐ (4 sao)</option>
+                  <option value="3">⭐⭐⭐ (3 sao)</option>
+                  <option value="2">⭐⭐ (2 sao)</option>
+                  <option value="1">⭐ (1 sao)</option>
+                </select>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                <textarea
+                  placeholder="Như ơi, hãy chia sẻ cảm nghĩ của bạn về sự kiện này để cộng đồng cùng biết nhé..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  rows="3"
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1.5px solid #d1d1f0",
+                    resize: "none",
+                    boxSizing: "border-box",
+                    outline: "none",
+                  }}
+                ></textarea>
+                <button
+                  type="submit"
+                  style={{
+                    alignSelf: "flex-end",
+                    padding: "8px 16px",
+                    backgroundColor: "#635bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                  }}
+                >
+                  Gửi phản hồi ✨
+                </button>
+              </div>
+            </form>
+
+            <div
+              className="ed-comments-list"
+              style={{
+                marginTop: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "15px",
+              }}
+            >
+              {comments.length > 0 ? (
+                comments.map((item) => {
+                  const finalAccountName =
+                    item.userStringName &&
+                    item.userStringName !== "Người dùng EviGo" &&
+                    item.userStringName !== "User EviGo"
+                      ? item.userStringName
+                      : (item.user?.email && item.user.email.includes("@")
+                          ? item.user.email.split("@")[0]
+                          : null) ||
+                        item.user?.username ||
+                        item.user?.name ||
+                        item.user?.displayName ||
+                        "User EviGo";
+
+                  const avatarLetters = finalAccountName
+                    .substring(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <div
+                      key={item._id}
+                      style={{
+                        display: "flex",
+                        gap: "15px",
+                        padding: "15px",
+                        backgroundColor: "#f9fafb",
+                        borderRadius: "16px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          backgroundColor: "#e0dbff",
+                          color: "#635bff",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "800",
+                          fontSize: "13px",
+                        }}
+                      >
+                        {avatarLetters}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          <strong
+                            style={{ fontSize: "14px", color: "#1f2937" }}
+                          >
+                            {finalAccountName}
+                          </strong>
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              color: "#f59e0b",
+                            }}
+                          >
+                            {item.rating}/5 ★
+                          </span>
+                        </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "13.5px",
+                            color: "#4b5563",
+                            lineHeight: "1.4",
+                          }}
+                        >
+                          {item.content}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p
+                  style={{
+                    textAlign: "center",
+                    color: "#888",
+                    fontSize: "13.5px",
+                    fontStyle: "italic",
+                    padding: "10px",
+                  }}
+                >
+                  Chưa có đánh giá nào. Hãy là người đầu tiên bình luận nhé Như!
+                  🌸
+                </p>
+              )}
             </div>
           </section>
         </div>
@@ -244,7 +540,6 @@ export default function EventDetail() {
               </div>
             </div>
 
-            {/* 🎯 NÚT LƯU TRÁI TIM ĐỎ: Tự động đổi text và icon thời gian thực theo mảng dữ liệu */}
             <button
               className={`ed-btn-save-large ${isCurrentEventSaved ? "is-saved" : ""}`}
               onClick={() => handleToggleSaveEvent(event._id)}
@@ -252,7 +547,12 @@ export default function EventDetail() {
               {isCurrentEventSaved ? "Đã yêu thích ❤️" : "Lưu sự kiện 🤍"}
             </button>
 
-            <button className="ed-btn-primary">Lên lịch đi ngay!</button>
+            <button
+              className="ed-btn-primary"
+              onClick={handleOpenGoogleDirections}
+            >
+              🚀 Chỉ đường chi tiết
+            </button>
           </div>
         </aside>
       </main>

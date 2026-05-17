@@ -98,7 +98,6 @@
   background: #ffffff;
   border-radius: 12px;
   padding-left: 12px;
-  /* Đây là vùng an toàn để icon nằm sít vào trong */
   padding-right: 12px;
   border: 1.5px solid #d1d1f0;
   height: 42px;
@@ -106,7 +105,6 @@
   transition: 0.3s;
   width: 100%;
   box-sizing: border-box;
-  /* Mở lại overflow để không bị mất icon Như ơi */
   overflow: visible;
 }
 
@@ -136,9 +134,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  /* Khoảng cách với chữ nhập vào */
   margin-left: -12px;
-  /* Margin-right bằng 0 để padding-right của wrapper xử lý khoảng cách sít vào trong */
   margin-right: 0;
   transition: transform 0.2s ease;
 }
@@ -328,56 +324,84 @@
   font-weight: 600;
 }
 
-/* --- POPUP TRÊN BẢN ĐỒ --- */
+/* =========================================================================
+   🎯 CẬP NHẬT ĐỒNG BỘ: SỬA LỖI HÌNH H1/H2 - BIẾN ĐỔI POPUP TRÀN VIỀN CĂNG NÉT
+   ========================================================================= */
+
+/* Vỏ bọc tổng thể Popup Leaflet */
 .map-page-wrapper .leaflet-popup-content-wrapper {
-  padding: 0;
-  overflow: hidden;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(40, 13, 140, 0.2);
+  padding: 0 !important; /* Triệt tiêu lề trắng thô kệch mặc định của Leaflet */
+  overflow: hidden !important;
+  border-radius: 16px !important; /* Bo góc tròn bọc khít ảnh banner bên trên */
+  box-shadow: 0 10px 30px rgba(40, 13, 140, 0.2) !important;
 }
 
+/* Khung nội dung cốt lõi của ô Popup */
 .map-page-wrapper .leaflet-popup-content {
+  margin: 0 !important; /* Xoá margin mặc định gây lệch khung */
+  width: 260px !important; /* Cố định chiều rộng khối chuẩn sang trọng */
+}
+
+/* Thùng chứa tổng của hộp Popup tự gõ bên file React */
+.map-page-wrapper .map-click-box {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* 🎯 ĐỊNH VỊ BANNER ẢNH (HÌNH H2): Ảnh full rộng 100%, tràn viền, bo góc trên khít khịt vỏ bọc */
+.map-page-wrapper .map-click-box .popup-img {
+  width: 100% !important;
+  height: 130px !important; /* Tỷ lệ vàng chiếm gần 1/2 chiều cao Popup */
+  object-fit: cover !important; /* Khử méo móp, ép ảnh căng phẳng tự nhiên */
+  display: block !important;
+  border-radius: 16px 16px 0 0 !important; /* Bo góc trên để khớp với vỏ bọc */
+  border-bottom: 3px solid #635bff !important; /* Đường chỉ gầm màu tím định hình ranh giới cực sang */
   margin: 0 !important;
-  width: 260px !important;
 }
 
-.map-page-wrapper .leaflet-popup-content img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  display: block;
-  border-bottom: 3px solid #635bff;
+/* Toàn bộ chữ viết, địa chỉ và nút Xem chi tiết nằm trong khối đệm này */
+.map-page-wrapper .map-click-box div {
+  padding: 12px 15px 15px 15px !important;
+  background: white !important;
+  display: flex;
+  flex-direction: column;
 }
 
-.map-page-wrapper .leaflet-popup-content div {
-  padding: 15px;
-  background: white;
+.map-page-wrapper .map-click-box h4 {
+  margin: 0 0 6px 0 !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: #280d8c !important;
+  line-height: 1.4 !important;
 }
 
-.map-page-wrapper .leaflet-popup-content h4 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: #280d8c;
+.map-page-wrapper .map-click-box .popup-addr {
+  margin: 0 0 12px 0 !important;
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  line-height: 1.4 !important;
 }
 
-.map-page-wrapper .leaflet-popup-content p {
-  margin: 0 0 15px 0;
-  font-size: 12px;
-  color: #6b7280;
-  line-height: 1.4;
+/* Nút bấm Xem chi tiết dạng khối dẹt Gradient tím sang xịn mịn */
+.map-page-wrapper .map-click-box button.btn-go-here {
+  width: 100% !important;
+  padding: 10px !important;
+  background: linear-gradient(90deg, #635bff 0%, #280d8c 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
 }
 
-.map-page-wrapper .leaflet-popup-content button {
-  width: 100%;
-  padding: 10px;
-  background: linear-gradient(90deg, #635bff 0%, #280d8c 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
+.map-page-wrapper .map-click-box button.btn-go-here:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* Responsive - Giữ nguyên */
