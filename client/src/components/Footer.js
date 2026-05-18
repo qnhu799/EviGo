@@ -5,16 +5,13 @@ export default function Footer() {
   return (
     <footer className="evigo-footer">
       <div className="footer-content">
-        {/* Cột 1: Giới thiệu */}
         <div className="footer-section">
           <h3>EviGo</h3>
           <p>
-            Hệ thống WebGIS hỗ trợ quản lý và đề xuất các sự kiện hấp dẫn trên
-            địa bàn TP.HCM.
+            Hệ thống WebGIS hỗ trợ quản lý và đề xuất các sự kiện hấp dẫn
           </p>
         </div>
 
-        {/* Cột 2: Liên kết nhanh */}
         <div className="footer-section">
           <h3>Khám phá</h3>
           <ul>
@@ -30,7 +27,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Cột 3: Liên hệ */}
         <div className="footer-section">
           <h3>Liên hệ</h3>
           <p>Khoa Môi trường và Tài nguyên</p>
@@ -38,7 +34,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Dải bản quyền dưới cùng */}
       <div className="footer-bottom">
         <p>© 2026 EviGo - Khóa luận tốt nghiệp của Lê Quỳnh Như</p>
       </div>

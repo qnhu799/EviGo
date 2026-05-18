@@ -30,46 +30,36 @@ export default function LoginPage() {
         formData,
       );
 
-      // 🎯 BƯỚC QUAN TRỌNG: Quét sạch localStorage cũ để dọn chỗ cho dữ liệu THẬT
       localStorage.clear();
-
-      // 1. Lưu Token và thông tin cơ bản (Dùng chữ thường 'token')
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
       localStorage.setItem("email", res.data.user.email);
 
-      // 2. Xử lý ngày tham gia (Format chuẩn: Tháng MM, YYYY)
       if (res.data.user.createdAt) {
         const date = new Date(res.data.user.createdAt);
         const joinedDate = date.toLocaleDateString("vi-VN", {
           month: "long",
           year: "numeric",
         });
-        // Viết hoa chữ cái đầu của tháng cho đẹp
         const formattedDate =
           joinedDate.charAt(0).toUpperCase() + joinedDate.slice(1);
         localStorage.setItem("joinedDate", formattedDate);
       }
 
-      // 3. Xác định quyền hạn (Role)
       let userRole = res.data.user.role || "user";
 
-      // Đặc cách cho tài khoản chính của Như
       if (formData.email === "qnhu799@gmail.com") {
         userRole = "superadmin";
       }
       localStorage.setItem("role", userRole);
 
-      // 4. Thông báo cập nhật Auth cho Navbar/Header
       window.dispatchEvent(new Event("authChange"));
 
-      // 5. Hiển thị thông báo thành công
       toast.success(`Mừng ${res.data.user.username} trở lại!`, {
         duration: 3000,
         icon: userRole === "superadmin" ? "👑" : "👋",
       });
 
-      // 6. Điều hướng dựa trên Role (🎯 Sửa từ /admindashboard thành /admin cho khớp component)
       if (userRole === "superadmin" || userRole === "admin") {
         navigate("/admin");
       } else {

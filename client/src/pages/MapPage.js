@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -7,14 +7,13 @@ import {
   Circle,
   useMap,
 } from "react-leaflet";
-import { useNavigate, useLocation } from "react-router-dom"; // 🎯 Thêm useLocation để bắt dữ liệu từ Card gửi sang
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
 
-// --- CẤU HÌNH ICON ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -71,7 +70,6 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
-// 🎯 BỘ ĐIỀU KHIỂN NÂNG CẤP: Tự động điều hướng và kích hoạt mở toang Popup theo ID sự kiện
 const MapDataAndFocusController = ({
   center,
   radius,
@@ -81,20 +79,17 @@ const MapDataAndFocusController = ({
   const map = useMap();
 
   useEffect(() => {
-    // Ưu tiên 1: Nếu có lệnh focus chính xác vào 1 sự kiện từ Card nhảy sang
     if (focusEventId && markerRefs.current[focusEventId]) {
       const targetMarker = markerRefs.current[focusEventId];
       const targetLatLng = targetMarker.getLatLng();
 
       const timer = setTimeout(() => {
-        map.flyTo(targetLatLng, 16, { duration: 1.2 }); // Bay cận cảnh zoom mức 16 nhìn rõ đường
-        targetMarker.openPopup(); // 🎯 BẬT popup lên lập tức cho Như
+        map.flyTo(targetLatLng, 16, { duration: 1.2 });
+        targetMarker.openPopup();
       }, 300);
 
       return () => clearTimeout(timer);
-    }
-    // Ưu tiên 2: Bay theo bán kính tìm kiếm thông thường của bộ lọc
-    else if (center && center[0] && center[1]) {
+    } else if (center && center[0] && center[1]) {
       const timer = setTimeout(() => {
         try {
           const circle = L.circle(center, { radius: radius * 1000 });
@@ -115,9 +110,8 @@ const MapDataAndFocusController = ({
 
 const MapPage = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Hook đón nhận gói dữ liệu state gửi từ EventCard
+  const location = useLocation();
 
-  // Mảng Refs lưu trữ tham chiếu toàn bộ Marker đang hiển thị để gọi hàm .openPopup() bằng code
   const markerRefs = useRef({});
 
   const [isFiltered, setIsFiltered] = useState(false);
@@ -129,6 +123,7 @@ const MapPage = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState(null);
+  const [savedEventIds, setSavedEventIds] = useState([]);
 
   const [selectedTypes, setSelectedTypes] = useState(["Tất cả"]);
   const [selectedTimes, setSelectedTimes] = useState(["Tất cả"]);
@@ -145,6 +140,10 @@ const MapPage = () => {
   ];
   const timeFilters = ["Tất cả", "Hôm nay", "Ngày mai", "Cuối tuần"];
 
+  const getValidToken = useCallback(() => {
+    return localStorage.getItem("token") || localStorage.getItem("Token") || "";
+  }, []);
+
   const getFullImageUrl = (path) => {
     if (!path)
       return "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
@@ -160,7 +159,49 @@ const MapPage = () => {
       : address;
   };
 
-  // 🎯 ĐÓN NHẬN DỮ LIỆU TỪ EVENTCARD SANG KHI TRANG MAP VỪA NẠP
+  const fetchSavedEventIds = useCallback(async () => {
+    try {
+      const token = getValidToken();
+      if (!token) return;
+
+      const response = await axios.get(
+        "http://localhost:5000/api/events/saved-events-ids",
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSavedEventIds(response.data || []);
+    } catch (err) {
+      console.error("Lỗi đồng bộ danh sách đã lưu ở trang map:", err.message);
+    }
+  }, [getValidToken]);
+
+  const handleToggleSaveEvent = async (e, eventId) => {
+    e.stopPropagation();
+    try {
+      const token = getValidToken();
+      if (!token) {
+        toast.error("Vui lòng đăng nhập để sử dụng tính năng lưu này! 🔒");
+        return;
+      }
+
+      const response = await axios.post(
+        `http://localhost:5000/api/events/save-event/${eventId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.isSaved) {
+        setSavedEventIds((prev) => [...prev, eventId]);
+        toast.success("Đã thêm vào danh sách yêu thích! ❤️");
+      } else {
+        setSavedEventIds((prev) => prev.filter((id) => id !== eventId));
+        toast.success("Đã xóa khỏi danh sách lưu! 🤍");
+      }
+    } catch (err) {
+      console.error("Lỗi thao tác lưu bài:", err.message);
+      toast.error("Thao tác lưu thất bại, vui lòng thử lại!");
+    }
+  };
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -170,13 +211,10 @@ const MapPage = () => {
         setEvents(res.data);
         setFilteredEvents(res.data);
 
-        // Sau khi nạp dữ liệu xong, kiểm tra xem Router có mang theo vị trí chỉ định không
         if (location.state && location.state.eventId) {
           const { lat, lng, eventId } = location.state;
           setMapCenter([lat, lng]);
           setSelectedEventId(eventId);
-
-          // Nếu nhấn từ card sang, tự động điền thông tin vị trí tượng trưng cho đỡ trống form lọc
           setStartLocation(location.state.keyword || "Sự kiện được chọn");
         }
       } catch (err) {
@@ -184,7 +222,8 @@ const MapPage = () => {
       }
     };
     fetchEvents();
-  }, [location.state]);
+    fetchSavedEventIds();
+  }, [location.state, fetchSavedEventIds]);
 
   const handleSearchLocation = async () => {
     if (!startLocation.trim()) return;
@@ -202,7 +241,7 @@ const MapPage = () => {
         setCurrentLocationMarker(newPos);
         setIsLocationFixed(true);
       } else {
-        toast.error("Hông tìm thấy địa điểm này rồi Như ơi!");
+        toast.error("Hông tìm thấy địa điểm này rồi!");
       }
     } catch (e) {
       toast.error("Lỗi kết nối bản đồ!");
@@ -303,7 +342,7 @@ const MapPage = () => {
     setIsFiltered(true);
     setSelectedEventId(null);
     if (result.length > 0) {
-      toast.success(`Tìm thấy ${result.length} sự kiện cho Như nè! ✨`, {
+      toast.success(`Tìm thấy ${result.length} sự kiện nè! ✨`, {
         style: {
           borderRadius: "15px",
           background: "#635bff",
@@ -312,7 +351,7 @@ const MapPage = () => {
         },
       });
     } else {
-      toast.error("Hổng có sự kiện nào khớp bộ lọc rồi Như ơi! 🌸");
+      toast.error("Hổng có sự kiện nào khớp bộ lọc rồi! 🌸");
     }
   };
 
@@ -484,7 +523,6 @@ const MapPage = () => {
               attribution="&copy; Google Maps"
               url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
             />
-            {/* 🎯 Kích hoạt bộ điều phối mượt mà mới */}
             <MapDataAndFocusController
               center={mapCenter}
               radius={radius}
@@ -528,7 +566,6 @@ const MapPage = () => {
                     key={`${ev._id}-${i}`}
                     position={[parseFloat(loc.lat), parseFloat(loc.lng)]}
                     icon={markerIcon}
-                    // 🎯 Gán phần tử Marker vào mảng Refs lưu trữ theo ID sự kiện
                     ref={(el) => {
                       if (el) markerRefs.current[ev._id] = el;
                     }}
@@ -539,7 +576,6 @@ const MapPage = () => {
                   >
                     <Popup maxWidth={280}>
                       <div className="map-click-box">
-                        {/* 🎯 SỬA LỖI HÌNH H2: Thêm onError bẫy lỗi tự nạp ảnh Unsplash chuyên nghiệp nếu link database hỏng */}
                         <img
                           src={getFullImageUrl(ev.image)}
                           alt={ev.title}
@@ -620,44 +656,110 @@ const MapPage = () => {
           </h2>
           <div className="event-scroll-area">
             {(isFiltered ? filteredEvents : events).length > 0 ? (
-              (isFiltered ? filteredEvents : events).map((ev) => (
-                <div
-                  className={`event-item-card clickable ${selectedEventId === ev._id ? "active-focus-card" : ""}`}
-                  key={ev._id}
-                  onClick={() => navigate(`/event/${ev._id}`)}
-                  style={{
-                    border:
-                      selectedEventId === ev._id
-                        ? "1.5px solid #635bff"
-                        : "1px solid #eee",
-                    background: selectedEventId === ev._id ? "#f5f4ff" : "#fff",
-                  }}
-                >
-                  <div className="event-info">
-                    <h4>{ev.title}</h4>
-                    <p>📍 {getShortAddress(ev.locations?.[0]?.address)}</p>
-                    <p>⭐ 4.4 (653 đánh giá)</p>
+              (isFiltered ? filteredEvents : events).map((ev) => {
+                const isCurrentEventSaved = savedEventIds.includes(ev._id);
+
+                return (
+                  <div
+                    className={`event-item-card clickable ${selectedEventId === ev._id ? "active-focus-card" : ""}`}
+                    key={ev._id}
+                    onClick={() => navigate(`/event/${ev._id}`)}
+                    style={{
+                      position: "relative",
+                      border:
+                        selectedEventId === ev._id
+                          ? "1.5px solid #635bff"
+                          : "1px solid #eee",
+                      background:
+                        selectedEventId === ev._id ? "#f5f4ff" : "#fff",
+                    }}
+                  >
                     <div
-                      className="click-hint-wrapper"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEventClick(ev, ev.locations?.[0]);
-                      }}
-                      style={{ display: "inline-block", marginTop: "5px" }}
+                      className="event-info"
+                      style={{ paddingRight: "30px" }}
                     >
-                      <span className="click-hint">
-                        📍 Nhấn để xem trên bản đồ
-                      </span>
+                      <h4>{ev.title}</h4>
+                      <p>📍 {getShortAddress(ev.locations?.[0]?.address)}</p>
+
+                      <p
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          margin: "4px 0",
+                        }}
+                      >
+                        <span style={{ color: "#f59e0b", fontWeight: "700" }}>
+                          ★
+                        </span>
+                        <strong style={{ color: "#374151" }}>
+                          {ev.averageRating !== undefined &&
+                          ev.averageRating !== null
+                            ? ev.averageRating
+                            : "5.0"}
+                        </strong>
+                        <span
+                          style={{
+                            color: "#6b7280",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          ({ev.totalReviews || 0} đánh giá)
+                        </span>
+                      </p>
+
+                      <div
+                        className="click-hint-wrapper"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEventClick(ev, ev.locations?.[0]);
+                        }}
+                        style={{ display: "inline-block", marginTop: "5px" }}
+                      >
+                        <span className="click-hint">
+                          📍 Nhấn để xem trên bản đồ
+                        </span>
+                      </div>
                     </div>
+
+                    <button
+                      onClick={(e) => handleToggleSaveEvent(e, ev._id)}
+                      style={{
+                        position: "absolute",
+                        top: "14px",
+                        right: "14px",
+                        background: "none",
+                        border: "none",
+                        fontSize: "18px",
+                        cursor: "pointer",
+                        outline: "none",
+                        padding: 0,
+                        transition: "transform 0.2s ease",
+                      }}
+                      title={
+                        isCurrentEventSaved
+                          ? "Bỏ lưu sự kiện"
+                          : "Lưu sự kiện vào yêu thích"
+                      }
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.transform = "scale(1.2)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.transform = "scale(1)")
+                      }
+                    >
+                      {isCurrentEventSaved ? "❤️" : "🤍"}
+                    </button>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p
                 className="empty-msg"
                 style={{ textAlign: "center", padding: "20px", color: "#666" }}
               >
-                Hông có sự kiện nào hết Như ơi! 🌸
+                Hông có sự kiện nào hết! 🌸
               </p>
             )}
           </div>

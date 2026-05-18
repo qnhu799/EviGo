@@ -31,7 +31,6 @@ function App() {
         <Header />
         <main style={{ minHeight: "80vh" }}>
           <Routes>
-            {/* 🌍 CẤP 1 - KHÁCH & TẤT CẢ: Các trang công khai */}
             <Route path="/" element={<Home />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/login" element={<Login />} />
@@ -39,7 +38,6 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/event/:id" element={<EventDetail />} />
 
-            {/* 👤 CẤP 2 - THÀNH VIÊN (User, Admin, Superadmin): Trang cá nhân & Đóng góp */}
             <Route
               path="/profile"
               element={
@@ -57,7 +55,6 @@ function App() {
               }
             />
 
-            {/* 🛡️ CẤP 3 - QUẢN TRỊ VIÊN (Admin, Superadmin): Trang duyệt bài */}
             <Route
               path="/admin"
               element={
@@ -67,7 +64,6 @@ function App() {
               }
             />
 
-            {/* 👑 CẤP 4 - SUPERADMIN: Dashboard hệ thống cao nhất */}
             <Route
               path="/admindashboard"
               element={
@@ -77,7 +73,6 @@ function App() {
               }
             />
 
-            {/* 🚨 Route dự phòng: Nếu nhập sai URL sẽ tự về Trang chủ */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

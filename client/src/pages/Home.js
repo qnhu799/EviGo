@@ -33,7 +33,6 @@ export default function Home() {
     hocThuat: 3,
   });
 
-  // 🎯 TÍNH NĂNG MỚI: Quản lý số lượng hiển thị riêng biệt cho khu vực "Tất cả sự kiện"
   const [allEventsCount, setAllEventsCount] = useState(3);
 
   useEffect(() => {
@@ -151,7 +150,6 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      {/* 1. Banner Slider */}
       <section className="banner-slider">
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
@@ -174,7 +172,6 @@ export default function Home() {
         </Swiper>
       </section>
 
-      {/* 2. Thanh Tìm kiếm */}
       <section className="search-container">
         <div className="search-wrapper" style={{ position: "relative" }}>
           <div className="search-input-group">
@@ -224,7 +221,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Danh mục Thể loại */}
       <section className="categories-container">
         <h2 className="categories-title">Thể loại sự kiện</h2>
         <div className="categories-grid">
@@ -250,7 +246,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* DANH SÁCH SỰ KIỆN THEO LOẠI */}
       <section id="section-am-nhac" className="featured-events">
         <h2 className="section-title">Âm nhạc</h2>
         <div className="events-grid">
@@ -347,9 +342,6 @@ export default function Home() {
         </button>
       </section>
 
-      {/* =========================================================================
-          🎯 KHU VỰC MỚI: TẤT CẢ SỰ KIỆN TỔNG HỢP (ĐỒNG BỘ CARD & PHÂN TRANG)
-          ========================================================================= */}
       <section className="featured-events all-events-section-wrapper">
         <h2 className="section-title">Tất cả sự kiện</h2>
         <div className="events-grid">
@@ -360,7 +352,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Nút Xem thêm tự động ẩn khi giao diện đã kéo hết data từ MongoDB */}
         {allEventsCount < events.length && (
           <button
             className="see-more-btn all-events-more-btn"

@@ -3,7 +3,6 @@
   height: 100%;
 }
 
-/* Khung chính 3 cột - Giữ nguyên */
 .map-page-wrapper .map-page-container {
   display: flex;
   width: 100%;
@@ -13,7 +12,6 @@
   overflow: hidden;
 }
 
-/* Sidebar chung cho trang bản đồ - Giữ nguyên */
 .map-page-wrapper .sidebar {
   flex: 0 0 300px;
   height: 100%;
@@ -36,7 +34,6 @@
   color: #280d8c;
 }
 
-/* BẢN ĐỒ Ở GIỮA - Giữ nguyên */
 .map-page-wrapper .map-center-panel {
   flex: 1;
   height: 100%;
@@ -52,7 +49,6 @@
   z-index: 1;
 }
 
-/* --- CẬP NHẬT: CĂN CHỈNH BỘ LỌC ĐỐI XỨNG & ẨN THANH CUỘN --- */
 .map-page-wrapper .panel-content {
   display: flex;
   flex-direction: column;
@@ -68,7 +64,6 @@
   display: none;
 }
 
-/* Card bao quanh từng nhóm lọc */
 .map-page-wrapper .filter-card {
   width: 260px;
   background: rgba(255, 255, 255, 0.7);
@@ -91,7 +86,6 @@
   text-align: left;
 }
 
-/* --- TỐI ƯU Ô TÌM KIẾM: ĐƯA KÍNH LÚP VÀO TRONG SÁT LỀ --- */
 .map-page-wrapper .search-wrapper {
   display: flex;
   align-items: center;
@@ -123,7 +117,6 @@
   color: #280d8c;
 }
 
-/* Nút kính lúp: Căn chỉnh nằm gọn gàng bên trong khung */
 .map-page-wrapper .search-icon-btn {
   background: transparent;
   border: none;
@@ -162,7 +155,6 @@
   color: white;
 }
 
-/* Slider Bán kính */
 .map-page-wrapper .label-row {
   display: flex;
   justify-content: space-between;
@@ -188,7 +180,6 @@
   -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #635bff; border: 3px solid white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* Filter Chips (Âm nhạc, Triển lãm...) */
 .map-page-wrapper .filter-chips {
   display: flex;
   flex-wrap: wrap;
@@ -215,7 +206,6 @@
   box-shadow: 0 4px 10px rgba(99, 91, 255, 0.3);
 }
 
-/* Ô CHỌN LỊCH HIỆN ĐẠI */
 .map-page-wrapper .modern-date-input {
   width: 100%;
   box-sizing: border-box;
@@ -237,7 +227,6 @@
   filter: invert(34%) sepia(85%) saturate(2641%) hue-rotate(234deg) brightness(97%) contrast(101%);
 }
 
-/* Nút áp dụng cuối cùng */
 .map-page-wrapper .modern-apply-btn {
   width: 260px !important;
   padding: 14px;
@@ -258,7 +247,26 @@
   box-shadow: 0 6px 20px rgba(40, 13, 140, 0.3);
 }
 
-/* SỰ KIỆN GẦN ĐÂY - ẨN THANH CUỘN CỘT PHẢI */
+.map-page-wrapper .show-all-btn {
+  width: 260px !important;
+  padding: 12px;
+  background: #ffffff;
+  color: #280d8c;
+  border: 1.5px solid #280d8c;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.map-page-wrapper .show-all-btn:hover {
+  background: #f4f2ff;
+  color: #635bff;
+  border-color: #635bff;
+  transform: translateY(-1px);
+}
+
 .map-page-wrapper .right-panel {
   display: flex;
   flex-direction: column;
@@ -324,25 +332,18 @@
   font-weight: 600;
 }
 
-/* =========================================================================
-   🎯 CẬP NHẬT ĐỒNG BỘ: SỬA LỖI HÌNH H1/H2 - BIẾN ĐỔI POPUP TRÀN VIỀN CĂNG NÉT
-   ========================================================================= */
-
-/* Vỏ bọc tổng thể Popup Leaflet */
 .map-page-wrapper .leaflet-popup-content-wrapper {
-  padding: 0 !important; /* Triệt tiêu lề trắng thô kệch mặc định của Leaflet */
+  padding: 0 !important;
   overflow: hidden !important;
-  border-radius: 16px !important; /* Bo góc tròn bọc khít ảnh banner bên trên */
+  border-radius: 16px !important;
   box-shadow: 0 10px 30px rgba(40, 13, 140, 0.2) !important;
 }
 
-/* Khung nội dung cốt lõi của ô Popup */
 .map-page-wrapper .leaflet-popup-content {
-  margin: 0 !important; /* Xoá margin mặc định gây lệch khung */
-  width: 260px !important; /* Cố định chiều rộng khối chuẩn sang trọng */
+  margin: 0 !important;
+  width: 260px !important;
 }
 
-/* Thùng chứa tổng của hộp Popup tự gõ bên file React */
 .map-page-wrapper .map-click-box {
   display: flex;
   flex-direction: column;
@@ -351,18 +352,16 @@
   overflow: hidden;
 }
 
-/* 🎯 ĐỊNH VỊ BANNER ẢNH (HÌNH H2): Ảnh full rộng 100%, tràn viền, bo góc trên khít khịt vỏ bọc */
 .map-page-wrapper .map-click-box .popup-img {
   width: 100% !important;
-  height: 130px !important; /* Tỷ lệ vàng chiếm gần 1/2 chiều cao Popup */
-  object-fit: cover !important; /* Khử méo móp, ép ảnh căng phẳng tự nhiên */
+  height: 130px !important;
+  object-fit: cover !important;
   display: block !important;
-  border-radius: 16px 16px 0 0 !important; /* Bo góc trên để khớp với vỏ bọc */
-  border-bottom: 3px solid #635bff !important; /* Đường chỉ gầm màu tím định hình ranh giới cực sang */
+  border-radius: 16px 16px 0 0 !important;
+  border-bottom: 3px solid #635bff !important;
   margin: 0 !important;
 }
 
-/* Toàn bộ chữ viết, địa chỉ và nút Xem chi tiết nằm trong khối đệm này */
 .map-page-wrapper .map-click-box div {
   padding: 12px 15px 15px 15px !important;
   background: white !important;
@@ -385,7 +384,6 @@
   line-height: 1.4 !important;
 }
 
-/* Nút bấm Xem chi tiết dạng khối dẹt Gradient tím sang xịn mịn */
 .map-page-wrapper .map-click-box button.btn-go-here {
   width: 100% !important;
   padding: 10px !important;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
+import logoImg from "../assets/logo.png";
 
 export default function Header() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -8,16 +9,7 @@ export default function Header() {
   const [role, setRole] = useState(null);
   const navigate = useNavigate();
   const popupRef = useRef(null);
-
   const checkAuth = () => {
-    // Tự động kiểm tra cả Token thật tránh đọc nhầm dữ liệu ẩn
-    const token =
-      localStorage.getItem("token") || localStorage.getItem("Token");
-    if (!token) {
-      setUsername(null);
-      setRole(null);
-      return;
-    }
     const savedName = localStorage.getItem("username");
     const savedRole = localStorage.getItem("role")?.toLowerCase();
     setUsername(savedName);
@@ -55,26 +47,35 @@ export default function Header() {
   return (
     <header className="navbar">
       <div className="logo">
-        <Link to="/" style={{ textDecoration: "none", color: "white" }}>
-          EviGO
+        <Link
+          to="/"
+          style={{
+            textDecoration: "none",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <img src={logoImg} alt="pin" className="logo-icon-pin" />
+          <span className="logo-text">EviGO</span>
         </Link>
       </div>
 
       <div className="menu-container">
         <nav className="menu-links">
-          {/* 🌍 CẤP 1 - KHÁCH: Luôn hiện */}
           <Link to="/">Trang chủ</Link>
           <Link to="/map">Bản đồ</Link>
 
-          {/* 👤 CẤP 2 - THÀNH VIÊN: Chỉ hiện khi đã đăng nhập */}
-          {username && <Link to="/contribute">Đóng góp</Link>}
+          {username &&
+            (role === "member" ||
+              role === "organizer" ||
+              role === "admin" ||
+              role === "superadmin") && <Link to="/contribute">Đóng góp</Link>}
 
-          {/* 🛡️ CẤP 3 - QUẢN TRỊ VIÊN: Phải là admin hoặc superadmin */}
           {(role === "admin" || role === "superadmin") && (
             <Link to="/admin">Quản lý</Link>
           )}
 
-          {/* 👑 CẤP 4 - SUPERADMIN: Dashboard đặc biệt */}
           {role === "superadmin" && (
             <Link
               to="/admindashboard"
@@ -137,7 +138,14 @@ export default function Header() {
                   </Link>
                   <div className="popup-divider"></div>
                   <button
-                    className="popup-link logout-btn-style"
+                    className="popup-link"
+                    style={{
+                      border: "none",
+                      background: "none",
+                      width: "100%",
+                      textAlign: "left",
+                      cursor: "pointer",
+                    }}
                     onClick={handleLogout}
                   >
                     Đăng xuất

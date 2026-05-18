@@ -1,5 +1,3 @@
-/* --- Admin.css --- */
-
 .admin-container {
   background-color: #f0f2f5;
   min-height: calc(100vh - 80px);
@@ -33,7 +31,6 @@
   margin-bottom: 40px;
 }
 
-/* --- Stat Card hỗ trợ nhấn (Clickable) --- */
 .stat-card {
   padding: 25px 20px;
   border-radius: 12px;
@@ -41,7 +38,7 @@
   text-align: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  border: 3px solid transparent; /* Tạo không gian cho border khi active */
+  border: 3px solid transparent;
 }
 
 .stat-card:hover {
@@ -49,7 +46,6 @@
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* ✨ HIỆU ỨNG KHI ĐANG CHỌN ĐỂ LỌC (ACTIVE) ✨ */
 .stat-card.active-filter {
   border-color: #280d8c;
   transform: scale(1.05);
@@ -57,7 +53,6 @@
   position: relative;
 }
 
-/* Thêm biểu tượng check hoặc điểm nhấn khi active */
 .stat-card.active-filter::after {
   content: '✓';
   position: absolute;
@@ -91,7 +86,6 @@
   opacity: 0.9;
 }
 
-/* --- Quản lý Bảng Dữ Liệu --- */
 .admin-table-section {
   overflow-x: auto;
   border-radius: 12px;
@@ -137,7 +131,6 @@
   background-color: #f9fafb;
 }
 
-/* Các chi tiết thông tin trong cột */
 .event-link-title {
   color: #280d8c;
   font-weight: 800;
@@ -183,7 +176,6 @@
   font-size: 12px;
 }
 
-/* Nút Duyệt/Hủy */
 .action-btns {
   display: flex;
   gap: 8px;
@@ -212,7 +204,6 @@
   font-weight: 500;
 }
 
-/* Responsive (Giữ nguyên) */
 @media (max-width: 992px) {
   .admin-stats { grid-template-columns: repeat(2, 1fr); }
 }

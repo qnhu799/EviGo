@@ -1,11 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-
-// 🎯 ĐỒNG BỘ ĐỘC QUYỀN: Bóc tách chính xác hàm protect từ Middleware gốc của Như
 const { protect } = require("../authMiddleware");
+const Event = require("../models/Event") || mongoose.model("Event");
 
-// Định nghĩa cấu trúc Schema lưu vào MongoDB
 const commentSchema = new mongoose.Schema({
   event: {
     type: mongoose.Schema.Types.ObjectId,
@@ -18,7 +16,6 @@ const commentSchema = new mongoose.Schema({
     required: true,
   },
   userStringName: {
-    // 🎯 LƯU TRỮ TÊN CỨNG: Để Frontend hiển thị ngay lập tức không bị phụ thuộc vào populate lỗi
     type: String,
     default: "Người dùng EviGo",
   },
@@ -41,10 +38,48 @@ const commentSchema = new mongoose.Schema({
 const Comment =
   mongoose.models.Comment || mongoose.model("Comment", commentSchema);
 
-// 🎯 API LẤY DANH SÁCH BÌNH LUẬN (Công khai công cộng)
+const updateEventRating = async (eventId) => {
+  try {
+    const cleanEventId = new mongoose.Types.ObjectId(eventId);
+    const allComments = await Comment.find({ event: cleanEventId });
+    const totalReviews = allComments.length;
+
+    let averageRating = 5.0;
+
+    if (totalReviews > 0) {
+      const sum = allComments.reduce(
+        (acc, cur) => acc + (Number(cur.rating) || 5),
+        0,
+      );
+
+      averageRating = Math.round((sum / totalReviews) * 10) / 10;
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      cleanEventId,
+      {
+        averageRating: averageRating,
+        totalReviews: totalReviews,
+      },
+      { new: true },
+    );
+
+    console.log(
+      `✨ [EviGo Đã Cập Nhật DB OK] Sự kiện: ${eventId} -> Số sao TB: ${averageRating} (${totalReviews} đánh giá tổng hợp)`,
+    );
+
+    return updatedEvent;
+  } catch (err) {
+    console.error("❌ Lỗi tự động tính số sao trung bình:", err.message);
+    return null;
+  }
+};
+
 router.get("/event/:eventId", async (req, res) => {
   try {
-    const list = await Comment.find({ event: req.params.eventId })
+    const cleanEventId = new mongoose.Types.ObjectId(req.params.eventId);
+
+    const list = await Comment.find({ event: cleanEventId })
       .populate("user", "name email displayName username")
       .sort({ createdAt: -1 });
     res.json(list);
@@ -56,7 +91,6 @@ router.get("/event/:eventId", async (req, res) => {
   }
 });
 
-// 🎯 API THÊM MỚI BÌNH LUẬN: Đóng dấu lưu tên chữ thời gian thực từ Middleware protect
 router.post("/add", protect, async (req, res) => {
   try {
     const { eventId, content, rating } = req.body;
@@ -67,7 +101,6 @@ router.post("/add", protect, async (req, res) => {
         .json({ message: "Nội dung bình luận không được để trống!" });
     }
 
-    // Lấy ID người dùng sạch sẽ đã qua xử lý của hàm protect
     const userId = req.user?._id || req.user?.id;
 
     if (!userId) {
@@ -76,36 +109,37 @@ router.post("/add", protect, async (req, res) => {
         .json({ message: "Không tìm thấy thông tin tài khoản hợp lệ!" });
     }
 
-    // 🎯 THUẬT TOÁN BẮT TÊN THÔNG MINH CỦA NHƯ:
-    // Nếu req.user.username trống, bóc luôn phần chữ trước dấu '@' trong Email làm tên hiển thị
     let usernameFromToken =
       req.user?.username || req.user?.name || req.user?.displayName;
 
     if (!usernameFromToken || usernameFromToken === "Người dùng EviGo") {
       const userEmail = req.user?.email || "";
       if (userEmail && userEmail.includes("@")) {
-        usernameFromToken = userEmail.split("@")[0]; // Ví dụ: "test@gmail.com" -> bóc ra chuỗi "test"
+        usernameFromToken = userEmail.split("@")[0]; "test"
       } else {
         usernameFromToken = "Người dùng EviGo";
       }
     }
 
     let comment = new Comment({
-      event: eventId,
+      event: new mongoose.Types.ObjectId(eventId),
       user: userId,
-      userStringName: usernameFromToken, // 🎯 LƯU CỨNG: Gán thẳng chuỗi tên (hoặc chuỗi email bóc tách) vào DB
+      userStringName: usernameFromToken,
       content,
       rating: Number(rating) || 5,
     });
 
     await comment.save();
 
-    // Nạp kèm thông tin liên kết bảng để backup dữ liệu
+    const updatedEventData = await updateEventRating(eventId);
+
     comment = await comment.populate("user", "name email displayName username");
 
-    res
-      .status(201)
-      .json({ message: "Đăng tải đánh giá thành công! ✨", comment });
+    res.status(201).json({
+      message: "Đăng tải đánh giá thành công! ✨",
+      comment,
+      event: updatedEventData,
+    });
   } catch (err) {
     console.error("Lỗi POST comment:", err.message);
     res

@@ -21,16 +21,15 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-    // 🎯 TÍNH NĂNG ĐỒNG BỘ: Mảng lưu trữ danh sách ID các sự kiện yêu thích của RIÊNG TỪNG TÀI KHOẢN
     savedEvents: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Event", // Tham chiếu chính xác tới tên Model trong file Event.js phục vụ lệnh liên thông dữ liệu (.populate)
+        ref: "Event",
       },
     ],
   },
   {
-    timestamps: true, // Tự động quản lý hai trường createdAt và updatedAt cho tài khoản
+    timestamps: true, 
   },
 );
 

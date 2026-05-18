@@ -1,8 +1,8 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
-const mongoose = require("mongoose"); // Nạp mongoose để kiểm tra hợp lệ cấu trúc
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-// 1. Gửi đóng góp sự kiện mới (🎯 CẬP NHẬT: Ưu tiên ID Token, xử lý triệt để chuỗi rỗng FormData - ĐÃ TẮT LOG TERM)
 exports.createEvent = async (req, res) => {
   try {
     const rawLocs = req.body.locations ? JSON.parse(req.body.locations) : [];
@@ -17,19 +17,29 @@ exports.createEvent = async (req, res) => {
       ? req.files.map((f) => f.path.replace(/\\/g, "/"))
       : [];
 
-    // 🎯 ĐÒN QUYẾT ĐỊNH: Trích xuất trực tiếp ID sạch giải mã từ Token do Middleware gán
     const tokenUserId = req.user ? req.user.id || req.user._id : null;
     const rawId = tokenUserId || req.body.contributorId || "";
     const finalizedUserIdStr = rawId ? rawId.toString() : "";
 
-    // Xử lý bảo hiểm Name & Email dính chuỗi rỗng từ FormData ép nộp lên
-    const tokenName = req.user ? req.user.username || req.user.name : "";
-    const finalizedName =
-      tokenName && tokenName.trim() !== ""
-        ? tokenName
-        : req.body.contributorName && req.body.contributorName.trim() !== ""
-          ? req.body.contributorName
-          : "Lê Quỳnh Như";
+    let contributorName =
+      req.user?.username || req.user?.name || req.user?.displayName;
+
+    if (
+      !contributorName ||
+      contributorName.trim() === "" ||
+      contributorName === "User EviGo" ||
+      contributorName === "Người dùng EviGo"
+    ) {
+      const userEmail = req.user?.email || "";
+      if (userEmail && userEmail.includes("@")) {
+        contributorName = userEmail.split("@")[0];
+      } else {
+        contributorName =
+          req.body.contributorName && req.body.contributorName.trim() !== ""
+            ? req.body.contributorName
+            : "Lê Quỳnh Như";
+      }
+    }
 
     const tokenEmail = req.user ? req.user.email : "";
     const finalizedEmail =
@@ -49,14 +59,18 @@ exports.createEvent = async (req, res) => {
       isAllDay: String(req.body.isAllDay) === "true",
       closedDays: req.body.closedDays ? JSON.parse(req.body.closedDays) : [],
 
-      // 🎯 PHẲNG HÓA TUYỆT ĐỐI: Lưu chuỗi ID bốc từ Token ra lớp vỏ ngoài của Document
       userContributedId: finalizedUserIdStr,
+      userContributedMongoId: mongoose.Types.ObjectId.isValid(
+        finalizedUserIdStr,
+      )
+        ? new mongoose.Types.ObjectId(finalizedUserIdStr)
+        : null,
 
       contributor: {
         userId: finalizedUserIdStr,
         userIdStr: finalizedUserIdStr,
-        name: finalizedName.trim(),
-        displayName: finalizedName.trim(),
+        name: contributorName.trim(),
+        displayName: contributorName.trim(),
         contact: finalizedEmail.trim(),
       },
       status: "pending",
@@ -77,7 +91,6 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// 2. Lấy danh sách đóng góp cá nhân (🎯 CẬP NHẬT: Chuyển sang tìm kiếm độc quyền theo ID gốc - ĐÃ TẮT LOG TERM)
 exports.getMyContributedEvents = async (req, res) => {
   try {
     const tokenUserId = req.user ? req.user.id || req.user._id : null;
@@ -92,17 +105,16 @@ exports.getMyContributedEvents = async (req, res) => {
 
     const userIdStr = finalUserId.toString();
 
-    // 🎯 LƯỚI QUÉT ĐA ĐIỂM THEO ID: Đối chiếu song hành mọi kiểu cấu trúc đặt tên trường ID lồng hay phẳng
     const queryConditions = [
       { userContributedId: userIdStr },
       { "contributor.userId": userIdStr },
       { "contributor.userIdStr": userIdStr },
     ];
 
-    // Bảo hiểm chiều sâu Mongoose: Nếu chuỗi ID hợp lệ, đắp thêm điều kiện định dạng Object ID chuẩn MongoDB
     if (mongoose.Types.ObjectId.isValid(userIdStr)) {
       const mongoObjId = new mongoose.Types.ObjectId(userIdStr);
       queryConditions.push({ "contributor.userId": mongoObjId });
+      queryConditions.push({ userContributedMongoId: mongoObjId });
     }
 
     const events = await Event.find({ $or: queryConditions })
@@ -116,12 +128,12 @@ exports.getMyContributedEvents = async (req, res) => {
   }
 };
 
-// 3. Phê duyệt/Từ chối sự kiện
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const adminId = req.user ? req.user.id : null;
+
+    const adminId = req.user ? req.user._id || req.user.id : null;
 
     if (!status) return res.status(400).json({ error: "Thiếu trạng thái!" });
 
@@ -138,7 +150,6 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// 4. Lấy danh sách cho Admin (Lọc Tím/Xanh/Đỏ)
 exports.getAdminEventsByStatus = async (req, res) => {
   try {
     const { status } = req.query;
@@ -174,7 +185,6 @@ exports.getAdminEventsByStatus = async (req, res) => {
   }
 };
 
-// 5. Lấy TẤT CẢ sự kiện đã duyệt cho cộng đồng
 exports.getApprovedEvents = async (req, res) => {
   try {
     const events = await Event.find({ status: "approved" })
@@ -186,8 +196,7 @@ exports.getApprovedEvents = async (req, res) => {
   }
 };
 
-// 6. Lấy danh sách chờ duyệt (Việc chung Admin)
-exports.getPendingEvents = async (react, res) => {
+exports.getPendingEvents = async (req, res) => {
   try {
     const rawEvents = await Event.find({ status: "pending" })
       .sort({ createdAt: -1 })
@@ -213,7 +222,6 @@ exports.getPendingEvents = async (react, res) => {
   }
 };
 
-// 7. Thống kê năng suất Admin
 exports.getAdminStats = async (req, res) => {
   try {
     const tokenAdminId = req.user ? req.user.id : null;
@@ -231,7 +239,6 @@ exports.getAdminStats = async (req, res) => {
   }
 };
 
-// 8. Xóa sự kiện
 exports.deleteEvent = async (req, res) => {
   try {
     await Event.findByIdAndDelete(req.params.id);
@@ -241,10 +248,12 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-// 9. Lấy chi tiết sự kiện
 exports.getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id).lean();
+    const event = await Event.findById(req.params.id)
+      .populate("approvedBy", "name displayName email")
+      .lean();
+
     if (!event) return res.status(404).json({ message: "Không tìm thấy!" });
     res.status(200).json(event);
   } catch (err) {
@@ -252,7 +261,6 @@ exports.getEventById = async (req, res) => {
   }
 };
 
-// 10. Lấy tất cả (Cho SuperAdmin)
 exports.getAllEventsForAdmin = async (req, res) => {
   try {
     const events = await Event.find({}).sort({ createdAt: -1 }).lean();
@@ -262,11 +270,6 @@ exports.getAllEventsForAdmin = async (req, res) => {
   }
 };
 
-// =========================================================================
-// 🎯 BOOKMARK SYSTEM (ĐÃ CẬP NHẬT ĐỒNG BỘ TÀI KHOẢN ĐỘC QUYỀN TRÁI TIM ĐỎ)
-// =========================================================================
-
-// 11. API lấy danh sách ID các sự kiện đã lưu của User đang đăng nhập
 exports.getSavedEventIds = async (req, res) => {
   try {
     const tokenUserId = req.user ? req.user.id : null;
@@ -284,7 +287,6 @@ exports.getSavedEventIds = async (req, res) => {
   }
 };
 
-// 12. API xử lý Bấm Lưu / Hủy Lưu sự kiện (Toggle Save)
 exports.toggleSaveEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -308,12 +310,10 @@ exports.toggleSaveEvent = async (req, res) => {
     } else {
       user.savedEvents.push(eventId);
       await user.save();
-      return res
-        .status(200)
-        .json({
-          isSaved: true,
-          message: "Đã thêm vào danh sách yêu thích! ❤️",
-        });
+      return res.status(200).json({
+        isSaved: true,
+        message: "Đã thêm vào danh sách yêu thích! ❤️",
+      });
     }
   } catch (err) {
     console.error("❌ Lỗi toggleSaveEvent:", err.message);
@@ -321,20 +321,17 @@ exports.toggleSaveEvent = async (req, res) => {
   }
 };
 
-// 13. API lấy đầy đủ thông tin chi tiết các sự kiện đã lưu phục vụ trang Profile cá nhân
 exports.getSavedEventsDetails = async (req, res) => {
   try {
     const tokenUserId = req.user ? req.user.id : null;
     const queryUserId = req.query.userId;
     const finalUserId = tokenUserId || queryUserId;
 
-    // populate("savedEvents") kết hợp loại bỏ các bản ghi null lỗi bảo hiểm
     const user = await User.findById(finalUserId).populate("savedEvents");
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy thành viên!" });
     }
 
-    // Lưới lọc bảo hiểm: Loại bỏ phần tử null nếu bài viết gốc bị admin xóa khỏi db
     const cleanSavedEvents = (user.savedEvents || []).filter(
       (event) => event !== null,
     );
@@ -345,5 +342,69 @@ exports.getSavedEventsDetails = async (req, res) => {
     res
       .status(500)
       .json({ error: "Lỗi hệ thống khi tải dữ liệu trang cá nhân" });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, oldPassword, newPassword } = req.body;
+    const userId = req.user ? req.user.id || req.user._id : null;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({
+          message: "Phiên làm việc hết hạn, vui lòng đăng nhập lại! 🔒",
+        });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy tài khoản người dùng!" });
+    }
+
+    if (name) user.username = name.trim();
+    if (phone) user.phone = phone.trim();
+
+    if (newPassword) {
+      if (!oldPassword) {
+        return res
+          .status(400)
+          .json({ message: "Vui lòng nhập mật khẩu hiện tại để xác thực!" });
+      }
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res
+          .status(400)
+          .json({
+            message: "Mật khẩu hiện tại không chính xác rồi! ❌",
+          });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await user.save();
+
+    if (name) {
+      await Event.updateMany(
+        { userContributedId: userId.toString() },
+        {
+          $set: {
+            "contributor.name": name.trim(),
+            "contributor.displayName": name.trim(),
+          },
+        },
+      );
+    }
+
+    res.status(200).json({ message: "Cập nhật hồ sơ thành công! ✨" });
+  } catch (err) {
+    console.error("❌ Lỗi updateProfile:", err.message);
+    res
+      .status(500)
+      .json({ error: "Lỗi hệ thống khi cập nhật thông tin hồ sơ" });
   }
 };

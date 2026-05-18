@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./ProfilePage.css";
-import { Link, useNavigate, useLocation } from "react-router-dom"; // 🎯 CẬP NHẬT: Thêm useLocation để bắt sự kiện chuyển trang realtime
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 export default function ProfilePage() {
-  const navigate = useNavigate(); // Kích hoạt điều hướng
-  const location = useLocation(); // 🎯 CẬP NHẬT: Kích hoạt bộ lắng nghe thay đổi định tuyến thời gian thực
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("contributed");
   const [contributedEvents, setContributedEvents] = useState([]);
   const [savedEvents, setSavedEvents] = useState([]);
@@ -21,7 +21,6 @@ export default function ProfilePage() {
     joinedDate: "Tháng 01, 2026",
   });
 
-  // 1. Hệ thống Cấp bậc (Giữ nguyên gốc chuẩn chỉnh của Như)
   const getTier = (count) => {
     if (count >= 51)
       return { label: "Huyền Thoại EviGo", class: "tier-legend" };
@@ -34,7 +33,6 @@ export default function ProfilePage() {
 
   const currentTier = getTier(user.contributionCount);
 
-  // Hàm bổ trợ thu gọn địa chỉ dài ngoằng cho sạch giao diện bảng
   const getShortAddress = (address) => {
     if (!address) return "Chưa cập nhật";
     const parts = address.split(",");
@@ -44,11 +42,9 @@ export default function ProfilePage() {
     return address;
   };
 
-  // 2. Fetch dữ liệu thực tế kết nối đa luồng liên thông Backend (🎯 CẬP NHẬT: Làm mới dữ liệu dứt điểm khi chuyển trang)
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Bốc cả token thường lẫn Token hoa để không bị nghẽn tiến trình gọi API
       const token =
         localStorage.getItem("token") || localStorage.getItem("Token") || "";
 
@@ -58,7 +54,6 @@ export default function ProfilePage() {
         localStorage.getItem("email") || localStorage.getItem("Email");
       const savedJoinedDate = localStorage.getItem("joinedDate");
 
-      // BỐC ID CHUỖI TỪ LOCALSTORAGE ĐỂ LÀM THAM SỐ ĐỒNG BỘ ĐA ĐIỂM BẢO HIỂM
       const localUserId =
         localStorage.getItem("userId") || localStorage.getItem("id") || "";
 
@@ -73,70 +68,43 @@ export default function ProfilePage() {
       }
 
       if (!token) {
-        console.warn(
-          "⚠️ [EviGo] Không tìm thấy Token xác thực trong localStorage!",
-        );
         setLoading(false);
         return;
       }
 
       try {
-        // 🎯 CHIẾN THUẬT PHÁ CACHE: Tạo mã thời gian ngẫu nhiên đính vào URL ép Server trả về dữ liệu realtime
         const timestamp = new Date().getTime();
-
         const [resContributed, resSaved] = await Promise.all([
-          // Luồng 1: Lấy các bài đóng góp (Ép header chặn cache 304 cứng đầu)
           axios.get(
             `http://localhost:5000/api/events/my-contributions?userId=${localUserId}&t=${timestamp}`,
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Cache-Control": "no-cache",
-                Pragma: "no-cache",
-                Expires: "0",
-              },
+              headers: { Authorization: `Bearer ${token}` },
             },
           ),
-          // Luồng 2: Đường dẫn bốc ĐẦY ĐỦ CHI TIẾT các bài viết đã lưu
           axios.get(
             `http://localhost:5000/api/events/saved-events-details?userId=${localUserId}&t=${timestamp}`,
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Cache-Control": "no-cache",
-                Pragma: "no-cache",
-                Expires: "0",
-              },
+              headers: { Authorization: `Bearer ${token}` },
             },
           ),
         ]);
 
-        console.log(
-          "✅ Dữ liệu bài đóng góp bốc về thành công:",
-          resContributed.data,
-        );
-        console.log("✅ Dữ liệu bài đã lưu bốc về thành công:", resSaved.data);
-
         setContributedEvents(resContributed.data || []);
         setSavedEvents(resSaved.data || []);
-
         setUser((prev) => ({
           ...prev,
           contributionCount: resContributed.data?.length || 0,
           savedCount: resSaved.data?.length || 0,
         }));
       } catch (err) {
-        console.error(
-          "❌ Lỗi truy xuất danh sách sự kiện tại trang cá nhân:",
-          err.response?.data || err.message,
-        );
+        console.error("Lỗi tải danh sách trang cá nhân:", err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [activeTab, location.key]); // 🎯 CẬP NHẬT CHÍ MẠNG: Lắng nghe location.key để ép buộc kích hoạt re-fetch bài tươi khi định tuyến thay đổi
+  }, [activeTab, location.key]);
 
   const currentList =
     activeTab === "contributed" ? contributedEvents : savedEvents;
@@ -144,7 +112,7 @@ export default function ProfilePage() {
   return (
     <div className="profile-container">
       <div className="profile-card">
-        {/* HEADER */}
+        {/* HEADER (ĐÃ BỎ HOÀN TOÀN NÚT CHỈNH SỬA HỒ SƠ) */}
         <div className="profile-header">
           <div className="profile-avatar-wrapper">
             <img src={user.avatar} alt="Avatar" className="profile-img" />
@@ -154,7 +122,6 @@ export default function ProfilePage() {
           </div>
           <h2 className="profile-name">{user.name}</h2>
           <p className="profile-email">{user.email}</p>
-          <button className="edit-btn">Chỉnh sửa hồ sơ</button>
         </div>
 
         {/* STATS TABS */}
@@ -188,88 +155,66 @@ export default function ProfilePage() {
               ? "Sự kiện bạn đã đóng góp"
               : "Sự kiện bạn đã lưu"}
           </h3>
-
           {loading ? (
             <div className="loading-spinner">
-              Đang lục tìm kho báu của Như...
+              Đang lục tìm kho
             </div>
           ) : currentList.length > 0 ? (
-            /* 🎯 CẤU TRÚC DANH SÁCH ROW HÀNG NGANG PHẲNG TINH GIẢN */
             <div className="profile-events-list-wrapper">
-              {currentList.map((ev, index) => {
-                const mainLocation = ev.locations?.[0];
-                return (
-                  <div
-                    key={ev._id}
-                    className="profile-event-row-item"
-                    onClick={() => navigate(`/event/${ev._id}`)}
-                  >
-                    {/* Cột 1: Số thứ tự & Tiêu đề kèm Tag thể loại */}
-                    <div className="row-col-main">
-                      <span className="row-index">#{index + 1}</span>
-                      <div className="row-title-block">
-                        <h4 className="row-event-title">{ev.title}</h4>
-                        <span className="row-event-type">
-                          {ev.type || "Sự kiện"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Cột 2: Địa điểm tinh giản */}
-                    <div className="row-col-info">
-                      <span className="row-label">📍 Địa điểm</span>
-                      <p className="row-value-text">
-                        {mainLocation?.address
-                          ? getShortAddress(mainLocation.address)
-                          : "Đang cập nhật..."}
-                      </p>
-                    </div>
-
-                    {/* Cột 3: Ngày tổ chức */}
-                    <div className="row-col-info">
-                      <span className="row-label">📅 Thời gian</span>
-                      <p className="row-value-text">
-                        {ev.startDate
-                          ? new Date(ev.startDate).toLocaleDateString("vi-VN")
-                          : "Cố định tuần"}
-                      </p>
-                    </div>
-
-                    {/* Cột 4: Badge trạng thái phẳng phẳng dẹt */}
-                    <div className="row-col-status">
-                      {activeTab === "contributed" ? (
-                        <span
-                          className={`status-row-badge ${ev.status || "pending"}`}
-                        >
-                          {ev.status === "approved" || ev.status === "Approved"
-                            ? "✓ Đã duyệt"
-                            : ev.status === "rejected" ||
-                                ev.status === "Rejected"
-                              ? "✕ Từ chối"
-                              : "● Chờ duyệt"}
-                        </span>
-                      ) : (
-                        <span className="status-row-badge saved">
-                          🔖 Đã lưu
-                        </span>
-                      )}
+              {currentList.map((ev, index) => (
+                <div
+                  key={ev._id}
+                  className="profile-event-row-item"
+                  onClick={() => navigate(`/event/${ev._id}`)}
+                >
+                  <div className="row-col-main">
+                    <span className="row-index">#{index + 1}</span>
+                    <div className="row-title-block">
+                      <h4 className="row-event-title">{ev.title}</h4>
+                      <span className="row-event-type">
+                        {ev.type || "Sự kiện"}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
+                  <div className="row-col-info">
+                    <span className="row-label">📍 Địa điểm</span>
+                    <p className="row-value-text">
+                      {ev.locations?.[0]?.address
+                        ? getShortAddress(ev.locations[0].address)
+                        : "Đang cập nhật..."}
+                    </p>
+                  </div>
+                  <div className="row-col-info">
+                    <span className="row-label">📅 Thời gian</span>
+                    <p className="row-value-text">
+                      {ev.startDate
+                        ? new Date(ev.startDate).toLocaleDateString("vi-VN")
+                        : "Cố định tuần"}
+                    </p>
+                  </div>
+                  <div className="row-col-status">
+                    <span
+                      className={`status-row-badge ${activeTab === "contributed" ? ev.status || "pending" : "saved"}`}
+                    >
+                      {activeTab === "contributed"
+                        ? ev.status === "approved"
+                          ? "✓ Đã duyệt"
+                          : ev.status === "rejected"
+                            ? "✕ Từ chối"
+                            : "● Chờ duyệt"
+                        : "🔖 Đã lưu"}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="empty-state">
               <p>
                 {activeTab === "contributed"
                   ? "Bạn chưa đóng góp sự kiện nào hết."
-                  : "Chưa có sự kiện nào trong kho lưu trữ của Như."}
+                  : "Chưa có sự kiện nào trong kho lưu trữ"}
               </p>
-              {activeTab === "contributed" && (
-                <Link to="/contribute">
-                  <button className="contribute-now-btn">Đóng góp ngay</button>
-                </Link>
-              )}
             </div>
           )}
         </div>

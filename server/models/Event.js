@@ -7,7 +7,6 @@ const eventSchema = new mongoose.Schema(
     type: { type: String },
     ticketPrice: { type: String },
 
-    // 1. Hỗ trợ nhiều địa điểm (Mảng locations)
     locations: [
       {
         address: { type: String },
@@ -17,16 +16,14 @@ const eventSchema = new mongoose.Schema(
       },
     ],
 
-    // 2. Hỗ trợ Album many ảnh
     images: [{ type: String }],
-    image: { type: String }, // Ảnh đại diện chính (Cover)
+    image: { type: String },
 
-    // 3. Các trường quản lý thời gian linh hoạt
     startDate: { type: Date },
     endDate: { type: Date },
-    isPermanent: { type: Boolean, default: false }, // Luôn mở cửa hằng tuần
-    closedDays: [{ type: Number }], // Các thứ nghỉ trong tuần (0: CN, 1: T2...)
-    isAllDay: { type: Boolean, default: false }, // Mở cửa 24/24
+    isPermanent: { type: Boolean, default: false },
+    closedDays: [{ type: Number }],
+    isAllDay: { type: Boolean, default: false },
     dailyOpeningTime: { type: String },
     dailyClosingTime: { type: String },
 
@@ -36,14 +33,12 @@ const eventSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    // --- Quản lý người duyệt để hiện số bài Admin đã duyệt ---
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Tham chiếu tới model User.js của em
+      ref: "User",
       default: null,
     },
 
-    // 🎯 ĐOẠN KHAI BÁO BẢO HIỂM PHẲNG: Cho phép Mongoose chấp nhận lưu trường ID phẳng ngoài cùng tầng
     userContributedId: {
       type: String,
       default: "",
@@ -54,13 +49,21 @@ const eventSchema = new mongoose.Schema(
       default: null,
     },
 
-    // --- 🎯 CẬP NHẬT: MỞ RỘNG ĐỊNH NGHĨA TRƯỜNG ID LỒNG CHỐNG BỊ NUỐT DỮ LIỆU ---
     contributor: {
-      userId: { type: String, default: "" }, // Khai báo rõ ràng dạng String để Mongoose ko chặn
-      userIdStr: { type: String, default: "" }, // Trường dự phòng lưu chuỗi chữ thường
+      userId: { type: String, default: "" },
+      userIdStr: { type: String, default: "" },
       name: { type: String, default: "User EviGo" },
       displayName: { type: String, default: "User EviGo" },
       contact: { type: String, default: "" },
+    },
+
+    averageRating: {
+      type: Number,
+      default: 5.0,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true },

@@ -11,7 +11,7 @@
 
 .profile-card {
   width: 100%;
-  max-width: 850px; /* Tăng nhẹ chiều rộng lên 850px giúp các cột hàng ngang hiển thị rộng rãi, không bị co chữ */
+  max-width: 850px;
   background: white;
   border-radius: 25px;
   box-shadow: 0 15px 35px rgba(40, 13, 140, 0.1);
@@ -20,7 +20,6 @@
   text-align: center;
 }
 
-/* HEADER & AVATAR */
 .profile-avatar-wrapper {
   position: relative;
   width: 120px;
@@ -37,7 +36,6 @@
   transition: transform 0.3s ease;
 }
 
-/* 🎯 HỆ THỐNG BADGE DANH HIỆU */
 .rank-badge {
   position: absolute;
   bottom: -5px;
@@ -88,7 +86,6 @@
 
 .edit-btn:hover { background: #635bff; color: white; }
 
-/* 🎯 STATS & TABS */
 .profile-stats {
   display: flex;
   justify-content: space-around;
@@ -134,11 +131,6 @@
   padding-left: 5px;
 }
 
-/* ========================================================================= */
-/* 🎯 ĐOẠN CẬP NHẬT MỚI: HỆ THỐNG DANH SÁCH HÀNG NGANG (ROW LAYOUT) TINH GỌN */
-/* ========================================================================= */
-
-/* Khung ngoài bọc danh sách, xếp các hàng theo chiều dọc */
 .profile-events-list-wrapper {
   display: flex;
   flex-direction: column;
@@ -147,10 +139,9 @@
   width: 100%;
 }
 
-/* Định dạng một dòng sự kiện phẳng dẹt */
 .profile-event-row-item {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 1fr; /* Chia tỉ lệ 4 cột ngay ngắn */
+  grid-template-columns: 2fr 1.5fr 1fr 1fr;
   align-items: center;
   background: white;
   padding: 14px 20px;
@@ -158,18 +149,16 @@
   border: 1px solid #eef0f8;
   box-shadow: 0 4px 10px rgba(40, 13, 140, 0.01);
   cursor: pointer;
-  text-align: left; /* Đưa text về căn lề trái chuẩn cấu trúc bảng */
+  text-align: left;
   transition: all 0.2s ease-in-out;
 }
 
-/* Hiệu ứng nhích nhẹ sang phải cực tinh tế khi hover */
 .profile-event-row-item:hover {
   transform: translateX(4px);
   border-color: #635bff;
   box-shadow: 0 6px 16px rgba(99, 91, 255, 0.06);
 }
 
-/* Cột Tiêu đề chính */
 .row-col-main {
   display: flex;
   align-items: center;
@@ -196,7 +185,7 @@
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Dài quá tự cắt chữ thành dấu ... */
+  text-overflow: ellipsis;
 }
 
 .row-event-type {
@@ -209,7 +198,6 @@
   width: fit-content;
 }
 
-/* Các cột thông tin chữ phụ (Địa điểm, Thời gian) */
 .row-col-info {
   display: flex;
   flex-direction: column;
@@ -236,13 +224,11 @@
   text-overflow: ellipsis;
 }
 
-/* Cột chứa badge trạng thái cuối dòng */
 .row-col-status {
   display: flex;
   justify-content: flex-end;
 }
 
-/* Thẻ kén trạng thái phẳng dẹt, mượt mà */
 .status-row-badge {
   font-size: 11px;
   font-weight: 700;
@@ -253,28 +239,25 @@
   white-space: nowrap;
 }
 
-/* Phối màu Pastel theo trạng thái */
 .status-row-badge.pending {
   background: #f3e8ff;
-  color: #a855f7; /* Chờ duyệt màu tím */
+  color: #a855f7;
 }
 
 .status-row-badge.approved {
   background: #d1fae5;
-  color: #10b981; /* Đã duyệt màu xanh lá */
+  color: #10b981;
 }
 
 .status-row-badge.rejected {
   background: #fee2e2;
-  color: #ef4444; /* Từ chối màu đỏ */
+  color: #ef4444;
 }
 
 .status-row-badge.saved {
   background: #e0f2fe;
-  color: #0284c7; /* Đã lưu màu xanh dương */
+  color: #0284c7;
 }
-
-/* ========================================================================= */
 
 .empty-state {
   padding: 40px 20px;
@@ -285,7 +268,7 @@
   border: 1px dashed #e0e0ff;
 }
 
-.loading-spinner { /* Thay thế tinh gọn class cũ */
+.loading-spinner {
   padding: 40px;
   color: #635bff;
   font-weight: bold;
@@ -308,10 +291,9 @@
   box-shadow: 0 5px 15px rgba(99, 91, 255, 0.3);
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .profile-event-row-item {
-    grid-template-columns: 1fr; /* Trên mobile bẻ dọc hàng thành khối nhỏ */
+    grid-template-columns: 1fr;
     gap: 10px;
     padding: 15px;
   }

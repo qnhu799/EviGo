@@ -1,6 +1,4 @@
 const jwt = require("jsonwebtoken");
-
-// 1. Kiểm tra xem có đăng nhập chưa (🎯 NÂNG CẤP TỐI CAO: Quét sạch ID, Tên, Email đa tầng Payload)
 const protect = (req, res, next) => {
   let token = req.headers.authorization;
   if (token && token.startsWith("Bearer")) {
@@ -13,7 +11,6 @@ const protect = (req, res, next) => {
       let finalizedEmail = "";
 
       if (decoded) {
-        // Tầng 1: Quét tìm ID sâu tầng (Giữ nguyên thuật toán chuẩn của Như)
         finalizedId =
           decoded.id ||
           decoded._id ||
@@ -30,7 +27,6 @@ const protect = (req, res, next) => {
             decoded.data.id || decoded.data._id || decoded.data.userId;
         }
 
-        // 🎯 TẦNG 2 BẢO HIỂM MỚI: Bới tung mọi tầng để tìm Tên hiển thị (Username)
         finalizedUsername =
           decoded.username ||
           decoded.name ||
@@ -43,7 +39,6 @@ const protect = (req, res, next) => {
           (decoded.data ? decoded.data.username || decoded.data.name : "") ||
           "User EviGo";
 
-        // 🎯 TẦNG 3 BẢO HIỂM MỚI: Bới tung mọi tầng để tìm Email liên hệ
         finalizedEmail =
           decoded.email ||
           decoded.mail ||
@@ -62,12 +57,6 @@ const protect = (req, res, next) => {
         email: finalizedEmail.trim(), // Khóa chặt email sạch tìm được phục vụ lưới quét đối chiếu
       };
 
-      // Bật nhẹ dòng log hỗ trợ Như kiểm tra trạng thái user trong Terminal khi nhấn gửi bình luận
-      console.log(
-        "✅ [Auth OK] Người dùng thực hiện hành động:",
-        req.user.username,
-      );
-
       next();
     } catch (error) {
       console.error("❌ Lỗi giải mã Token bảo mật:", error.message);
@@ -80,7 +69,6 @@ const protect = (req, res, next) => {
   }
 };
 
-// 2. Chỉ cho phép Admin (Giữ nguyên gốc của Như)
 const adminOnly = (req, res, next) => {
   if (
     req.user &&
@@ -94,7 +82,6 @@ const adminOnly = (req, res, next) => {
   }
 };
 
-// 3. Cho phép Admin VÀ Thành viên đóng góp (Giữ nguyên logic của Như)
 const canContribute = (req, res, next) => {
   if (
     req.user &&

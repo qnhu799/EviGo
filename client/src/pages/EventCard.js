@@ -61,9 +61,8 @@ const EventCard = ({ event }) => {
     }
   };
 
-  // 🎯 CẬP NHẬT QUAN TRỌNG: Đính kèm eventId vào gói state gửi sang hệ thống WebGIS
   const handleMapLocationClick = (e) => {
-    e.stopPropagation(); // Chặn lan truyền ngược lên thẻ div cha
+    e.stopPropagation();
     const firstLoc = event.locations?.[0];
     if (firstLoc && firstLoc.lat && firstLoc.lng) {
       navigate("/map", {
@@ -71,7 +70,7 @@ const EventCard = ({ event }) => {
           lat: Number(firstLoc.lat),
           lng: Number(firstLoc.lng),
           keyword: event.title,
-          eventId: event._id, // <-- Đóng gói ID sự kiện gửi đi
+          eventId: event._id,
         },
       });
     } else {
@@ -99,22 +98,98 @@ const EventCard = ({ event }) => {
 
   const mainLocation = event.locations?.[0];
 
-  // 🎯 BỘ CSS INLINE LỰC CHIẾN: Đè bẹp hoàn toàn lề xám mặc định của trình duyệt
   const inlineStyles = {
+    cardWrapper: {
+      background: "#ffffff",
+      borderRadius: "20px",
+      border: "1.5px solid #635bff",
+      overflow: "hidden",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      width: "100%",
+      height: "430px",
+      display: "flex",
+      flexDirection: "column",
+      boxSizing: "border-box",
+    },
+    imageWrapper: {
+      width: "100%",
+      height: "180px",
+      overflow: "hidden",
+      flexShrink: 0,
+    },
+    imageContent: {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    },
+    cardBody: {
+      padding: "18px",
+      flexGrow: 1,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "flex-start",
+      boxSizing: "border-box",
+      overflow: "hidden",
+    },
+    eventName: {
+      fontSize: "16px",
+      fontWeight: "700",
+      color: "#2d2d2d",
+      margin: "0 0 8px 0",
+      lineHeight: "1.4",
+      height: "2.8em",
+      display: "-webkit-box",
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: "vertical",
+      overflow: "hidden",
+    },
+    eventLocation: {
+      fontSize: "13.5px",
+      color: "#888",
+      margin: "0 0 0px 0",
+      lineHeight: "1.4",
+      height: "1.4em",
+      display: "-webkit-box",
+      WebkitLineClamp: 1,
+      WebkitBoxOrient: "vertical",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      borderBottom: "1px solid #eeeeee",
+      paddingBottom: "12px",
+      boxSizing: "content-box",
+    },
+    eventMetaRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      fontSize: "13px",
+      fontWeight: "600",
+      paddingTop: "12px",
+      boxSizing: "border-box",
+    },
+    eventDate: {
+      color: "#777",
+    },
+    eventPrice: {
+      color: "#635bff",
+      fontWeight: "700",
+    },
     actionsWrapper: {
       display: "flex",
       flexDirection: "column",
       gap: "8px",
       width: "100%",
-      marginTop: "12px",
+      marginTop: "auto",
       boxSizing: "border-box",
+      paddingTop: "12px",
     },
     btnBase: {
       width: "100%",
       padding: "11px 16px",
       border: "none",
       outline: "none",
-      borderRadius: "10px",
+      borderRadius: "12px",
       fontSize: "13.5px",
       fontWeight: "700",
       cursor: "pointer",
@@ -141,12 +216,15 @@ const EventCard = ({ event }) => {
   };
 
   return (
-    <div className="event-card" onClick={() => navigate(`/event/${event._id}`)}>
-      <div className="event-image-wrapper">
+    <div
+      style={inlineStyles.cardWrapper}
+      onClick={() => navigate(`/event/${event._id}`)}
+    >
+      <div style={inlineStyles.imageWrapper}>
         <img
           src={getEventThumbnail(event)}
           alt={event.title}
-          className="event-image"
+          style={inlineStyles.imageContent}
           onError={(e) => {
             e.target.src =
               "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
@@ -154,21 +232,21 @@ const EventCard = ({ event }) => {
         />
       </div>
 
-      <div className="event-details">
-        <h3 className="event-name">{event.title}</h3>
+      <div style={inlineStyles.cardBody}>
+        <h3 style={inlineStyles.eventName}>{event.title}</h3>
 
-        <p className="event-location">
+        <p style={inlineStyles.eventLocation}>
           <i
             className="fas fa-map-marker-alt"
-            style={{ marginRight: "6px" }}
+            style={{ marginRight: "6px", color: "#635bff" }}
           ></i>
           {mainLocation?.address
             ? getShortAddress(mainLocation.address)
             : "Đang cập nhật..."}
         </p>
 
-        <div className="event-meta">
-          <span className="event-date">
+        <div style={inlineStyles.eventMetaRow}>
+          <span style={inlineStyles.eventDate}>
             <i
               className="far fa-calendar-alt"
               style={{ marginRight: "6px" }}
@@ -177,10 +255,11 @@ const EventCard = ({ event }) => {
               ? new Date(event.startDate).toLocaleDateString("vi-VN")
               : "Tùy lúc"}
           </span>
-          <span className="event-price">{event.ticketPrice || "Miễn phí"}</span>
+          <span style={inlineStyles.eventPrice}>
+            {event.ticketPrice || "Miễn phí"}
+          </span>
         </div>
 
-        {/* 🎯 ÁP DỤNG INLINE STYLES: Đảm bảo giao diện đồng bộ tuyệt đối bất kể cache file CSS */}
         <div style={inlineStyles.actionsWrapper}>
           <button
             style={{ ...inlineStyles.btnBase, ...inlineStyles.btnHeart }}

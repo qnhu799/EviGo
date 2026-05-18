@@ -1,4 +1,3 @@
-/* --- Banner Slider (Giữ nguyên) --- */
 .banner-slider {
   width: 100%;
   height: 35vw;
@@ -32,7 +31,6 @@
   background: #635bff !important;
 }
 
-/* --- Thanh Tìm kiếm (Đã cố định mốc tọa độ chính xác) --- */
 .search-container {
   width: 100%;
   display: flex;
@@ -49,8 +47,8 @@
   max-width: 800px;
   background: white;
   transition: all 0.3s ease;
-  position: relative; /* QUAN TRỌNG: Mốc để bảng gợi ý không bay lung tung */
-  z-index: 100; /* Thấp hơn Header nhưng đủ để hiển thị */
+  position: relative;
+  z-index: 100;
 }
 
 .search-input-group {
@@ -89,10 +87,9 @@
   transform: translateY(-2px);
 }
 
-/* --- 🎯 PHẦN CẬP NHẬT: BẢNG GỢI Ý CHI TIẾT & CỐ ĐỊNH VỊ TRÍ --- */
 .search-suggestions-portal {
   position: absolute;
-  top: 100%; /* Dính sát ngay mép dưới thanh search */
+  top: 100%;
   left: 0;
   width: 100%;
   margin-top: 8px;
@@ -100,7 +97,7 @@
   border: 1.5px solid #635bff;
   border-radius: 12px;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
-  z-index: 999; /* Đảm bảo nằm dưới Header (thường Header là 1000+) */
+  z-index: 999;
   max-height: 380px;
   overflow-y: auto;
 }
@@ -135,7 +132,7 @@
 
 .suggestion-name {
   font-weight: 800;
-  color: #280d8c !important; /* Hiện màu xanh đậm rõ ràng */
+  color: #280d8c !important;
   font-size: 15px;
   flex: 1;
 }
@@ -158,7 +155,7 @@
 
 .suggestion-location {
   font-size: 12.5px;
-  color: #444 !important; /* Màu địa chỉ đậm rõ nét */
+  color: #444 !important;
   line-height: 1.4;
   display: block;
 }
@@ -170,7 +167,6 @@
   padding: 25px;
 }
 
-/* --- Danh mục Thể loại (Giữ nguyên) --- */
 .categories-container {
   width: 95%;
   max-width: 1200px;
@@ -240,7 +236,6 @@
   border-color: #635bff;
 }
 
-/* --- FEATURED EVENTS (Giữ nguyên) --- */
 .featured-events {
   width: 90%;
   max-width: 1200px;
@@ -293,7 +288,6 @@
   color: white;
 }
 
-/* --- Event Card & Map CTA (Giữ nguyên) --- */
 .event-card {
   border: 3px solid #635bff;
   border-radius: 20px;
@@ -408,13 +402,12 @@
 }
 
 .suggestion-item.focused {
-    background-color: rgba(99, 91, 255, 0.15); /* Màu tím đặc trưng EviGo */
+    background-color: rgba(99, 91, 255, 0.15);
     border-left: 4px solid #635bff;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-/* --- Responsive (Giữ nguyên) --- */
 @media (max-width: 1024px) {
   .events-grid {
     grid-template-columns: repeat(2, 1fr);

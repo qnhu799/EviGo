@@ -30,7 +30,6 @@ export default function Register() {
     setError("");
 
     try {
-      // 🎯 CHỖ CẬP NHẬT: Thêm /auth để thông mạch với server.js Backend
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
         formData,
@@ -54,7 +53,6 @@ export default function Register() {
 
       window.dispatchEvent(new Event("authChange"));
 
-      // Giữ nguyên logic Toast thông báo xịn sò của Như
       if (userRole === "superadmin") {
         toast.success("Chào mừng Super Admin! Quyền tối thượng đã kích hoạt.", {
           duration: 3000,
@@ -66,7 +64,6 @@ export default function Register() {
         });
       }
 
-      // Đợi 2 giây cho user kịp đọc thông báo rồi mới chuyển trang
       setTimeout(() => {
         navigate("/login");
       }, 2000);

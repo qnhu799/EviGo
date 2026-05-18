@@ -65,7 +65,6 @@
   font-weight: 600;
 }
 
-/* 🎯 CẬP NHẬT: Hàng ngang bọc Tiêu đề và nút bấm Trái tim để chúng song hành */
 .ed-title-action-row {
   display: flex;
   align-items: center;
@@ -74,7 +73,6 @@
   margin: 15px 0;
 }
 
-/* Triệt tiêu margin cũ của tiêu đề để không bị lệch hàng */
 .ed-main-title {
   color: white;
   font-size: 48px;
@@ -83,20 +81,19 @@
   line-height: 1.2;
 }
 
-/* 🎯 CẬP NHẬT: Xóa sạch khung viền vuông trắng, trả lại trái tim trong suốt hòa vào nền Hero */
 .ed-btn-bookmark {
-  background: transparent !important; /* Đuổi cái hộp trắng vuông đáng ghét đi */
-  border: none !important;             /* Bỏ viền mặc định */
+  background: transparent !important;
+  border: none !important;
   outline: none !important;
   cursor: pointer;
-  font-size: 2.5rem;                  /* Tăng nhẹ size icon cho cân bằng với font 48px của tên bài */
+  font-size: 2.5rem;
   padding: 0 !important;
   margin: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  opacity: 0.7;                       /* Trạng thái chưa lưu mờ nhẹ ẩn vào overlay tím */
+  opacity: 0.7;
   transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -105,14 +102,12 @@
   opacity: 1;
 }
 
-/* 💖 TRẠNG THÁI ACTIVE: Phát sáng nhẹ khi Như đã bấm lưu sự kiện thành công */
 .ed-btn-bookmark.is-saved {
   opacity: 1;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); /* Tỏa sáng nhẹ trên nền hero tối */
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
   animation: popBookmark 0.35s ease;
 }
 
-/* Grid Layout */
 .ed-main-grid {
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -123,7 +118,6 @@
   padding-bottom: 100px;
 }
 
-/* Cards */
 .ed-card {
   background: white;
   padding: 35px;
@@ -132,7 +126,6 @@
   margin-bottom: 30px;
 }
 
-/* --- FIX KHUNG ALBUM HÌNH ẢNH CỦA NHƯ --- */
 .ed-gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -187,7 +180,6 @@
   font-weight: 600;
 }
 
-/* Map Box */
 .ed-map-box {
   width: 100%;
   height: 400px;
@@ -211,7 +203,6 @@
   color: var(--accent-purple);
 }
 
-/* Sidebar */
 .ed-sticky-card {
   background: white;
   padding: 30px;
@@ -258,7 +249,6 @@
   font-size: 18px;
 }
 
-/* Buttons */
 .ed-btn-primary {
   width: 100%;
   background: var(--primary-purple);
@@ -296,7 +286,6 @@
 
 .ed-btn-outline:hover { border-color: var(--accent-purple); color: var(--accent-purple); }
 
-/* Hiệu ứng giật nảy tim nhẹ khi click lưu bài đăng thành công */
 @keyframes popBookmark {
   0% { transform: scale(1); }
   45% { transform: scale(1.4); }
@@ -310,22 +299,14 @@
   .ed-sidebar { position: static; }
 }
 
-/* =========================================================================
-   🎯 SIÊU CẬP NHẬT: STYLE NÚT LƯU SỰ KIỆN ĐẶC SẮC (GLOW & GRADIENT)
-   (Ghi đè lên đoạn .ed-btn-save-large cũ ở cuối file, giữ nguyên code trên của Như)
-   ========================================================================= */
-
 .ed-btn-save-large {
   width: 100%;
   padding: 18px;
   position: relative;
   overflow: hidden;
-
-  /* Trạng thái chưa lưu: Gradient tím chuyển từ đậm sang accent tinh tế */
   background: linear-gradient(135deg, #1e1b4b 0%, var(--primary-purple) 50%, #3b20a6 100%);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.1);
-
   border-radius: 14px;
   font-size: 16px;
   font-weight: bold;
@@ -340,7 +321,6 @@
   box-shadow: 0 4px 15px rgba(40, 13, 140, 0.2);
 }
 
-/* Hiệu ứng tia sáng quét qua (Shimmer Effect) khi hover giúp nút cực kỳ sinh động */
 .ed-btn-save-large::before {
   content: '';
   position: absolute;
@@ -365,10 +345,9 @@
 }
 
 .ed-btn-save-large:hover::before {
-  left: 150%; /* Tia sáng quét ngang qua nút khi di chuột */
+  left: 150%;
 }
 
-/* 💖 TRẠNG THÁI ĐÃ LƯU: Đổi sang Gradient Neon và Phát sáng Neon tỏa rộng (Glow Effect) */
 .ed-btn-save-large.is-saved {
   background: linear-gradient(135deg, var(--accent-purple) 0%, #8b5cf6 100%) !important;
   color: #ffffff !important;
@@ -378,7 +357,6 @@
   animation: popButtonGlow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Hiệu ứng giật nảy khối kết hợp bung tỏa ánh sáng khi click */
 @keyframes popButtonGlow {
   0% {
     transform: scale(1);
@@ -386,7 +364,7 @@
   }
   50% {
     transform: scale(1.05);
-    filter: brightness(1.3); /* Chớp sáng nhẹ tại thời điểm bấm */
+    filter: brightness(1.3);
   }
   100% {
     transform: scale(1);

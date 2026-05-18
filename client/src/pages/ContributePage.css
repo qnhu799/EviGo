@@ -92,9 +92,6 @@
   box-shadow: 0 0 0 2px #635BFF;
 }
 
-/* --- PHẦN THẦY MỚI CẬP NHẬT: CARD CHECKBOX CHO NHƯ --- */
-
-/* Container dàn hàng ngang cho 2 lựa chọn */
 .toggle-options-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -102,7 +99,6 @@
   margin: 10px 0;
 }
 
-/* Biến mỗi checkbox thành một cái Card hiện đại */
 .modern-checkbox-card {
   display: flex;
   align-items: center;
@@ -120,7 +116,6 @@
   background: #f8f9ff;
 }
 
-/* Khi checkbox được chọn, card sẽ đổi màu tím nhẹ */
 .modern-checkbox-card.active {
   border-color: #635bff;
   background: #f0efff;
@@ -142,9 +137,6 @@
   white-space: nowrap;
 }
 
-/* --- KẾT THÚC PHẦN CẬP NHẬT --- */
-
-/* --- XỬ LÝ AUTOCOMPLETE (CHỐNG BỊ NÚT BẢN ĐỒ ĐÈ) --- */
 .search-autocomplete-wrapper {
   position: relative;
   width: 100%;
@@ -179,7 +171,6 @@
   color: #635bff;
 }
 
-/* --- TỔ CHỨC ĐỊA ĐIỂM & TABS --- */
 .mode-toggle {
   display: flex;
   background: #f0f0f0;
@@ -203,7 +194,6 @@
   background: #f0efff;
 }
 
-/* --- POSTER UPLOAD --- */
 .poster-upload-group {
   border: 2px dashed rgba(99, 91, 255, 0.3);
   padding: 20px;
@@ -240,7 +230,6 @@
   }
 }
 
-/* Thêm responsive cho grid checkbox */
 @media (max-width: 600px) {
   .toggle-options-grid {
     grid-template-columns: 1fr;

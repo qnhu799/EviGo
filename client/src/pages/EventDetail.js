@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import axiosInstance from "axios"; // Sử dụng duy nhất instance axios cấu hình chuẩn của Như
+import axiosInstance from "axios";
 import toast from "react-hot-toast";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./EventDetail.css";
+import iconCalendar from "../assets/eventdetail/1.png";
+import iconTicket from "../assets/eventdetail/2.png";
+import iconVerified from "../assets/eventdetail/3.png";
 
-// Khắc phục lỗi mất icon Marker mặc định của Leaflet trên môi trường React
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -23,11 +25,7 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
   const [savedEventIds, setSavedEventIds] = useState([]);
-
-  // Quản lý phân khu bình luận và đánh giá sao
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
@@ -42,7 +40,6 @@ export default function EventDetail() {
     "Thứ 7",
   ];
 
-  // Hàm lấy token từ bộ nhớ cục bộ
   const getValidToken = useCallback(() => {
     return localStorage.getItem("token") || localStorage.getItem("Token") || "";
   }, []);
@@ -58,7 +55,6 @@ export default function EventDetail() {
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
-  // 🎯 ĐÃ TỐI ƯU: Bọc hàm bằng useCallback để triệt tiêu Warning ESLint
   const fetchSavedEventIds = useCallback(async () => {
     try {
       const token = getValidToken();
@@ -74,19 +70,17 @@ export default function EventDetail() {
     }
   }, [getValidToken]);
 
-  // 🎯 ĐÃ TỐI ƯU: Bọc hàm bằng useCallback giúp React quản lý vòng đời chuẩn chỉ
   const fetchEventComments = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         `http://localhost:5000/api/comments/event/${id}`,
       );
-      setComments(response.data || []);
+      setComments(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error("Lỗi nạp bình luận:", err.message);
     }
   }, [id]);
 
-  // Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện lớn hình trái tim
   const handleToggleSaveEvent = async (eventId) => {
     try {
       const token = getValidToken();
@@ -114,22 +108,67 @@ export default function EventDetail() {
     }
   };
 
-  // Điều hướng mở tab Google Maps chỉ đường theo tọa độ GIS
+  const handleShareEventLink = () => {
+    const currentUrl = window.location.href;
+    navigator.clipboard
+      .writeText(currentUrl)
+      .then(() => {
+        toast.success(
+          "Đã sao chép liên kết sự kiện! Chia sẻ cho bạn bè liền nhen 🔗✨",
+        );
+      })
+      .catch((err) => {
+        console.error("Lỗi sao chép URL bài viết:", err);
+        toast.error(
+          "Không thể tự copy, em hãy sao chép trên thanh địa chỉ trình duyệt nhé!",
+        );
+      });
+  };
+
   const handleOpenGoogleDirections = () => {
     const firstLoc = event?.locations?.[0];
-    if (firstLoc && firstLoc.lat && firstLoc.lng) {
-      const url = `http://googleusercontent.com/maps.google.com/maps?daddr=${firstLoc.lat},${firstLoc.lng}`;
-      window.open(url, "_blank");
-    } else {
+    if (!firstLoc || !firstLoc.lat || !firstLoc.lng) {
       toast.error("Không tìm thấy tọa độ GIS của địa điểm này!");
+      return;
+    }
+
+    toast.loading("Đang kết nối định vị vệ tinh GPS... 🛰️", {
+      id: "geo-toast",
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const startLat = position.coords.latitude;
+          const startLng = position.coords.longitude;
+          toast.dismiss("geo-toast");
+
+          const url = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${firstLoc.lat},${firstLoc.lng}&travelmode=driving`;
+          window.open(url, "_blank");
+        },
+        (error) => {
+          console.warn("Không lấy được GPS tự động:", error.message);
+          toast.dismiss("geo-toast");
+          toast.error(
+            "Đã chặn quyền GPS, hãy tự nhập điểm đi trên Google Maps nhé! 🗺️",
+            { duration: 4000 },
+          );
+
+          const url = `https://www.google.com/maps/dir/?api=1&destination=${firstLoc.lat},${firstLoc.lng}&travelmode=driving`;
+          window.open(url, "_blank");
+        },
+      );
+    } else {
+      toast.dismiss("geo-toast");
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${firstLoc.lat},${firstLoc.lng}&travelmode=driving`;
+      window.open(url, "_blank");
     }
   };
 
-  // Submit đẩy bình luận & số sao lên API
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) {
-      toast.error("Như ơi, nhập nội dung đánh giá trước nha! 🌸");
+      toast.error("Evier ơi, nhập nội dung đánh giá trước nha! 🌸");
       return;
     }
 
@@ -150,12 +189,47 @@ export default function EventDetail() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      toast.success("Đã đăng tải đánh giá của Như thành công! ✨");
+      toast.success("Đã đăng tải đánh giá thành công! ✨");
 
-      const addedComment = response.data.comment || response.data;
-      setComments((prev) => [addedComment, ...prev]); // Cập nhật danh sách bình luận thời gian thực
+      const addedComment = response.data?.comment || response.data;
+      if (addedComment) {
+        setComments((prev) => {
+          const safeList = Array.isArray(prev) ? prev : [];
+          const nextComments = [addedComment, ...safeList];
+
+          const nextTotalReviews = nextComments.length;
+          const sum = nextComments.reduce(
+            (acc, cur) => acc + (Number(cur.rating) || 5),
+            0,
+          );
+          const nextAverageRating =
+            Math.round((sum / nextTotalReviews) * 10) / 10;
+
+          setEvent((prevEvent) => ({
+            ...prevEvent,
+            averageRating: nextAverageRating,
+            totalReviews: nextTotalReviews,
+          }));
+
+          return nextComments;
+        });
+      }
+
       setNewComment("");
       setRating(5);
+
+      setTimeout(async () => {
+        try {
+          const res = await axiosInstance.get(
+            `http://localhost:5000/api/events/${id}`,
+          );
+          if (res.data && res.data.totalReviews > 0) {
+            setEvent(res.data);
+          }
+        } catch (fetchErr) {
+          console.error("Lỗi đồng bộ ngầm dự phòng:", fetchErr.message);
+        }
+      }, 600);
     } catch (err) {
       console.error("Lỗi đăng bình luận:", err.message);
       toast.error(err.response?.data?.message || "Gửi bình luận thất bại rồi!");
@@ -180,13 +254,13 @@ export default function EventDetail() {
     fetchDetail();
     fetchSavedEventIds();
     fetchEventComments();
-  }, [id, fetchSavedEventIds, fetchEventComments]); // 🎯 ĐÃ ĐỒNG BỘ: Điền đầy đủ mảng dependencies chuẩn mực
+  }, [id, fetchSavedEventIds, fetchEventComments]);
 
   if (loading)
     return <div className="ed-loading">Đang tải thông tin EviGo...</div>;
   if (!event)
     return (
-      <div className="ed-error">Không tìm thấy sự kiện này rồi Như ơi!</div>
+      <div className="ed-error">Không tìm thấy sự kiện này rồi!</div>
     );
 
   const mainBanner = getFullImageUrl(
@@ -199,6 +273,13 @@ export default function EventDetail() {
     event.locations && event.locations[0]
       ? [parseFloat(event.locations[0].lat), parseFloat(event.locations[0].lng)]
       : [10.7719, 106.6983];
+
+  const iconImageStyle = {
+    width: "44px",
+    height: "44px",
+    objectFit: "contain",
+    borderRadius: "10px",
+  };
 
   return (
     <div className="ed-wrapper">
@@ -220,7 +301,11 @@ export default function EventDetail() {
               </div>
 
               <p className="ed-hero-loc">
-                📍 {event.locations && event.locations[0]?.address}
+                📍{" "}
+                {event.locations && event.locations[0]?.detailAddress
+                  ? `[${event.locations[0].detailAddress}] `
+                  : ""}
+                {event.locations && event.locations[0]?.address}
               </p>
             </div>
           </div>
@@ -231,7 +316,9 @@ export default function EventDetail() {
         <div className="ed-content-left">
           <section className="ed-card">
             <h2 className="ed-section-title">Giới thiệu sự kiện</h2>
-            <p className="ed-desc">{event.description}</p>
+            <p className="ed-desc" style={{ whiteSpace: "pre-line" }}>
+              {event.description}
+            </p>
           </section>
 
           {event.images && event.images.length > 0 && (
@@ -255,13 +342,46 @@ export default function EventDetail() {
             <h2 className="ed-section-title">Các địa điểm diễn ra</h2>
             <div className="ed-location-list" style={{ marginBottom: "15px" }}>
               {event.locations?.map((loc, index) => (
-                <div key={index} className="ed-loc-item">
-                  <p>
-                    <strong>Địa điểm {index + 1}:</strong> {loc.address}
+                <div
+                  key={index}
+                  className="ed-loc-item"
+                  style={{
+                    padding: "12px",
+                    borderBottom: "1px solid #eee",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: "0 0 6px 0",
+                      fontSize: "14.5px",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    <strong>Địa điểm {index + 1}:</strong>{" "}
+                    {loc.detailAddress && (
+                      <span style={{ color: "#635bff", fontWeight: "700" }}>
+                        {loc.detailAddress}{" "}
+                      </span>
+                    )}
+                    <span style={{ color: "#4b5563" }}>— {loc.address}</span>
                   </p>
-                  <small className="ed-gis-text">
-                    🌐 GIS: {loc.lat}, {loc.lng} - {loc.district}
-                  </small>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <small
+                      className="ed-gis-text"
+                      style={{ color: "#00bfa5", fontWeight: "600" }}
+                    >
+                      🌐 GIS: {loc.lat}, {loc.lng}{" "}
+                      {loc.district ? `- ${loc.district}` : ""}
+                    </small>
+                  </div>
                 </div>
               ))}
             </div>
@@ -290,6 +410,9 @@ export default function EventDetail() {
                   <Popup>
                     <strong>{event.title}</strong>
                     <br />
+                    {event.locations?.[0]?.detailAddress
+                      ? `[${event.locations[0].detailAddress}] `
+                      : ""}
                     {event.locations?.[0]?.address}
                   </Popup>
                 </Marker>
@@ -311,7 +434,7 @@ export default function EventDetail() {
                 }}
               >
                 <label style={{ marginRight: "10px" }}>
-                  Như đánh giá sự kiện này mấy sao:
+                  Evier đánh giá sự kiện này mấy sao:
                 </label>
                 <select
                   value={rating}
@@ -340,7 +463,7 @@ export default function EventDetail() {
                 }}
               >
                 <textarea
-                  placeholder="Như ơi, hãy chia sẻ cảm nghĩ của bạn về sự kiện này để cộng đồng cùng biết nhé..."
+                  placeholder="Evier ơi, hãy chia sẻ cảm nghĩ của bạn về sự kiện này để cộng đồng cùng biết nhé..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   rows="3"
@@ -457,6 +580,7 @@ export default function EventDetail() {
                             fontSize: "13.5px",
                             color: "#4b5563",
                             lineHeight: "1.4",
+                            whiteSpace: "pre-line",
                           }}
                         >
                           {item.content}
@@ -475,7 +599,7 @@ export default function EventDetail() {
                     padding: "10px",
                   }}
                 >
-                  Chưa có đánh giá nào. Hãy là người đầu tiên bình luận nhé Như!
+                  Chưa có đánh giá nào. Hãy là người đầu tiên bình luận nhé!
                   🌸
                 </p>
               )}
@@ -485,9 +609,85 @@ export default function EventDetail() {
 
         <aside className="ed-sidebar">
           <div className="ed-sticky-card">
+            <div
+              className="ed-rating-summary-box"
+              style={{
+                padding: "16px",
+                backgroundColor: "#f9f8ff",
+                borderRadius: "14px",
+                border: "1.5px dashed #cbd5e1",
+                marginBottom: "16px",
+              }}
+            >
+              <h4
+                style={{
+                  margin: "0 0 10px 0",
+                  color: "#280d8c",
+                  fontSize: "14.5px",
+                  fontWeight: "800",
+                }}
+              >
+                ⭐ Đánh giá từ cộng đồng
+              </h4>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: "5px",
+                  marginBottom: "4px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "26px",
+                    fontWeight: "900",
+                    color: "#1f2937",
+                  }}
+                >
+                  {event.averageRating !== undefined &&
+                  event.averageRating !== null
+                    ? event.averageRating
+                    : "5.0"}
+                </span>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    color: "#f59e0b",
+                  }}
+                >
+                  ★
+                </span>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color: "#6b7280",
+                    fontWeight: "600",
+                    marginLeft: "4px",
+                  }}
+                >
+                  ({event.totalReviews || 0} đánh giá)
+                </span>
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "12px",
+                  color: "#635bff",
+                  fontWeight: "700",
+                }}
+              >
+                📍 Ho Chi Minh City, VN
+              </p>
+            </div>
+
             <div className="ed-sidebar-item">
-              <div className="ed-icon-box">
-                <i className="far fa-calendar-alt"></i>
+              <div className="ed-icon-box" style={{ background: "none" }}>
+                <img
+                  src={iconCalendar}
+                  alt="Lịch trình"
+                  style={iconImageStyle}
+                />
               </div>
               <div className="ed-text-box">
                 <small>Lịch trình</small>
@@ -505,7 +705,10 @@ export default function EventDetail() {
                     : `⏰ ${event.dailyOpeningTime} - ${event.dailyClosingTime}`}
                 </span>
                 {event.isPermanent && event.closedDays?.length > 0 && (
-                  <div className="ed-closed-days">
+                  <div
+                    className="ed-closed-days"
+                    style={{ color: "#ff4d4f", fontWeight: "600" }}
+                  >
                     ❌ Nghỉ:{" "}
                     {event.closedDays.map((d) => dayNames[d]).join(", ")}
                   </div>
@@ -514,28 +717,40 @@ export default function EventDetail() {
             </div>
 
             <div className="ed-sidebar-item">
-              <div className="ed-icon-box">
-                <i className="fas fa-ticket-alt"></i>
+              <div className="ed-icon-box" style={{ background: "none" }}>
+                <img src={iconTicket} alt="Giá vé" style={iconImageStyle} />
               </div>
               <div className="ed-text-box">
                 <small>Giá vé</small>
-                <p className="ed-price">{event.ticketPrice || "Miễn phí"}</p>
+                <p
+                  className="ed-price"
+                  style={{ color: "#10b981", fontWeight: "700" }}
+                >
+                  {event.ticketPrice || "Miễn phí"}
+                </p>
               </div>
             </div>
 
             <div className="ed-sidebar-item">
-              <div className="ed-icon-box">
-                <i className="fas fa-user-edit"></i>
+              <div className="ed-icon-box" style={{ background: "none" }}>
+                <img
+                  src={iconVerified}
+                  alt="Người cung cấp"
+                  style={iconImageStyle}
+                />
               </div>
               <div className="ed-text-box">
                 <small>Cung cấp bởi</small>
-                <p>
+                <p style={{ fontWeight: "600" }}>
                   {event.contributor?.displayName ||
                     event.contributor?.name ||
                     "Cộng đồng EviGo"}
                 </p>
-                <span className="ed-verified">
-                  <i className="fas fa-check-circle"></i> Đã xác thực
+                <span
+                  className="ed-verified"
+                  style={{ color: "#635bff", fontWeight: "700" }}
+                >
+                  ✨ Đã xác thực
                 </span>
               </div>
             </div>
@@ -543,8 +758,34 @@ export default function EventDetail() {
             <button
               className={`ed-btn-save-large ${isCurrentEventSaved ? "is-saved" : ""}`}
               onClick={() => handleToggleSaveEvent(event._id)}
+              style={{ marginBottom: "10px" }}
             >
               {isCurrentEventSaved ? "Đã yêu thích ❤️" : "Lưu sự kiện 🤍"}
+            </button>
+
+            <button
+              type="button"
+              className="ed-btn-share-link"
+              onClick={handleShareEventLink}
+              style={{
+                width: "100%",
+                padding: "12px",
+                backgroundColor: "#f0f0f5",
+                color: "#280d8c",
+                border: "1.5px solid #280d8c",
+                borderRadius: "12px",
+                fontWeight: "700",
+                cursor: "pointer",
+                marginBottom: "10px",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                transition: "all 0.2s ease",
+              }}
+            >
+              Chia sẻ sự kiện này 🔗
             </button>
 
             <button

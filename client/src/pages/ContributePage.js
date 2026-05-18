@@ -13,7 +13,6 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Marker Leaflet (Giữ nguyên cấu hình chuẩn của Như)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -32,7 +31,6 @@ function MapFlyController({ center }) {
   return null;
 }
 
-// --- Component nhấn bản đồ tự lấy địa chỉ ---
 function LocationMarker({ position, index, formData, setFormData }) {
   useMapEvents({
     async click(e) {
@@ -170,7 +168,7 @@ const ContributePage = () => {
         }
       },
       () => {
-        Swal.fire("Lỗi", "Em hãy bật GPS/Quyền truy cập vị trí nhé!", "error");
+        Swal.fire("Lỗi", "Evier hãy bật GPS/Quyền truy cập vị trí nhé!", "error");
       },
     );
   };
@@ -282,6 +280,35 @@ const ContributePage = () => {
     setSuggestions([]);
   };
 
+  const handleSearchKeyDown = async (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (suggestions && suggestions.length > 0) {
+        handleSelectSuggestion(suggestions[0]);
+      } else if (searchQuery.trim().length > 2) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${searchQuery}&countrycodes=vn&limit=1`,
+          );
+          const data = await res.json();
+          if (data && data.length > 0) {
+            handleSelectSuggestion(data[0]);
+          } else {
+            Swal.fire({
+              icon: "info",
+              title: "Thông báo vị trí",
+              text: "Không tìm thấy tọa độ GIS cho địa điểm này, hãy kiểm tra lại nhé!",
+              confirmButtonColor: "#635bff",
+            });
+          }
+        } catch (err) {
+          console.error("Lỗi xử lý Enter bản đồ:", err);
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -301,7 +328,6 @@ const ContributePage = () => {
       localStorage.getItem("Username") ||
       "Người dùng ẩn danh";
 
-    // 🎯 ĐỒNG BỘ ĐỊNH DANH: Trích xuất chính xác ID tài khoản từ localStorage
     const contributorId =
       localStorage.getItem("userId") || localStorage.getItem("id") || "";
 
@@ -339,7 +365,6 @@ const ContributePage = () => {
     dataToSend.append("title", formData.title);
     dataToSend.append("contributorName", contributorName);
 
-    // 🎯 ĐÍNH KÈM CHÍ MẠNG: Gài ID tài khoản thật vào FormData nộp lên Server
     if (contributorId) {
       dataToSend.append("contributorId", contributorId);
     }
@@ -384,7 +409,6 @@ const ContributePage = () => {
           confirmButtonColor: "#635bff",
         }).then((result) => {
           if (result.isConfirmed) {
-            // 🎯 ĐIỀU HƯỚNG CHUẨN: Chuyển hướng thẳng về trang cá nhân để cập nhật dữ liệu mới
             navigate("/profile");
           }
         });
@@ -795,6 +819,7 @@ const ContributePage = () => {
                   placeholder="🔍 Tìm địa chỉ..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
                   style={{
                     width: "100%",
                     padding: "12px",
@@ -854,66 +879,68 @@ const ContributePage = () => {
               />
             )}
 
-            <div style={{ position: "relative" }}>
-              <button
-                type="button"
-                onClick={handleGetCurrentLocation}
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                  zIndex: 1000,
-                  background: "white",
-                  border: "2px solid #635bff",
-                  borderRadius: "8px",
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                  color: "#635bff",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                }}
-              >
-                📍 Vị trí hiện tại
-              </button>
-
-              <div
-                style={{
-                  height: "300px",
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                  border: "1px solid #ddd",
-                }}
-              >
-                <MapContainer
-                  center={[
-                    formData.locations[activeIndex].lat,
-                    formData.locations[activeIndex].lng,
-                  ]}
-                  zoom={13}
-                  style={{ height: "100%", width: "100%" }}
+            {searchMode === "auto" && (
+              <div style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  onClick={handleGetCurrentLocation}
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                    zIndex: 1000,
+                    background: "white",
+                    border: "2px solid #635bff",
+                    borderRadius: "8px",
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    color: "#635bff",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
                 >
-                  <TileLayer url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi" />
-                  <MapFlyController
+                  📍 Vị trí hiện tại
+                </button>
+
+                <div
+                  style={{
+                    height: "300px",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  <MapContainer
                     center={[
                       formData.locations[activeIndex].lat,
                       formData.locations[activeIndex].lng,
                     ]}
-                  />
-                  <LocationMarker
-                    position={[
-                      formData.locations[activeIndex].lat,
-                      formData.locations[activeIndex].lng,
-                    ]}
-                    index={activeIndex}
-                    formData={formData}
-                    setFormData={setFormData}
-                  />
-                </MapContainer>
+                    zoom={13}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi" />
+                    <MapFlyController
+                      center={[
+                        formData.locations[activeIndex].lat,
+                        formData.locations[activeIndex].lng,
+                      ]}
+                    />
+                    <LocationMarker
+                      position={[
+                        formData.locations[activeIndex].lat,
+                        formData.locations[activeIndex].lng,
+                      ]}
+                      index={activeIndex}
+                      formData={formData}
+                      setFormData={setFormData}
+                    />
+                  </MapContainer>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="form-section">

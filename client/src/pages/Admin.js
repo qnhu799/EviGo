@@ -4,19 +4,16 @@ import "./Admin.css";
 import Swal from "sweetalert2";
 
 const Admin = () => {
-  const [displayedEvents, setDisplayedEvents] = useState([]); // Danh sách hiển thị theo tab
+  const [displayedEvents, setDisplayedEvents] = useState([]);
   const [filterStatus, setFilterStatus] = useState("pending");
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  // Hàm tiện ích để lấy token (Chống lỗi lệch chữ Token viết hoa / viết thường)
   const getValidToken = () => {
     return localStorage.getItem("token") || localStorage.getItem("Token") || "";
   };
 
-  // 1. Lấy thống kê số lượng (Đếm cá nhân cho Xanh/Đỏ, đếm Chung cho Tím)
   const fetchStats = async () => {
     try {
       const token = getValidToken();
@@ -37,7 +34,6 @@ const Admin = () => {
     }
   };
 
-  // 2. Lấy danh sách sự kiện theo Status (🎯 ĐỂ KHỚP LOGIC CÁ NHÂN HÓA)
   const fetchEventsByStatus = async (status) => {
     setLoading(true);
     try {
@@ -47,7 +43,6 @@ const Admin = () => {
         return;
       }
 
-      // Gọi API mới để lấy bài: Pending (Tất cả) | Approved/Rejected (Của tôi)
       const response = await axios.get(
         `http://localhost:5000/api/events/admin-list?status=${status}`,
         { headers: { Authorization: `Bearer ${token}` } },
@@ -64,7 +59,6 @@ const Admin = () => {
     }
   };
 
-  // Cập nhật dữ liệu khi đổi Tab hoặc khi vừa vào trang
   useEffect(() => {
     fetchEventsByStatus(filterStatus);
     fetchStats();
@@ -133,21 +127,21 @@ const Admin = () => {
             onClick={() => setFilterStatus("pending")}
           >
             <h3>{pendingCount}</h3>
-            <p>Sự kiện mới (Chung)</p>
+            <p>Sự kiện mới</p>
           </div>
           <div
             className={`stat-card green ${filterStatus === "approved" ? "active-filter" : ""}`}
             onClick={() => setFilterStatus("approved")}
           >
             <h3>{approvedCount}</h3>
-            <p>Bạn đã duyệt (Riêng)</p>
+            <p>Bạn đã duyệt</p>
           </div>
           <div
             className={`stat-card red ${filterStatus === "rejected" ? "active-filter" : ""}`}
             onClick={() => setFilterStatus("rejected")}
           >
             <h3>{rejectedCount}</h3>
-            <p>Bạn đã hủy (Riêng)</p>
+            <p>Bạn đã hủy</p>
           </div>
         </div>
 
@@ -180,7 +174,6 @@ const Admin = () => {
               <tbody>
                 {displayedEvents.length > 0 ? (
                   displayedEvents.map((event) => {
-                    // 🎯 TRIỆT ĐỂ: Quét sạch toàn bộ các thuộc tính lưu trữ tiềm năng trả về từ Database
                     const nameFromContributor =
                       event.contributor?.displayName || event.contributor?.name;
                     const nameFromContrName = event.contributorName;
@@ -190,7 +183,6 @@ const Admin = () => {
 
                     let finalDisplayName = "User EviGo";
 
-                    // Ưu tiên số 1: Đọc từ object 'contributor' chuẩn hóa mới
                     if (
                       typeof nameFromContributor === "string" &&
                       nameFromContributor.trim().length > 0 &&
@@ -199,7 +191,7 @@ const Admin = () => {
                     ) {
                       finalDisplayName = nameFromContributor;
                     }
-                    // Ưu tiên số 2: Đọc từ trường contributorName dự phòng do Form đẩy lên thẳng
+
                     else if (
                       typeof nameFromContrName === "string" &&
                       nameFromContrName.trim().length > 0 &&
@@ -207,7 +199,7 @@ const Admin = () => {
                     ) {
                       finalDisplayName = nameFromContrName;
                     }
-                    // Ưu tiên số 3: Đọc từ object cũ contributorInfo nếu là dữ liệu lịch sử
+
                     else if (
                       typeof nameFromInfo === "string" &&
                       nameFromInfo.trim().length > 0 &&
