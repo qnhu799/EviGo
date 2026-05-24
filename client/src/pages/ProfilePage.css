@@ -163,12 +163,15 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  /* 🚀 CẬP NHẬT QUAN TRỌNG: Ép cột chứa tiêu đề không được tự ý phình rộng ra lấn chiếm không gian */
+  min-width: 0;
 }
 
 .row-index {
   font-size: 13px;
   font-weight: 800;
   color: #c3c6f9;
+  flex-shrink: 0; /* Khóa chặt không cho số thứ tự bị ép co nhỏ */
 }
 
 .row-title-block {
@@ -176,6 +179,8 @@
   flex-direction: column;
   gap: 3px;
   overflow: hidden;
+  /* 🚀 CẬP NHẬT QUAN TRỌNG: Khóa cứng không gian con để text-overflow nhận diện biên cắt dòng */
+  min-width: 0;
 }
 
 .row-event-title {
@@ -186,6 +191,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* 🚀 CẬP NHẬT QUAN TRỌNG: Giới hạn bề ngang chữ luôn khít 100% tỷ lệ 2fr của cột */
+  width: 100%;
 }
 
 .row-event-type {
@@ -196,6 +203,7 @@
   padding: 2px 8px;
   border-radius: 4px;
   width: fit-content;
+  white-space: nowrap;
 }
 
 .row-col-info {
@@ -204,6 +212,8 @@
   gap: 3px;
   padding-right: 10px;
   overflow: hidden;
+  /* 🚀 CẬP NHẬT QUAN TRỌNG: Ép các cột địa chỉ, thời gian không được phình to phá lưới Grid */
+  min-width: 0;
 }
 
 .row-label {
@@ -212,6 +222,7 @@
   color: #9ca3af;
   letter-spacing: 0.5px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .row-value-text {
@@ -222,11 +233,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* 🚀 CẬP NHẬT QUAN TRỌNG: Khóa cứng bề ngang dòng text địa chỉ */
+  width: 100%;
 }
 
 .row-col-status {
   display: flex;
   justify-content: flex-end;
+  /* 🚀 CẬP NHẬT QUAN TRỌNG: Khóa cứng khối đuôi không cho cột trạng thái bị chèn mất chữ */
+  flex-shrink: 0;
 }
 
 .status-row-badge {

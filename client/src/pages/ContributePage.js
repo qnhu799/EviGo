@@ -13,6 +13,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+// Fix Marker Leaflet (Giữ nguyên cấu hình chuẩn của Như)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -31,6 +32,7 @@ function MapFlyController({ center }) {
   return null;
 }
 
+// --- Component nhấn bản đồ tự lấy địa chỉ hành chính ---
 function LocationMarker({ position, index, formData, setFormData }) {
   useMapEvents({
     async click(e) {
@@ -78,6 +80,7 @@ const ContributePage = () => {
     title: "",
     type: "",
     ticketPrice: "",
+    eventUrl: "",
     startDate: "",
     endDate: "",
     dailyOpeningTime: "07:00",
@@ -93,6 +96,10 @@ const ContributePage = () => {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [otherType, setOtherType] = useState("");
   const [isOtherSelected, setIsOtherSelected] = useState(false);
+
+  // 🚀 BỘ STATE ĐIỀU CHỈNH GIỜ LINH HOẠT:
+  const [noClosingTime, setNoClosingTime] = useState(false);
+  const [noSpecificTime, setNoSpecificTime] = useState(false); // <-- Thêm state chưa chốt khung giờ cụ thể
 
   const eventTypeOptions = [
     "Âm nhạc",
@@ -168,7 +175,11 @@ const ContributePage = () => {
         }
       },
       () => {
-        Swal.fire("Lỗi", "Evier hãy bật GPS/Quyền truy cập vị trí nhé!", "error");
+        Swal.fire(
+          "Lỗi",
+          "Evier hãy bật GPS/Quyền truy cập vị trí nhé!",
+          "error",
+        );
       },
     );
   };
@@ -371,11 +382,20 @@ const ContributePage = () => {
 
     dataToSend.append("type", typeString);
     dataToSend.append("ticketPrice", formData.ticketPrice);
+    dataToSend.append("eventUrl", formData.eventUrl);
     dataToSend.append("description", formData.description);
     dataToSend.append("isAllDay", formData.isAllDay);
     dataToSend.append("isPermanent", formData.isPermanent);
-    dataToSend.append("dailyOpeningTime", formData.dailyOpeningTime);
-    dataToSend.append("dailyClosingTime", formData.dailyClosingTime);
+
+    // 🚀 ĐỒNG BỘ GIỜ GỬI LÊN SERVER: Nếu chưa chốt giờ cụ thể, trả về rỗng cả 2 ô giờ
+    dataToSend.append(
+      "dailyOpeningTime",
+      noSpecificTime ? "" : formData.dailyOpeningTime,
+    );
+    dataToSend.append(
+      "dailyClosingTime",
+      noSpecificTime || noClosingTime ? "" : formData.dailyClosingTime,
+    );
 
     if (!formData.isPermanent) {
       dataToSend.append("startDate", formData.startDate);
@@ -598,12 +618,27 @@ const ContributePage = () => {
                   type="text"
                   value={formData.ticketPrice}
                   onChange={handleChange}
-                  placeholder="Ví dụ: Miễn phí..."
+                  placeholder="Ví dụ: Miễn phí, 50.000đ..."
                 />
               </div>
             </div>
 
-            <div className="toggle-options-grid">
+            <div className="form-row" style={{ marginTop: "10px" }}>
+              <div className="form-group" style={{ width: "100%" }}>
+                <label>Link nguồn bài viết / Website sự kiện (Nếu có)</label>
+                <input
+                  name="eventUrl"
+                  type="url"
+                  value={formData.eventUrl}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: https://facebook.com/events/sau-sukien..."
+                  required={false}
+                  style={{ border: "1px solid #cbd5e1" }}
+                />
+              </div>
+            </div>
+
+            <div className="toggle-options-grid" style={{ marginTop: "15px" }}>
               <div
                 className={`modern-checkbox-card ${formData.isPermanent ? "active" : ""}`}
               >
@@ -684,28 +719,129 @@ const ContributePage = () => {
               </div>
             )}
 
+            {/* 🎯 PHÂN KHU THỜI GIAN LINH HOẠT: BỔ SUNG 2 CHECKBOX CHỌN GIỜ THEO THỰC TẾ TRANG TRÍ */}
             {!formData.isAllDay && (
-              <div className="form-row" style={{ marginTop: "10px" }}>
-                <div className="form-group">
-                  <label>Mở cửa lúc</label>
-                  <input
-                    name="dailyOpeningTime"
-                    type="time"
-                    value={formData.dailyOpeningTime}
-                    onChange={handleChange}
-                    required
-                  />
+              <div
+                className="form-group full-width"
+                style={{ marginTop: "15px" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "15px",
+                    flexWrap: "wrap",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {/* NÚT 1: CHƯA XÁC ĐỊNH GIỜ TỔ CHỨC CỤ THỂ (ẨN CẢ 2 Ô GIỜ) */}
+                  <div
+                    className={`modern-checkbox-card ${noSpecificTime ? "active" : ""}`}
+                    style={{ display: "inline-flex", width: "auto" }}
+                  >
+                    <input
+                      type="checkbox"
+                      id="noSpecificTime"
+                      checked={noSpecificTime}
+                      onChange={(e) => {
+                        setNoSpecificTime(e.target.checked);
+                        if (e.target.checked) setNoClosingTime(false); // Reset nút đóng cửa nếu ẩn hết giờ
+                      }}
+                    />
+                    <label htmlFor="noSpecificTime">
+                      Chưa xác định giờ tổ chức cụ thể ⏳
+                    </label>
+                  </div>
+
+                  {/* NÚT 2: KHÔNG CÓ GIỜ KẾ THÚC CỤ THỂ (CHỈ ẨN Ô GIỜ SAU) */}
+                  {!noSpecificTime && (
+                    <div
+                      className={`modern-checkbox-card ${noClosingTime ? "active" : ""}`}
+                      style={{ display: "inline-flex", width: "auto" }}
+                    >
+                      <input
+                        type="checkbox"
+                        id="noClosingTime"
+                        checked={noClosingTime}
+                        onChange={(e) => setNoClosingTime(e.target.checked)}
+                      />
+                      <label htmlFor="noClosingTime">
+                        Không có giờ kết thúc cụ thể ⏰
+                      </label>
+                    </div>
+                  )}
                 </div>
-                <div className="form-group">
-                  <label>Đóng cửa lúc</label>
-                  <input
-                    name="dailyClosingTime"
-                    type="time"
-                    value={formData.dailyClosingTime}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+
+                {/* KHU VỰC RENDER ĐIỀU KIỆN Ô NHẬP THEO PHÂN LỚP STATE */}
+                {!noSpecificTime ? (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Mở cửa lúc</label>
+                      <input
+                        name="dailyOpeningTime"
+                        type="time"
+                        value={formData.dailyOpeningTime}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    {!noClosingTime ? (
+                      <div className="form-group">
+                        <label>Đóng cửa lúc</label>
+                        <input
+                          name="dailyClosingTime"
+                          type="time"
+                          value={formData.dailyClosingTime}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="form-group"
+                        style={{
+                          justifyContent: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <label style={{ color: "#94a3b8" }}>Giờ kết thúc</label>
+                        <div
+                          style={{
+                            padding: "12px",
+                            background: "#f8fafc",
+                            border: "1px dashed #cbd5e1",
+                            borderRadius: "8px",
+                            color: "#64748b",
+                            fontSize: "13.5px",
+                            fontWeight: "600",
+                            textAlign: "center",
+                          }}
+                        >
+                          Tùy thuộc vào chương trình diễn ra ✨
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* HỘP CẢNH BÁO KHI ẨN TOÀN BỘ KHUNG GIỜ */
+                  <div
+                    style={{
+                      padding: "15px",
+                      background: "#fffbeb",
+                      border: "1.5px dashed #f59e0b",
+                      borderRadius: "10px",
+                      color: "#b45309",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      textAlign: "center",
+                      marginTop: "5px",
+                    }}
+                  >
+                    🔔 Hệ thống sẽ tự động cập nhật trạng thái "Khung giờ linh
+                    hoạt / Đang cập nhật" trên bản đồ EviGo!
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -748,10 +884,11 @@ const ContributePage = () => {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  cursor: "pointer",
                 }}
                 onClick={() => setActiveIndex(index)}
               >
-                <span style={{ flex: 1 }}>
+                <span style={{ flex: 1, fontSize: "14px", fontWeight: "600" }}>
                   📍 {loc.address || `Địa điểm ${index + 1}`}
                 </span>
                 {formData.locations.length > 1 && (

@@ -141,8 +141,16 @@ export default function Home() {
     }
   };
 
+  // 🚀 ĐÃ CẬP NHẬT: Sử dụng kỹ thuật quét chuỗi bao phủ .includes() để lọc chính xác đa danh mục dữ liệu sự kiện gộp dấu phẩy
   const getEventsByType = (type, count) =>
-    events.filter((ev) => ev.type === type).slice(0, count);
+    events
+      .filter((ev) => {
+        if (!ev.type) return false;
+        // Bóc tách chuỗi gộp "Học thuật, Triển lãm" thành mảng tự do để đối sánh không lệch chữ
+        const typesArray = ev.type.split(",").map((t) => t.trim());
+        return typesArray.includes(type);
+      })
+      .slice(0, count);
 
   const handleShowMore = (category) => {
     setVisibleCounts((prev) => ({ ...prev, [category]: prev[category] + 3 }));

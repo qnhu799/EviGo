@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import axiosInstance from "axios";
+import axiosInstance from "axios"; // Sử dụng duy nhất instance axios cấu hình chuẩn của Như
 import toast from "react-hot-toast";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./EventDetail.css";
+
+// 🎯 IMPORT BỘ ẢNH ICON 3D TỪ THƯ MỤC ASSETS CỦA NHƯ
 import iconCalendar from "../assets/eventdetail/1.png";
 import iconTicket from "../assets/eventdetail/2.png";
 import iconVerified from "../assets/eventdetail/3.png";
 
+// Khắc phục lỗi mất icon Marker mặc định của Leaflet trên môi trường React
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -25,7 +28,11 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // State lưu danh sách ID các sự kiện đã được tài khoản này lưu lại
   const [savedEventIds, setSavedEventIds] = useState([]);
+
+  // Quản lý phân khu bình luận và đánh giá sao
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
@@ -40,6 +47,7 @@ export default function EventDetail() {
     "Thứ 7",
   ];
 
+  // Hàm lấy token từ bộ nhớ cục bộ
   const getValidToken = useCallback(() => {
     return localStorage.getItem("token") || localStorage.getItem("Token") || "";
   }, []);
@@ -55,6 +63,7 @@ export default function EventDetail() {
     return `http://localhost:5000/uploads/${cleanPath}`;
   };
 
+  // Tải danh sách ID sự kiện đã lưu
   const fetchSavedEventIds = useCallback(async () => {
     try {
       const token = getValidToken();
@@ -70,6 +79,7 @@ export default function EventDetail() {
     }
   }, [getValidToken]);
 
+  // Tải toàn bộ danh sách bình luận từ cơ sở dữ liệu
   const fetchEventComments = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
@@ -81,6 +91,7 @@ export default function EventDetail() {
     }
   }, [id]);
 
+  // Xử lý bật/tắt (Toggle) khi bấm chọn nút Lưu sự kiện lớn hình trái tim
   const handleToggleSaveEvent = async (eventId) => {
     try {
       const token = getValidToken();
@@ -108,6 +119,7 @@ export default function EventDetail() {
     }
   };
 
+  // Trích xuất liên kết động của bài viết giúp copy mang đi chia sẻ
   const handleShareEventLink = () => {
     const currentUrl = window.location.href;
     navigator.clipboard
@@ -125,6 +137,7 @@ export default function EventDetail() {
       });
   };
 
+  // Tự động xin GPS vị trí hiện tại của thiết bị để làm điểm xuất phát chỉ đường chi tiết bằng tọa độ hình học chuẩn GIS
   const handleOpenGoogleDirections = () => {
     const firstLoc = event?.locations?.[0];
     if (!firstLoc || !firstLoc.lat || !firstLoc.lng) {
@@ -165,6 +178,7 @@ export default function EventDetail() {
     }
   };
 
+  // Submit đẩy bình luận & số sao lên API
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) {
@@ -259,9 +273,7 @@ export default function EventDetail() {
   if (loading)
     return <div className="ed-loading">Đang tải thông tin EviGo...</div>;
   if (!event)
-    return (
-      <div className="ed-error">Không tìm thấy sự kiện này rồi!</div>
-    );
+    return <div className="ed-error">Không tìm thấy sự kiện này rồi!</div>;
 
   const mainBanner = getFullImageUrl(
     event.image || (event.images && event.images[0]),
@@ -313,6 +325,7 @@ export default function EventDetail() {
       </header>
 
       <main className="ed-container ed-main-grid">
+        {/* 🛠️ CỘT TRÁI THÔNG TIN TEXT CHÂN TRANG */}
         <div className="ed-content-left">
           <section className="ed-card">
             <h2 className="ed-section-title">Giới thiệu sự kiện</h2>
@@ -337,88 +350,6 @@ export default function EventDetail() {
               </div>
             </section>
           )}
-
-          <section className="ed-card">
-            <h2 className="ed-section-title">Các địa điểm diễn ra</h2>
-            <div className="ed-location-list" style={{ marginBottom: "15px" }}>
-              {event.locations?.map((loc, index) => (
-                <div
-                  key={index}
-                  className="ed-loc-item"
-                  style={{
-                    padding: "12px",
-                    borderBottom: "1px solid #eee",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: "0 0 6px 0",
-                      fontSize: "14.5px",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    <strong>Địa điểm {index + 1}:</strong>{" "}
-                    {loc.detailAddress && (
-                      <span style={{ color: "#635bff", fontWeight: "700" }}>
-                        {loc.detailAddress}{" "}
-                      </span>
-                    )}
-                    <span style={{ color: "#4b5563" }}>— {loc.address}</span>
-                  </p>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <small
-                      className="ed-gis-text"
-                      style={{ color: "#00bfa5", fontWeight: "600" }}
-                    >
-                      🌐 GIS: {loc.lat}, {loc.lng}{" "}
-                      {loc.district ? `- ${loc.district}` : ""}
-                    </small>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div
-              className="ed-detail-map-box"
-              style={{
-                width: "100%",
-                height: "260px",
-                borderRadius: "14px",
-                overflow: "hidden",
-                border: "1px solid #d1d1f0",
-              }}
-            >
-              <MapContainer
-                center={mapPosition}
-                zoom={15}
-                style={{ height: "100%", width: "100%" }}
-                scrollWheelZoom={false}
-              >
-                <TileLayer
-                  attribution="© Google Maps"
-                  url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
-                />
-                <Marker position={mapPosition}>
-                  <Popup>
-                    <strong>{event.title}</strong>
-                    <br />
-                    {event.locations?.[0]?.detailAddress
-                      ? `[${event.locations[0].detailAddress}] `
-                      : ""}
-                    {event.locations?.[0]?.address}
-                  </Popup>
-                </Marker>
-              </MapContainer>
-            </div>
-          </section>
 
           <section className="ed-card ed-comments-section">
             <h2 className="ed-section-title">Bình luận & Đánh giá</h2>
@@ -599,16 +530,17 @@ export default function EventDetail() {
                     padding: "10px",
                   }}
                 >
-                  Chưa có đánh giá nào. Hãy là người đầu tiên bình luận nhé!
-                  🌸
+                  Chưa có đánh giá nào. Hãy là người đầu tiên bình luận nhé! 🌸
                 </p>
               )}
             </div>
           </section>
         </div>
 
-        <aside className="ed-sidebar">
+        {/* 🗺️ CỘT SIDEBAR PHẢI: GỘP TOÀN BỘ MINI-MAP, DANH SÁCH ĐỊA ĐIỂM VÀ TIỆN ÍCH LỊCH TRÌNH LINH HOẠT */}
+        <div className="ed-sidebar">
           <div className="ed-sticky-card">
+            {/* BOX THỐNG KÊ SAO */}
             <div
               className="ed-rating-summary-box"
               style={{
@@ -681,6 +613,7 @@ export default function EventDetail() {
               </p>
             </div>
 
+            {/* Ô LỊCH TRÌNH: ĐỒNG BỘ ĐỌC CẢ KỊCH BẢN CHƯA CÓ NGÀY VÀ CHƯA CÓ GIỜ CỤ THỂ CHỐNG LỖI LAYOUT */}
             <div className="ed-sidebar-item">
               <div className="ed-icon-box" style={{ background: "none" }}>
                 <img
@@ -691,23 +624,48 @@ export default function EventDetail() {
               </div>
               <div className="ed-text-box">
                 <small>Lịch trình</small>
-                {event.isPermanent ? (
+
+                {/* 🚀 TRẠNG THÁI 1: Chưa xác định NGÀY tổ chức */}
+                {!event.startDate || event.isTBA ? (
+                  <p
+                    style={{
+                      color: "#d97706",
+                      fontWeight: "700",
+                      margin: "4px 0",
+                    }}
+                  >
+                    ⚠️ Thời gian tổ chức: Đang cập nhật
+                  </p>
+                ) : event.isPermanent ? (
                   <p className="ed-status-open">Mở cửa cố định hằng tuần</p>
                 ) : (
-                  <p>
+                  <p style={{ fontWeight: "600", color: "#1f2937" }}>
                     {new Date(event.startDate).toLocaleDateString("vi-VN")} -{" "}
                     {new Date(event.endDate).toLocaleDateString("vi-VN")}
                   </p>
                 )}
-                <span>
-                  {event.isAllDay
-                    ? "🕛 Mở cửa cả ngày (24/24)"
-                    : `⏰ ${event.dailyOpeningTime} - ${event.dailyClosingTime}`}
-                </span>
+
+                {/* 🚀 TRẠNG THÁI 2: Chưa xác định GIỜ tổ chức cụ thể (Nếu chuỗi rỗng từ database trả về thông báo linh hoạt) */}
+                {event.startDate && (
+                  <span>
+                    {event.isAllDay
+                      ? "🕛 Mở cửa cả ngày (24/24)"
+                      : !event.dailyOpeningTime && !event.dailyClosingTime
+                        ? "⏰ Khung giờ linh hoạt / Đang cập nhật"
+                        : !event.dailyClosingTime
+                          ? `⏰ Bắt đầu lúc ${event.dailyOpeningTime} (Chưa có giờ kết thúc)`
+                          : `⏰ ${event.dailyOpeningTime} - ${event.dailyClosingTime}`}
+                  </span>
+                )}
+
                 {event.isPermanent && event.closedDays?.length > 0 && (
                   <div
                     className="ed-closed-days"
-                    style={{ color: "#ff4d4f", fontWeight: "600" }}
+                    style={{
+                      color: "#ff4d4f",
+                      fontWeight: "600",
+                      marginTop: "4px",
+                    }}
                   >
                     ❌ Nghỉ:{" "}
                     {event.closedDays.map((d) => dayNames[d]).join(", ")}
@@ -716,22 +674,79 @@ export default function EventDetail() {
               </div>
             </div>
 
+            {/* Ô GIÁ VÉ & ĐƯỜNG LINK WEBSITE NGUỒN ĐỘNG CỦA SỰ KIỆN */}
             <div className="ed-sidebar-item">
               <div className="ed-icon-box" style={{ background: "none" }}>
                 <img src={iconTicket} alt="Giá vé" style={iconImageStyle} />
               </div>
-              <div className="ed-text-box">
+              <div className="ed-text-box" style={{ width: "100%" }}>
                 <small>Giá vé</small>
                 <p
                   className="ed-price"
-                  style={{ color: "#10b981", fontWeight: "700" }}
+                  style={{
+                    color: "#10b981",
+                    fontWeight: "700",
+                    marginBottom: "6px",
+                  }}
                 >
                   {event.ticketPrice || "Miễn phí"}
                 </p>
+
+                {/* 🚀 TRẠNG THÁI 3: Kiểm tra link nguồn -> Sinh nút bấm mở website hoặc box text hướng dẫn dự phòng */}
+                {event.eventUrl && event.eventUrl.trim() !== "" ? (
+                  <button
+                    type="button"
+                    onClick={() => window.open(event.eventUrl, "_blank")}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "#f0f2ff",
+                      border: "1px solid #635bff",
+                      color: "#635bff",
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                      marginTop: "4px",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#635bff";
+                      e.currentTarget.style.color = "white";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#f0f2ff";
+                      e.currentTarget.style.color = "#635bff";
+                    }}
+                  >
+                    🌐 Xem website chính thức
+                  </button>
+                ) : (
+                  <div
+                    style={{
+                      fontSize: "11.5px",
+                      color: "#4f46e5",
+                      fontWeight: "600",
+                      backgroundColor: "#f8fafc",
+                      padding: "6px 10px",
+                      borderRadius: "8px",
+                      display: "block",
+                      marginTop: "4px",
+                      border: "1px dashed #cbd5e1",
+                      lineHeight: "1.3",
+                    }}
+                  >
+                    💬 Theo dõi thêm thông tin chi tiết từ các kênh truyền thông
+                    chính thống của ban tổ chức.
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="ed-sidebar-item">
+            {/* Ô CUNG CẤP BỞI */}
+            <div className="ed-sidebar-item" style={{ marginBottom: "20px" }}>
               <div className="ed-icon-box" style={{ background: "none" }}>
                 <img
                   src={iconVerified}
@@ -755,6 +770,112 @@ export default function EventDetail() {
               </div>
             </div>
 
+            {/* 🎯 TÁI CẤU TRÚC: ĐỊA ĐIỂM SỰ KIỆN & BẢN ĐỒ MINI-MAP ĐÃ ĐƯỢC CHUYỂN TRỌN VẸN SANG SIDEBAR PHẢI CHỐNG KHOẢNG TRỐNG TRẮNG */}
+            <div
+              className="ed-sidebar-gis-box"
+              style={{
+                borderTop: "1px solid #f0f0f5",
+                paddingTop: "20px",
+                marginTop: "10px",
+                textAlign: "left",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "14.5px",
+                  fontWeight: "800",
+                  color: "#280d8c",
+                  margin: "0 0 12px 0",
+                }}
+              >
+                📍 Các địa điểm diễn ra ({event.locations?.length || 0})
+              </h3>
+
+              <div
+                className="ed-location-list"
+                style={{
+                  maxHeight: "150px",
+                  overflowY: "auto",
+                  marginBottom: "12px",
+                }}
+              >
+                {event.locations?.map((loc, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "10px",
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "10px",
+                      marginBottom: "6px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: "0 0 4px 0",
+                        fontSize: "13px",
+                        lineHeight: "1.4",
+                        color: "#334155",
+                      }}
+                    >
+                      <strong>Cơ sở {index + 1}:</strong>{" "}
+                      {loc.detailAddress && (
+                        <span style={{ color: "#635bff", fontWeight: "700" }}>
+                          [{loc.detailAddress}]{" "}
+                        </span>
+                      )}
+                      {loc.address}
+                    </p>
+                    <small
+                      style={{
+                        color: "#00bfa5",
+                        fontWeight: "700",
+                        fontSize: "11.5px",
+                      }}
+                    >
+                      🌐 GIS: {loc.lat}, {loc.lng}
+                    </small>
+                  </div>
+                ))}
+              </div>
+
+              {/* KHỐI MINI-MAP CỦA SIDEBAR */}
+              <div
+                className="ed-detail-map-box"
+                style={{
+                  width: "100%",
+                  height: "190px",
+                  borderRadius: "14px",
+                  overflow: "hidden",
+                  border: "1px solid #d1d1f0",
+                  marginBottom: "20px",
+                }}
+              >
+                <MapContainer
+                  center={mapPosition}
+                  zoom={15}
+                  style={{ height: "100%", width: "100%" }}
+                  scrollWheelZoom={false}
+                >
+                  <TileLayer
+                    attribution="© Google Maps"
+                    url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
+                  />
+                  <Marker position={mapPosition}>
+                    <Popup>
+                      <strong>{event.title}</strong>
+                      <br />
+                      {event.locations?.[0]?.detailAddress
+                        ? `[${event.locations[0].detailAddress}] `
+                        : ""}
+                      {event.locations?.[0]?.address}
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+            </div>
+
+            {/* HÀNG NÚT HÀNH ĐỘNG HẠ ĐÁY SIDEBAR */}
             <button
               className={`ed-btn-save-large ${isCurrentEventSaved ? "is-saved" : ""}`}
               onClick={() => handleToggleSaveEvent(event._id)}
@@ -795,7 +916,7 @@ export default function EventDetail() {
               🚀 Chỉ đường chi tiết
             </button>
           </div>
-        </aside>
+        </div>
       </main>
     </div>
   );

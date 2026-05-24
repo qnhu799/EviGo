@@ -15,11 +15,16 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.use("/uploads", express.static("uploads"));
 
+// 🎯 NẠP CÁC FILE ROUTER
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+// 🚀 ĐÃ SỬA TÊN FILE: Đổi từ "comments" thành "commentRoutes" cho khớp với cây thư mục của Như
+const commentRoutes = require("./routes/commentRoutes");
 
+// 🎯 KHAI BÁO CÁC ĐƯỜNG DẪN API (Đã thông luồng bình luận)
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/comments", commentRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 EviGo Server is running smoothly...");
