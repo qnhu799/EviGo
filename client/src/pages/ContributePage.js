@@ -39,7 +39,7 @@ function LocationMarker({ position, index, formData, setFormData }) {
       const { lat, lng } = e.latlng;
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=vi`,
         );
         const data = await response.json();
 
@@ -146,7 +146,7 @@ const ContributePage = () => {
         const { latitude, longitude } = position.coords;
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=vi`,
           );
           const data = await res.json();
 
@@ -205,7 +205,7 @@ const ContributePage = () => {
       if (searchMode === "auto" && searchQuery.length > 2) {
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${searchQuery}&countrycodes=vn&limit=5`,
+            `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${searchQuery}&countrycodes=vn&limit=5&accept-language=vi`,
           );
           const data = await res.json();
           setSuggestions(data);
@@ -300,7 +300,7 @@ const ContributePage = () => {
       } else if (searchQuery.trim().length > 2) {
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${searchQuery}&countrycodes=vn&limit=1`,
+            `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${searchQuery}&countrycodes=vn&limit=1&accept-language=vi`,
           );
           const data = await res.json();
           if (data && data.length > 0) {

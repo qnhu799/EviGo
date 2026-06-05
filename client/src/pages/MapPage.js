@@ -229,7 +229,7 @@ const MapPage = () => {
     if (!startLocation.trim()) return;
     try {
       const res = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startLocation)}`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startLocation)}&accept-language=vi`,
       );
       if (res.data && res.data.length > 0) {
         const newPos = [
