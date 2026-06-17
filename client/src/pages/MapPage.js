@@ -14,12 +14,17 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapPage.css";
 
+// Kích hoạt các file CSS và thư viện gom cụm marker
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
   iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-png.png",
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
@@ -104,6 +109,157 @@ const MapDataAndFocusController = ({
       return () => clearTimeout(timer);
     }
   }, [center, radius, focusEventId, map, markerRefs]);
+
+  return null;
+};
+
+// Component phụ điều khiển gom cụm toàn bộ sự kiện với tính năng phân cấp tông màu tự động
+const MarkerCluster = ({
+  events,
+  filteredEvents,
+  selectedEventId,
+  isFiltered,
+  navigate,
+  getFullImageUrl,
+  markerRefs,
+  selectedIcon,
+  filteredIcon,
+  setSelectedEventId,
+}) => {
+  const map = useMap();
+
+  // Khởi tạo MarkerClusterGroup kết hợp tính toán số lượng để đổi tông màu từ nhạt đến đậm
+  const clusterGroupRef = useRef(
+    L.markerClusterGroup({
+      iconCreateFunction: function (cluster) {
+        const count = cluster.getChildCount();
+
+        // Phân cấp mức độ mật độ dựa trên số lượng sự kiện được gom cụm
+        let level = "small"; // Dưới 5 sự kiện: Tím nhạt
+        if (count >= 15) {
+          level = "large"; // Từ 15 sự kiện trở lên: Tím đậm thẫm
+        } else if (count >= 5) {
+          level = "medium"; // Từ 5 đến 14 sự kiện: Tím thương hiệu gốc
+        }
+
+        return L.divIcon({
+          html: `<div class="evigo-custom-cluster"><span>${count}</span></div>`,
+          className: `evigo-cluster-wrapper level-${level}`, // Truyền class phân cấp vào vòng bọc ngoài
+          iconSize: L.point(40, 40),
+        });
+      },
+    }),
+  );
+
+  const markersMapRef = useRef({});
+
+  useEffect(() => {
+    const mcg = clusterGroupRef.current;
+    map.addLayer(mcg);
+    return () => {
+      map.removeLayer(mcg);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    const mcg = clusterGroupRef.current;
+    mcg.clearLayers();
+    markersMapRef.current = {};
+    markerRefs.current = {};
+
+    events.forEach((ev) => {
+      ev.locations?.forEach((loc, i) => {
+        const lat = parseFloat(loc.lat);
+        const lng = parseFloat(loc.lng);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const isMatched = filteredEvents.some((fEv) => fEv._id === ev._id);
+        let markerIcon = new L.Icon.Default();
+        if (ev._id === selectedEventId) markerIcon = selectedIcon;
+        else if (isFiltered && isMatched) markerIcon = filteredIcon;
+
+        const marker = L.marker([lat, lng], { icon: markerIcon });
+
+        markerRefs.current[ev._id] = marker;
+        if (!markersMapRef.current[ev._id]) {
+          markersMapRef.current[ev._id] = [];
+        }
+        markersMapRef.current[ev._id].push({ marker, isMatched });
+
+        const popupContent = document.createElement("div");
+        popupContent.className = "map-click-box";
+        popupContent.innerHTML = `
+          <img
+            src="${getFullImageUrl(ev.image)}"
+            alt="${ev.title}"
+            class="popup-img"
+            style="width: 100%; height: 130px; object-fit: cover; border-radius: 14px 14px 0 0; display: block;"
+          />
+          <div style="padding: 12px;">
+            <h4 style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: 700; color: #2d2d2d;">${ev.title}</h4>
+            ${isFiltered && isMatched ? `<span style="color: #635bff; font-weight: bold; font-size: 10px; display: block; margin-bottom: 6px;">✨ Khớp bộ lọc</span>` : ""}
+            <p class="popup-addr" style="margin: 0 0 12px 0; font-size: 12.5px; color: #666; line-height: 1.4;">${loc.address}</p>
+            <button class="btn-go-here" style="width: 100%; background: #635bff; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: 600;">Xem chi tiết</button>
+          </div>
+        `;
+
+        const btn = popupContent.querySelector(".btn-go-here");
+        if (btn) {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            navigate(`/event/${ev._id}`);
+          };
+        }
+
+        const img = popupContent.querySelector(".popup-img");
+        if (img) {
+          img.onerror = (e) => {
+            e.target.onerror = null;
+            e.target.src =
+              "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
+          };
+        }
+
+        marker.bindPopup(popupContent, { maxWidth: 280 });
+
+        marker.on("mouseover", (e) => {
+          e.target.openPopup();
+        });
+
+        marker.on("click", () => {
+          setSelectedEventId(ev._id);
+        });
+
+        mcg.addLayer(marker);
+      });
+    });
+  }, [
+    events,
+    filteredEvents,
+    isFiltered,
+    navigate,
+    getFullImageUrl,
+    markerRefs,
+    selectedIcon,
+    filteredIcon,
+    setSelectedEventId,
+    selectedEventId, // Thêm chính xác dependency này để thỏa mãn quy tắc nghiêm ngặt của ESLint
+  ]);
+
+  useEffect(() => {
+    Object.keys(markersMapRef.current).forEach((evId) => {
+      const markerDataArray = markersMapRef.current[evId];
+      markerDataArray.forEach(({ marker, isMatched }) => {
+        let markerIcon = new L.Icon.Default();
+        if (evId === selectedEventId) {
+          markerIcon = selectedIcon;
+        } else if (isFiltered && isMatched) {
+          markerIcon = filteredIcon;
+        }
+        marker.setIcon(markerIcon);
+      });
+    });
+  }, [selectedEventId, isFiltered, selectedIcon, filteredIcon]);
 
   return null;
 };
@@ -399,7 +555,7 @@ const MapPage = () => {
                 <input
                   type="text"
                   className="filter-input"
-                  placeholder="Nhập KTX, Quận 1..."
+                  placeholder="Nhập địa điểm khởi đầu..."
                   value={startLocation}
                   onChange={(e) => {
                     setStartLocation(e.target.value);
@@ -552,99 +708,19 @@ const MapPage = () => {
               </>
             )}
 
-            {events.map((ev) =>
-              ev.locations?.map((loc, i) => {
-                const isMatched = filteredEvents.some(
-                  (fEv) => fEv._id === ev._id,
-                );
-                let markerIcon = new L.Icon.Default();
-                if (ev._id === selectedEventId) markerIcon = selectedIcon;
-                else if (isFiltered && isMatched) markerIcon = filteredIcon;
-
-                return (
-                  <Marker
-                    key={`${ev._id}-${i}`}
-                    position={[parseFloat(loc.lat), parseFloat(loc.lng)]}
-                    icon={markerIcon}
-                    ref={(el) => {
-                      if (el) markerRefs.current[ev._id] = el;
-                    }}
-                    eventHandlers={{
-                      mouseover: (e) => e.target.openPopup(),
-                      click: () => setSelectedEventId(ev._id),
-                    }}
-                  >
-                    <Popup maxWidth={280}>
-                      <div className="map-click-box">
-                        <img
-                          src={getFullImageUrl(ev.image)}
-                          alt={ev.title}
-                          className="popup-img"
-                          style={{
-                            width: "100%",
-                            height: "130px",
-                            objectFit: "cover",
-                            borderRadius: "14px 14px 0 0",
-                            display: "block",
-                          }}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src =
-                              "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
-                          }}
-                        />
-
-                        <div style={{ padding: "12px" }}>
-                          <h4
-                            style={{
-                              margin: "0 0 6px 0",
-                              fontSize: "14.5px",
-                              fontWeight: "700",
-                              color: "#2d2d2d",
-                            }}
-                          >
-                            {ev.title}
-                          </h4>
-
-                          {isFiltered && isMatched && (
-                            <span
-                              style={{
-                                color: "#635bff",
-                                fontWeight: "bold",
-                                fontSize: "10px",
-                                display: "block",
-                                marginBottom: "6px",
-                              }}
-                            >
-                              ✨ Khớp bộ lọc
-                            </span>
-                          )}
-
-                          <p
-                            className="popup-addr"
-                            style={{
-                              margin: "0 0 12px 0",
-                              fontSize: "12.5px",
-                              color: "#666",
-                              lineHeight: "1.4",
-                            }}
-                          >
-                            {loc.address}
-                          </p>
-
-                          <button
-                            className="btn-go-here"
-                            onClick={() => navigate(`/event/${ev._id}`)}
-                          >
-                            Xem chi tiết
-                          </button>
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                );
-              }),
-            )}
+            {/* Gọi component phụ xử lý gom cụm tự động cho toàn bộ Marker sự kiện */}
+            <MarkerCluster
+              events={events}
+              filteredEvents={filteredEvents}
+              selectedEventId={selectedEventId}
+              isFiltered={isFiltered}
+              navigate={navigate}
+              getFullImageUrl={getFullImageUrl}
+              markerRefs={markerRefs}
+              selectedIcon={selectedIcon}
+              filteredIcon={filteredIcon}
+              setSelectedEventId={setSelectedEventId}
+            />
           </MapContainer>
         </div>
 

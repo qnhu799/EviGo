@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs"); // Đã thêm thư viện bcryptjs
+
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -14,12 +16,22 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    // Băm mật khẩu trước khi lưu vào DB
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     let role = "user";
     if (email === "qnhu799@gmail.com") {
       role = "superadmin";
     }
 
-    const user = await User.create({ username, email, password, role });
+    // Lưu mật khẩu đã băm (hashedPassword)
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      role,
+    });
 
     res.status(201).json({
       message:
@@ -42,16 +54,16 @@ router.post("/login", async (req, res) => {
       return res.status(404).json({ message: "Gmail chưa đăng kí" });
     }
 
-    if (user.password !== password) {
+    // So sánh mật khẩu nhập vào với mật khẩu đã băm trong DB
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ message: "Mật khẩu không đúng!" });
     }
 
     const jwtSecret = process.env.JWT_SECRET || "EviGo_Secret_Key_997";
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      jwtSecret,
-      { expiresIn: "1d" },
-    );
+    const token = jwt.sign({ id: user._id, role: user.role }, jwtSecret, {
+      expiresIn: "1d",
+    });
 
     res.status(200).json({
       message: `Chào mừng ${user.role === "superadmin" ? "Super Admin" : "Evier"} quay trở lại!`,
@@ -77,8 +89,7 @@ router.put("/update-role", async (req, res) => {
 
     if (user.email === "qnhu799@gmail.com") {
       return res.status(403).json({
-        message:
-          "Không thể hạ quyền chính mình!",
+        message: "Không thể hạ quyền chính mình!",
       });
     }
 

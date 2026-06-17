@@ -420,3 +420,69 @@
     z-index: 1000;
   }
 }
+
+/* ==========================================================================
+   CẤU HÌNH GOM CỤM MARKER (MARKER CLUSTERING) HIỆU ỨNG HÀO QUANG LOANG RỘNG
+   ========================================================================== */
+
+/* Khối bọc ngoài: Đóng vai trò là vùng hào quang loang ra xung quanh */
+.evigo-cluster-wrapper {
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px !important; /* Tăng vùng đệm để đẩy độ loang rộng ra ngoài */
+  transition: all 0.3s ease !important;
+}
+
+/* Khối tròn đậm ở giữa: Giữ nét sắc sảo với viền trắng và bóng đổ khối */
+.evigo-custom-cluster {
+  color: #ffffff !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  font-weight: 800 !important; /* Chữ Extra Bold siêu dày để nhìn rõ số */
+  font-size: 14px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+
+  border: 2px solid #ffffff !important; /* Viền trắng giữ nét để không bị lẫn vào đường sá */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important; /* Bóng đổ chân thực */
+}
+
+/* --------------------------------------------------------------------------
+   CHI TIẾT 3 MỨC ĐỘ LOANG MÀU (TÍNH TOÁN BÁN KÍNH TỪ NHẠT ĐẾN ĐẬM)
+   -------------------------------------------------------------------------- */
+
+/* MỨC 1: Mật độ thấp (Dưới 5 sự kiện) - Loang nhẹ màu Tím hoa anh thảo */
+.evigo-cluster-wrapper.level-small {
+  background: rgba(138, 132, 255, 0.25) !important;
+  /* Kết hợp bóng đổ nhạt với bán kính mờ 15px và độ loang rộng 4px */
+  box-shadow: 0 0 15px 4px rgba(138, 132, 255, 0.4) !important;
+}
+.evigo-cluster-wrapper.level-small .evigo-custom-cluster {
+  background: #8a84ff !important;
+}
+
+/* MỨC 2: Mật độ vừa phải (Từ 5 - 14 sự kiện) - Loang vừa màu Tím EviGo gốc */
+.evigo-cluster-wrapper.level-medium {
+  background: rgba(99, 91, 255, 0.25) !important;
+  /* Tăng bán kính mờ lên 20px và độ loang rộng 6px */
+  box-shadow: 0 0 20px 6px rgba(99, 91, 255, 0.45) !important;
+}
+.evigo-cluster-wrapper.level-medium .evigo-custom-cluster {
+  background: #635bff !important;
+}
+
+/* MỨC 3: Mật độ cao (Từ 15 sự kiện trở lên) - Siêu loang, màu Tím thẫm nổi bật */
+.evigo-cluster-wrapper.level-large {
+  background: rgba(59, 51, 179, 0.3) !important;
+  /* Hào quang loang cực rộng với bán kính mờ 25px và độ loang rộng 8px */
+  box-shadow: 0 0 25px 8px rgba(59, 51, 179, 0.5) !important;
+}
+.evigo-cluster-wrapper.level-large .evigo-custom-cluster {
+  background: #3b33b3 !important;
+}
