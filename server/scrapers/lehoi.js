@@ -7,20 +7,65 @@ async function scrapeLehoi() {
   const CURRENT_YEAR = 2026;
 
   try {
-    await page.goto("https://lehoivietnam.com.vn/vi", {
-      waitUntil: "networkidle2",
-    });
+    let allEventLinks = [];
+    const maxPages = 1; // Đã đổi thành 1: Chỉ cào duy nhất trang đầu tiên của mỗi chuyên mục
 
-    const eventLinks = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll("h3 a")).map((a) => a.href);
-    });
+    // KHAI BÁO CÁC CHUYÊN MỤC CẦN CÀO
+    const categories = [
+      {
+        name: "Trang chủ (Toàn quốc)",
+        baseUrl: "https://lehoivietnam.com.vn/vi",
+      },
+      {
+        name: "Chuyên mục TP.HCM",
+        baseUrl:
+          "https://lehoivietnam.com.vn/vi/dia-diem/thanh-pho-ho-chi-minh-l41437844471808",
+      },
+    ];
 
-    // Đã gỡ bỏ .slice(0, 5) để cào sạch toàn bộ danh sách sự kiện!
-    for (let link of eventLinks) {
+    console.log(
+      `🔍 Bắt đầu quét link từ ${categories.length} chuyên mục, mỗi chuyên mục ${maxPages} trang...`,
+    );
+
+    // 1. VÒNG LẶP QUÉT QUA TỪNG CHUYÊN MỤC
+    for (let category of categories) {
+      console.log(`\n👉 Đang quét: ${category.name}`);
+
+      // Vòng lặp lật trang cho chuyên mục hiện tại
+      for (let i = 1; i <= maxPages; i++) {
+        const url =
+          i === 1 ? category.baseUrl : `${category.baseUrl}/page/${i}/`;
+
+        try {
+          await page.goto(url, { waitUntil: "networkidle2" });
+          const linksOnPage = await page.evaluate(() => {
+            return Array.from(document.querySelectorAll("h3 a")).map(
+              (a) => a.href,
+            );
+          });
+
+          allEventLinks.push(...linksOnPage);
+          console.log(
+            `   ✅ Đã gom được ${linksOnPage.length} link từ Trang ${i}`,
+          );
+        } catch (err) {
+          console.log(`   ⚠️ Bỏ qua trang ${i} do lỗi hoặc hết trang.`);
+        }
+      }
+    }
+
+    // Loại bỏ các link bị trùng (sự kiện TP.HCM hiển thị luôn ở Trang chủ)
+    const uniqueEventLinks = [...new Set(allEventLinks)];
+    console.log(
+      `\n🚀 Tổng cộng tìm thấy ${uniqueEventLinks.length} sự kiện duy nhất. Bắt đầu cào chi tiết...`,
+    );
+
+    // 2. VÒNG LẶP CÀO CHI TIẾT
+    for (let link of uniqueEventLinks) {
       await page.goto(link, { waitUntil: "networkidle2" });
 
       const eventData = await page.evaluate(() => {
-        // 1. LẤY ẢNH BÌA
+        // Ảnh bìa
         const ogImage = document.querySelector(
           'meta[property="og:image"]',
         )?.content;
@@ -29,7 +74,7 @@ async function scrapeLehoi() {
           document.querySelector("img")?.src;
         const image = ogImage || fallbackImage || "";
 
-        // 2. LẤY GIỚI THIỆU SỰ KIỆN
+        // Giới thiệu
         const rawParagraphs = Array.from(
           document.querySelectorAll(
             "p, .elementor-text-editor, .elementor-text-editor li",
@@ -49,7 +94,7 @@ async function scrapeLehoi() {
             ? uniqueParagraphs.join("\n\n")
             : "Đang cập nhật giới thiệu...";
 
-        // 3. LẤY THỜI GIAN & ĐỊA ĐIỂM
+        // Thời gian & Địa điểm
         const bodyText = document.body.innerText;
         const infoMatch = bodyText.match(
           /THỜI GIAN & ĐỊA ĐIỂM[\s\n]+([^\n]+)[\s\n]+([^\n]+)/i,
@@ -58,7 +103,7 @@ async function scrapeLehoi() {
         let timeText = infoMatch ? infoMatch[1].trim() : "";
         let addressText = infoMatch ? infoMatch[2].trim() : "Đang cập nhật";
 
-        // 4. LẤY GIÁ VÉ THÔNG MINH
+        // Giá vé
         let ticketPriceText = "Chưa xác định";
         const priceMatch = bodyText.match(
           /(Giá vé|Vé vào cổng|Chi phí)[\s:]+([^\n]+)/i,
@@ -78,12 +123,12 @@ async function scrapeLehoi() {
           timeText: timeText,
           addressText: addressText,
           description: description,
-          ticketPrice: ticketPriceText, // Đổi tên biến cho khớp y chang Schema
+          ticketPrice: ticketPriceText,
         };
       });
 
       if (eventData.title) {
-        // --- Xử lý ngày tháng ---
+        // Xử lý ngày tháng
         let parsedStartDate = new Date();
         let parsedEndDate = new Date();
 
@@ -110,7 +155,7 @@ async function scrapeLehoi() {
           }
         }
 
-        // --- Xử lý tọa độ ---
+        // Xử lý tọa độ
         let lat = 10.776,
           lng = 106.701;
         const addrLower = eventData.addressText.toLowerCase();
@@ -127,6 +172,22 @@ async function scrapeLehoi() {
 
         const cleanAddress = eventData.addressText.replace(/•/g, "-").trim();
 
+        // Tách Phường/Quận và Địa chỉ
+        let districtStr = "";
+        let addressStr = cleanAddress;
+
+        if (cleanAddress.includes("-")) {
+          const parts = cleanAddress.split("-");
+          districtStr = parts[0].trim();
+          addressStr = cleanAddress;
+        } else if (
+          cleanAddress.toLowerCase().includes("phường") ||
+          cleanAddress.toLowerCase().includes("quận") ||
+          cleanAddress.toLowerCase().includes("huyện")
+        ) {
+          districtStr = cleanAddress;
+        }
+
         results.push({
           title: eventData.title,
           description: eventData.description,
@@ -134,21 +195,22 @@ async function scrapeLehoi() {
           images: eventData.image ? [eventData.image] : [],
           locations: [
             {
-              address: cleanAddress,
+              address: addressStr,
+              district: districtStr,
               lat: lat,
               lng: lng,
             },
           ],
           startDate: parsedStartDate,
           endDate: parsedEndDate,
-          ticketPrice: eventData.ticketPrice, // Nạp đúng tên trường ticketPrice
+          ticketPrice: eventData.ticketPrice,
           status: "approved",
           type: "Lễ hội",
         });
       }
     }
   } catch (e) {
-    console.error("Lỗi cào dữ liệu:", e.message);
+    console.error("❌ Lỗi cào dữ liệu:", e.message);
   } finally {
     await browser.close();
   }
