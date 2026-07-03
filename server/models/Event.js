@@ -5,7 +5,7 @@ const eventSchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String },
     type: { type: String },
-    ticketPrice: { type: String },
+    ticketPrice: { type: String},
 
     locations: [
       {

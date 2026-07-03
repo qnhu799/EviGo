@@ -397,7 +397,7 @@ export default function AdminDashboard() {
                   <tr>
                     <th>SỰ KIỆN</th>
                     <th>NGƯỜI ĐĂNG</th>
-                    <th>ĐỊA CHỈ & QUẬN</th>
+                    <th>ĐỊA CHỈ</th>
                     <th>TRẠNG THÁI</th>
                     <th>THAO TÁC SYSTEM</th>
                   </tr>
