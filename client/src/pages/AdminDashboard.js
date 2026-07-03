@@ -233,7 +233,7 @@ export default function AdminDashboard() {
             </div>
             <div className="stat-card green">
               <h3>{totalApproved}</h3>
-              <p>Sự kiện Trên sàn (Approved)</p>
+              <p>Sự kiện đã có trên EviGO</p>
             </div>
             <div className="stat-card red">
               <h3>{totalPending}</h3>
