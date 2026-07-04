@@ -410,16 +410,12 @@ const ContributePage = () => {
     });
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/events/contribute",
-        dataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await axios.post("/api/events/contribute", dataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (response.status === 201) {
         Swal.fire({

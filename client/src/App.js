@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import axios from "axios";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -20,6 +21,16 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { Toaster } from "react-hot-toast";
 import ScrollToTop from "./components/ScrollToTop";
 import EventDetail from "./pages/EventDetail";
+
+// ĐOẠN CODE "THÔNG MINH" Ở ĐÂY:
+// Nếu đang chạy online (production), nó dùng link Render.
+// Nếu đang ở máy em (local), nó tự dùng localhost.
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://evigo.onrender.com"
+    : "http://localhost:5000";
+
+axios.defaults.baseURL = API_URL;
 
 function App() {
   return (

@@ -76,13 +76,13 @@ export default function ProfilePage() {
         const timestamp = new Date().getTime();
         const [resContributed, resSaved] = await Promise.all([
           axios.get(
-            `http://localhost:5000/api/events/my-contributions?userId=${localUserId}&t=${timestamp}`,
+            `/api/events/my-contributions?userId=${localUserId}&t=${timestamp}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             },
           ),
           axios.get(
-            `http://localhost:5000/api/events/saved-events-details?userId=${localUserId}&t=${timestamp}`,
+            `/api/events/saved-events-details?userId=${localUserId}&t=${timestamp}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -156,9 +156,7 @@ export default function ProfilePage() {
               : "Sự kiện bạn đã lưu"}
           </h3>
           {loading ? (
-            <div className="loading-spinner">
-              Đang lục tìm kho
-            </div>
+            <div className="loading-spinner">Đang lục tìm kho</div>
           ) : currentList.length > 0 ? (
             <div className="profile-events-list-wrapper">
               {currentList.map((ev, index) => (

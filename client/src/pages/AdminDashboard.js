@@ -21,9 +21,7 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/auth/all-users",
-      );
+      const response = await axios.get("/api/auth/all-users");
       setUsers(response.data || []);
       setFilteredUsers(response.data || []);
     } catch (err) {
@@ -37,14 +35,11 @@ export default function AdminDashboard() {
     try {
       const token = getValidToken();
 
-      const response = await axios.get(
-        "http://localhost:5000/api/events/all-admin",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await axios.get("/api/events/all-admin", {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (response.data && response.data.length > 0) {
         setAllEvents(response.data);
@@ -61,17 +56,10 @@ export default function AdminDashboard() {
         const headers = { headers: { Authorization: `Bearer ${token}` } };
 
         const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+          axios.get("/api/events/pending", headers).catch(() => ({ data: [] })),
+          axios.get("/api/events/approved").catch(() => ({ data: [] })),
           axios
-            .get("http://localhost:5000/api/events/pending", headers)
-            .catch(() => ({ data: [] })),
-          axios
-            .get("http://localhost:5000/api/events/approved")
-            .catch(() => ({ data: [] })),
-          axios
-            .get(
-              "http://localhost:5000/api/events/admin-list?status=rejected",
-              headers,
-            )
+            .get("/api/events/admin-list?status=rejected", headers)
             .catch(() => ({ data: [] })),
         ]);
 
@@ -160,10 +148,7 @@ export default function AdminDashboard() {
   const handleToggleRole = async (userId) => {
     setProcessingId(userId);
     try {
-      const res = await axios.put(
-        "http://localhost:5000/api/auth/update-role",
-        { userId },
-      );
+      const res = await axios.put("/api/auth/update-role", { userId });
 
       toast.success(res.data.message, {
         icon: "🛡️",
@@ -193,12 +178,9 @@ export default function AdminDashboard() {
         setProcessingEventId(eventId);
         try {
           const token = getValidToken();
-          await axios.delete(
-            `http://localhost:5000/api/events/delete/${eventId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
+          await axios.delete(`/api/events/delete/${eventId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           toast.success("Xóa sự kiện thành công! ✨");
           await fetchAllEvents();
         } catch (err) {

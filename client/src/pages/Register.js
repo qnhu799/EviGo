@@ -30,10 +30,7 @@ export default function Register() {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        formData,
-      );
+      const response = await axios.post("/api/auth/register", formData);
 
       const now = new Date();
       const day = String(now.getDate()).padStart(2, "0");

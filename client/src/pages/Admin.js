@@ -22,10 +22,9 @@ const Admin = () => {
         return;
       }
 
-      const response = await axios.get(
-        "http://localhost:5000/api/events/stats",
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await axios.get("/api/events/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setApprovedCount(response.data.approvedCount || 0);
       setRejectedCount(response.data.rejectedCount || 0);
       setPendingCount(response.data.pendingCount || 0);
@@ -44,7 +43,7 @@ const Admin = () => {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/events/admin-list?status=${status}`,
+        `/api/events/admin-list?status=${status}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setDisplayedEvents(response.data || []);
@@ -69,7 +68,7 @@ const Admin = () => {
     try {
       const token = getValidToken();
       await axios.patch(
-        `http://localhost:5000/api/events/update-status/${id}`,
+        `/api/events/update-status/${id}`,
         { status: "approved" },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -95,7 +94,7 @@ const Admin = () => {
     try {
       const token = getValidToken();
       await axios.patch(
-        `http://localhost:5000/api/events/update-status/${id}`,
+        `/api/events/update-status/${id}`,
         { status: "rejected" },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -190,17 +189,13 @@ const Admin = () => {
                       nameFromContributor !== "Ẩn danh"
                     ) {
                       finalDisplayName = nameFromContributor;
-                    }
-
-                    else if (
+                    } else if (
                       typeof nameFromContrName === "string" &&
                       nameFromContrName.trim().length > 0 &&
                       nameFromContrName !== "Ẩn danh"
                     ) {
                       finalDisplayName = nameFromContrName;
-                    }
-
-                    else if (
+                    } else if (
                       typeof nameFromInfo === "string" &&
                       nameFromInfo.trim().length > 0 &&
                       nameFromInfo !== "Người dùng ẩn danh"

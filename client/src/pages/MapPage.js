@@ -320,7 +320,7 @@ const MapPage = () => {
     if (!path)
       return "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
     if (path.startsWith("http")) return path;
-    return `http://localhost:5000/${path.replace(/\\/g, "/")}`;
+    return `/${path.replace(/\\/g, "/")}`;
   };
 
   // 🛠️ ĐÃ CẬP NHẬT HÀM RÚT GỌN ĐỊA CHỈ CHO SIDEBAR BÊN PHẢI
@@ -343,10 +343,9 @@ const MapPage = () => {
       const token = getValidToken();
       if (!token) return;
 
-      const response = await axios.get(
-        "http://localhost:5000/api/events/saved-events-ids",
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await axios.get("/api/events/saved-events-ids", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setSavedEventIds(response.data || []);
     } catch (err) {
       console.error("Lỗi đồng bộ danh sách đã lưu ở trang map:", err.message);
@@ -363,7 +362,7 @@ const MapPage = () => {
       }
 
       const response = await axios.post(
-        `http://localhost:5000/api/events/save-event/${eventId}`,
+        `/api/events/save-event/${eventId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -384,9 +383,7 @@ const MapPage = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/events/approved",
-        );
+        const res = await axios.get("/api/events/approved");
         setEvents(res.data);
         setFilteredEvents(res.data);
 

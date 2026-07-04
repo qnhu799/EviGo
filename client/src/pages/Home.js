@@ -39,9 +39,7 @@ export default function Home() {
     window.scrollTo(0, 0);
     const fetchEvents = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/events/approved",
-        );
+        const res = await axios.get("/api/events/approved");
         setEvents(res.data);
       } catch (err) {
         console.error("Lỗi lấy dữ liệu:", err);

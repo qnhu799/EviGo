@@ -21,10 +21,9 @@ const EventCard = ({ event }) => {
         const token = getValidToken();
         if (!token) return;
 
-        const response = await axios.get(
-          "http://localhost:5000/api/events/saved-events-ids",
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        const response = await axios.get("/api/events/saved-events-ids", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const savedIds = response.data || [];
         setIsSaved(savedIds.includes(event._id));
       } catch (err) {
@@ -44,7 +43,7 @@ const EventCard = ({ event }) => {
       }
 
       const response = await axios.post(
-        `http://localhost:5000/api/events/save-event/${event._id}`,
+        `/api/events/save-event/${event._id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -82,7 +81,7 @@ const EventCard = ({ event }) => {
     if (eventData.image) {
       if (eventData.image.startsWith("http")) return eventData.image;
       const cleanPath = eventData.image.replace(/\\/g, "/");
-      return `http://localhost:5000/${cleanPath}`;
+      return `/${cleanPath}`;
     }
     return "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=600&auto=format&fit=crop";
   };

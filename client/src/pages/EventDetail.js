@@ -58,9 +58,8 @@ export default function EventDetail() {
     let cleanPath = path.replace(/\\/g, "/");
     if (cleanPath.startsWith("server/"))
       cleanPath = cleanPath.replace("server/", "");
-    if (cleanPath.startsWith("uploads/"))
-      return `http://localhost:5000/${cleanPath}`;
-    return `http://localhost:5000/uploads/${cleanPath}`;
+    if (cleanPath.startsWith("uploads/")) return `/${cleanPath}`;
+    return `/uploads/${cleanPath}`;
   };
 
   // Tải danh sách ID sự kiện đã lưu
@@ -69,10 +68,9 @@ export default function EventDetail() {
       const token = getValidToken();
       if (!token) return;
 
-      const response = await axiosInstance.get(
-        "http://localhost:5000/api/events/saved-events-ids",
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await axiosInstance.get("/api/events/saved-events-ids", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setSavedEventIds(response.data || []);
     } catch (err) {
       console.error("Lỗi đồng bộ danh sách đã lưu ở chi tiết:", err.message);
@@ -82,9 +80,7 @@ export default function EventDetail() {
   // Tải toàn bộ danh sách bình luận từ cơ sở dữ liệu
   const fetchEventComments = useCallback(async () => {
     try {
-      const response = await axiosInstance.get(
-        `http://localhost:5000/api/comments/event/${id}`,
-      );
+      const response = await axiosInstance.get(`/api/comments/event/${id}`);
       setComments(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error("Lỗi nạp bình luận:", err.message);
@@ -101,7 +97,7 @@ export default function EventDetail() {
       }
 
       const response = await axiosInstance.post(
-        `http://localhost:5000/api/events/save-event/${eventId}`,
+        `/api/events/save-event/${eventId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -203,7 +199,7 @@ export default function EventDetail() {
       }
 
       const response = await axiosInstance.post(
-        "http://localhost:5000/api/comments/add",
+        "/api/comments/add",
         {
           eventId: id,
           content: newComment,
@@ -243,9 +239,7 @@ export default function EventDetail() {
 
       setTimeout(async () => {
         try {
-          const res = await axiosInstance.get(
-            `http://localhost:5000/api/events/${id}`,
-          );
+          const res = await axiosInstance.get(`/api/events/${id}`);
           if (res.data && res.data.totalReviews > 0) {
             setEvent(res.data);
           }
@@ -263,9 +257,7 @@ export default function EventDetail() {
     window.scrollTo(0, 0);
     const fetchDetail = async () => {
       try {
-        const res = await axiosInstance.get(
-          `http://localhost:5000/api/events/${id}`,
-        );
+        const res = await axiosInstance.get(`/api/events/${id}`);
         setEvent(res.data);
         setLoading(false);
       } catch (err) {
