@@ -137,13 +137,20 @@ export default function EventDetail() {
       });
   };
 
-  // Tự động xin GPS vị trí hiện tại của thiết bị để làm điểm xuất phát chỉ đường chi tiết bằng tọa độ hình học chuẩn GIS
+  // Tự động xin GPS vị trí hiện tại của thiết bị để làm điểm xuất phát chỉ đường chi tiết bằng ĐỊA CHỈ (Google Maps tự phân tích GIS)
   const handleOpenGoogleDirections = () => {
     const firstLoc = event?.locations?.[0];
-    if (!firstLoc || !firstLoc.lat || !firstLoc.lng) {
-      toast.error("Không tìm thấy tọa độ GIS của địa điểm này!");
+    // Sửa điều kiện: Kiểm tra xem có chuỗi address không, thay vì kiểm tra lat/lng
+    if (!firstLoc || !firstLoc.address) {
+      toast.error("Không tìm thấy địa chỉ của sự kiện này!");
       return;
     }
+
+    // Ghép detailAddress (Cơ sở/Tên tòa nhà) và address lại thành 1 chuỗi hoàn chỉnh rồi mã hóa URL
+    const fullAddressString = firstLoc.detailAddress
+      ? `${firstLoc.detailAddress}, ${firstLoc.address}`
+      : firstLoc.address;
+    const destinationAddress = encodeURIComponent(fullAddressString);
 
     toast.loading("Đang kết nối định vị vệ tinh GPS... 🛰️", {
       id: "geo-toast",
@@ -156,7 +163,8 @@ export default function EventDetail() {
           const startLng = position.coords.longitude;
           toast.dismiss("geo-toast");
 
-          const url = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${firstLoc.lat},${firstLoc.lng}&travelmode=driving`;
+          // TRUYỀN CHUỖI ĐỊA CHỈ VÀO BIẾN destination THAY VÌ TỌA ĐỘ
+          const url = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${destinationAddress}&travelmode=driving`;
           window.open(url, "_blank");
         },
         (error) => {
@@ -167,13 +175,14 @@ export default function EventDetail() {
             { duration: 4000 },
           );
 
-          const url = `https://www.google.com/maps/dir/?api=1&destination=${firstLoc.lat},${firstLoc.lng}&travelmode=driving`;
+          // TRUYỀN CHUỖI ĐỊA CHỈ VÀO BIẾN destination
+          const url = `https://www.google.com/maps/dir/?api=1&destination=${destinationAddress}&travelmode=driving`;
           window.open(url, "_blank");
         },
       );
     } else {
       toast.dismiss("geo-toast");
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${firstLoc.lat},${firstLoc.lng}&travelmode=driving`;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destinationAddress}&travelmode=driving`;
       window.open(url, "_blank");
     }
   };

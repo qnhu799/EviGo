@@ -9,6 +9,7 @@ export default function Header() {
   const [role, setRole] = useState(null);
   const navigate = useNavigate();
   const popupRef = useRef(null);
+
   const checkAuth = () => {
     const savedName = localStorage.getItem("username");
     const savedRole = localStorage.getItem("role")?.toLowerCase();
@@ -66,16 +67,15 @@ export default function Header() {
           <Link to="/">Trang chủ</Link>
           <Link to="/map">Bản đồ</Link>
 
-          {username &&
-            (role === "member" ||
-              role === "organizer" ||
-              role === "admin" ||
-              role === "superadmin") && <Link to="/contribute">Đóng góp</Link>}
+          {/* ĐÃ ĐĂNG NHẬP LÀ THẤY NÚT ĐÓNG GÓP (Không cần check quyền) */}
+          {username && <Link to="/contribute">Đóng góp</Link>}
 
+          {/* CHỈ ADMIN VÀ SUPERADMIN MỚI THẤY NÚT QUẢN LÝ */}
           {(role === "admin" || role === "superadmin") && (
             <Link to="/admin">Quản lý</Link>
           )}
 
+          {/* CHỈ SUPERADMIN MỚI THẤY NÚT DASHBOARD */}
           {role === "superadmin" && (
             <Link
               to="/admindashboard"

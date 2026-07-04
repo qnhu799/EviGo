@@ -8,7 +8,7 @@ async function scrapeLehoi() {
 
   try {
     let allEventLinks = [];
-    const maxPages = 1; // Đã đổi thành 1: Chỉ cào duy nhất trang đầu tiên của mỗi chuyên mục
+    const maxPages = 1; // Chỉ cào trang đầu tiên
 
     // KHAI BÁO CÁC CHUYÊN MỤC CẦN CÀO
     const categories = [
@@ -31,7 +31,6 @@ async function scrapeLehoi() {
     for (let category of categories) {
       console.log(`\n👉 Đang quét: ${category.name}`);
 
-      // Vòng lặp lật trang cho chuyên mục hiện tại
       for (let i = 1; i <= maxPages; i++) {
         const url =
           i === 1 ? category.baseUrl : `${category.baseUrl}/page/${i}/`;
@@ -54,7 +53,6 @@ async function scrapeLehoi() {
       }
     }
 
-    // Loại bỏ các link bị trùng (sự kiện TP.HCM hiển thị luôn ở Trang chủ)
     const uniqueEventLinks = [...new Set(allEventLinks)];
     console.log(
       `\n🚀 Tổng cộng tìm thấy ${uniqueEventLinks.length} sự kiện duy nhất. Bắt đầu cào chi tiết...`,
@@ -65,7 +63,7 @@ async function scrapeLehoi() {
       await page.goto(link, { waitUntil: "networkidle2" });
 
       const eventData = await page.evaluate(() => {
-        // Ảnh bìa
+        // --- ẢNH BÌA ---
         const ogImage = document.querySelector(
           'meta[property="og:image"]',
         )?.content;
@@ -74,7 +72,7 @@ async function scrapeLehoi() {
           document.querySelector("img")?.src;
         const image = ogImage || fallbackImage || "";
 
-        // Giới thiệu
+        // --- GIỚI THIỆU ---
         const rawParagraphs = Array.from(
           document.querySelectorAll(
             "p, .elementor-text-editor, .elementor-text-editor li",
@@ -87,28 +85,25 @@ async function scrapeLehoi() {
               !text.includes("THỜI GIAN") &&
               !text.includes("Khám phá"),
           );
-
         const uniqueParagraphs = [...new Set(rawParagraphs)];
         const description =
           uniqueParagraphs.length > 0
             ? uniqueParagraphs.join("\n\n")
             : "Đang cập nhật giới thiệu...";
 
-        // Thời gian & Địa điểm
+        // --- THỜI GIAN & ĐỊA ĐIỂM ---
         const bodyText = document.body.innerText;
         const infoMatch = bodyText.match(
           /THỜI GIAN & ĐỊA ĐIỂM[\s\n]+([^\n]+)[\s\n]+([^\n]+)/i,
         );
-
         let timeText = infoMatch ? infoMatch[1].trim() : "";
         let addressText = infoMatch ? infoMatch[2].trim() : "Đang cập nhật";
 
-        // Giá vé
+        // --- GIÁ VÉ ---
         let ticketPriceText = "Chưa xác định";
         const priceMatch = bodyText.match(
-          /(Giá vé|Vé vào cổng|Chi phí)[\s:]+([^\n]+)/i,
+          /(Giá vé|Vé vào cổng|Chi phí)[\s:]+([^\n]{1,60})/i,
         );
-
         if (priceMatch) {
           ticketPriceText = priceMatch[2].trim();
         } else if (bodyText.match(/miễn phí/i)) {
@@ -117,18 +112,67 @@ async function scrapeLehoi() {
           ticketPriceText = "Vào cửa tự do";
         }
 
+        const title = document.querySelector("h1")?.innerText.trim();
+
+        // --- THỂ LOẠI THÔNG MINH ---
+        let eventType = "Lễ hội"; // Mặc định
+        // Tìm danh mục từ các thẻ meta hoặc class phổ biến
+        const metaSection = document.querySelector(
+          'meta[property="article:section"]',
+        );
+        const catElement = document.querySelector(
+          ".elementor-post-info__terms-list-item, .category-name, .post-category a, .entry-category a",
+        );
+
+        if (metaSection && metaSection.content) {
+          eventType = metaSection.content.trim();
+        } else if (catElement) {
+          eventType = catElement.innerText.trim();
+        } else if (title) {
+          // Nếu không có thẻ tag, phân tích qua tiêu đề
+          const titleLower = title.toLowerCase();
+          if (
+            titleLower.includes("âm nhạc") ||
+            titleLower.includes("ca nhạc") ||
+            titleLower.includes("liveshow")
+          )
+            eventType = "Âm nhạc";
+          else if (
+            titleLower.includes("triển lãm") ||
+            titleLower.includes("hội chợ")
+          )
+            eventType = "Triển lãm";
+          else if (
+            titleLower.includes("văn hóa") ||
+            titleLower.includes("nghệ thuật")
+          )
+            eventType = "Văn hóa & Nghệ thuật";
+          else if (
+            titleLower.includes("ẩm thực") ||
+            titleLower.includes("món ngon")
+          )
+            eventType = "Ẩm thực";
+          else if (
+            titleLower.includes("thể thao") ||
+            titleLower.includes("giải chạy") ||
+            titleLower.includes("marathon")
+          )
+            eventType = "Thể thao";
+        }
+
         return {
-          title: document.querySelector("h1")?.innerText.trim(),
+          title: title,
           image: image,
           timeText: timeText,
           addressText: addressText,
           description: description,
           ticketPrice: ticketPriceText,
+          type: eventType, // Trả về thể loại đã phân tích
         };
       });
 
       if (eventData.title) {
-        // Xử lý ngày tháng
+        // --- Xử lý ngày tháng ---
         let parsedStartDate = new Date();
         let parsedEndDate = new Date();
 
@@ -155,7 +199,7 @@ async function scrapeLehoi() {
           }
         }
 
-        // Xử lý tọa độ
+        // --- Xử lý tọa độ ---
         let lat = 10.776,
           lng = 106.701;
         const addrLower = eventData.addressText.toLowerCase();
@@ -205,12 +249,12 @@ async function scrapeLehoi() {
           endDate: parsedEndDate,
           ticketPrice: eventData.ticketPrice,
           status: "approved",
-          type: "Lễ hội",
+          type: eventData.type, // Gán trực tiếp thể loại mà bot vừa tìm được
         });
       }
     }
   } catch (e) {
-    console.error("❌ Lỗi cào dữ liệu:", e.message);
+    console.error("❌ Lỗi cào dữ liệu Lễ hội:", e.message);
   } finally {
     await browser.close();
   }

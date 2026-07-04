@@ -171,7 +171,23 @@ const MarkerCluster = ({
       ev.locations?.forEach((loc, i) => {
         const lat = parseFloat(loc.lat);
         const lng = parseFloat(loc.lng);
-        if (isNaN(lat) || isNaN(lng)) return;
+        const address = loc.address || "";
+
+        // 🛠️ BỘ LỌC AN TOÀN KÉP: Kiểm tra tọa độ và địa chỉ chi tiết
+        const isAddressValid =
+          address.length > 10 &&
+          !address.toLowerCase().includes("đang cập nhật") &&
+          !address.toLowerCase().includes("tba");
+
+        // Nếu tọa độ không hợp lệ, hoặc địa chỉ không đủ chi tiết, hoặc tọa độ đang bị kẹt ở trung tâm thì BỎ QUA không ghim marker
+        if (
+          isNaN(lat) ||
+          isNaN(lng) ||
+          !isAddressValid ||
+          (lat === 10.776 && lng === 106.701)
+        ) {
+          return;
+        }
 
         const isMatched = filteredEvents.some((fEv) => fEv._id === ev._id);
         let markerIcon = new L.Icon.Default();
@@ -243,7 +259,7 @@ const MarkerCluster = ({
     selectedIcon,
     filteredIcon,
     setSelectedEventId,
-    selectedEventId, // Thêm chính xác dependency này để thỏa mãn quy tắc nghiêm ngặt của ESLint
+    selectedEventId,
   ]);
 
   useEffect(() => {
@@ -307,8 +323,15 @@ const MapPage = () => {
     return `http://localhost:5000/${path.replace(/\\/g, "/")}`;
   };
 
+  // 🛠️ ĐÃ CẬP NHẬT HÀM RÚT GỌN ĐỊA CHỈ CHO SIDEBAR BÊN PHẢI
   const getShortAddress = (address) => {
-    if (!address) return "Chưa cập nhật";
+    if (
+      !address ||
+      address.toLowerCase().includes("đang cập nhật") ||
+      address.toLowerCase().includes("tba")
+    ) {
+      return "Địa điểm đang cập nhật";
+    }
     const parts = address.split(",");
     return parts.length >= 3
       ? `${parts[parts.length - 3].trim()}, ${parts[parts.length - 2].trim()}`
@@ -734,6 +757,12 @@ const MapPage = () => {
             {(isFiltered ? filteredEvents : events).length > 0 ? (
               (isFiltered ? filteredEvents : events).map((ev) => {
                 const isCurrentEventSaved = savedEventIds.includes(ev._id);
+                // 🛠️ Kiểm tra xem sự kiện này có địa chỉ hợp lệ để hiển thị nút "Nhấn để xem trên bản đồ" hay không
+                const evAddress = ev.locations?.[0]?.address || "";
+                const isAddressValid =
+                  evAddress.length > 10 &&
+                  !evAddress.toLowerCase().includes("đang cập nhật") &&
+                  !evAddress.toLowerCase().includes("tba");
 
                 return (
                   <div
@@ -785,18 +814,35 @@ const MapPage = () => {
                         </span>
                       </p>
 
-                      <div
-                        className="click-hint-wrapper"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEventClick(ev, ev.locations?.[0]);
-                        }}
-                        style={{ display: "inline-block", marginTop: "5px" }}
-                      >
-                        <span className="click-hint">
-                          📍 Nhấn để xem trên bản đồ
-                        </span>
-                      </div>
+                      {/* Nếu địa chỉ hợp lệ thì mới hiện nút Nhấn để xem bản đồ, không thì hiện thông báo */}
+                      {isAddressValid ? (
+                        <div
+                          className="click-hint-wrapper"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEventClick(ev, ev.locations?.[0]);
+                          }}
+                          style={{ display: "inline-block", marginTop: "5px" }}
+                        >
+                          <span className="click-hint">
+                            📍 Nhấn để xem trên bản đồ
+                          </span>
+                        </div>
+                      ) : (
+                        <div
+                          style={{ display: "inline-block", marginTop: "5px" }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "#9ca3af",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            🕒 Địa điểm sẽ được EviGo cập nhật sau
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <button
